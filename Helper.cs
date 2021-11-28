@@ -12,8 +12,10 @@ using TaleWorlds.ModuleManager;
 
 namespace MarryAnyone
 {
-    internal static class MAHelper
+    internal static class Helper
     {
+
+        public const String MODULE_NAME = "MarryAnyone";
 
         private static FileStream? _fichier = null;
         private static StreamWriter? _sw = null;
@@ -36,7 +38,6 @@ namespace MarryAnyone
             _MASettings = null;
         }
 
-
         public enum PrintHow // Bitwise enumération
         {
             PrintRAS = 0,
@@ -46,7 +47,9 @@ namespace MarryAnyone
             UpdateLog = 8,
             PrintToLogAndWrite = 12,
             PrintToLogAndWriteAndDisplay = 13,
-            PrintToLogAndWriteAndForceDisplay = 14
+            PrintToLogAndWriteAndForceDisplay = 14,
+            CanInitLogPath = 16,
+            PrintToLogAndWriteAndInit = 12 | CanInitLogPath,
         }
 
         public enum Etape
@@ -64,7 +67,7 @@ namespace MarryAnyone
         public const PrintHow PRINT_TRACE_WEDDING = PrintHow.PrintDisplay;
 #endif
 #if TRACELOAD
-        public const PrintHow PRINT_TRACE_LOAD = PrintHow.PrintToLog;
+        public const PrintHow PRINT_TRACE_LOAD = PrintHow.PrintToLogAndWriteAndInit;
 #else
         public const PrintHow PRINT_TRACE_LOAD = PrintHow.PrintDisplay;
 #endif
@@ -95,33 +98,51 @@ namespace MarryAnyone
 #else
         public const PrintHow PRINT_TRACE_CREATE_CLAN = PrintHow.PrintDisplay;
 #endif
-        public static string? LogPath 
+        public static string? LogPath
         {
             get => _logPath;
-            set
+            private set
             {
                 _logPath = value;
                 _needToSupprimeFichier = true;
-
             }
         }
-        private static string? _logPath;
+        private static string? _logPath = null;
 
-        public static string VersionGet
+        internal static void InitLogPath(bool force)
+        {
+            if (force || String.IsNullOrWhiteSpace(LogPath))
+            {
+                var dirpath = System.IO.Path.Combine(TaleWorlds.Engine.Utilities.GetLocalOutputPath(), Helper.MODULE_NAME);
+                try
+                {
+                    if (!Directory.Exists(dirpath))
+                    {
+                        Directory.CreateDirectory(dirpath);
+                    }
+                    Helper.Print("Output directory : " + dirpath, Helper.PrintHow.PrintForceDisplay);
+                }
+                catch
+                {
+                    Helper.Print("Failed to create config directory.  Please manually create this directory: " + dirpath, Helper.PrintHow.PrintForceDisplay);
+                }
+
+                LogPath = dirpath;
+            }
+        }
+
+        public static Version VersionGet
         {
             get { 
                 if (_version == null) {
                     //_version = Assembly.GetEntryAssembly().GetCustomAttributes<Version>().ToString();
-                    _version = typeof(MASubModule).Assembly.GetName().Version.ToString();
-                    //_version = Version.
-                    if (_version == null)
-                        _version = "Retrieve Version FAIL";
+                    _version = typeof(MASubModule).Assembly.GetName().Version;
                 }
                 return _version;
             }
 
         }
-        private static string? _version = null;
+        private static Version? _version = null;
 
         public static string ModuleNameGet
         {
@@ -148,6 +169,10 @@ namespace MarryAnyone
                 Color color = new(0.6f, 0.2f, 1f);
                 InformationManager.DisplayMessage(new InformationMessage(message, color));
             }
+
+            if ((printHow & PrintHow.PrintToLog) != 0 && (printHow & PrintHow.CanInitLogPath) != 0 && LogPath == null)
+                InitLogPath(false);
+
             if ((printHow & PrintHow.PrintToLog) != 0 && LogPath != null)
             {
                 Log(message);
@@ -231,7 +256,7 @@ namespace MarryAnyone
         }
 
         // completelyRemove : remove all spouse alive
-        public static void RemoveExSpouses(Hero hero, bool completelyRemove = false)
+        public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false)
         {
             FieldInfo _exSpouses = AccessTools.Field(typeof(Hero), "_exSpouses");
             List<Hero> _exSpousesList = (List<Hero>)_exSpouses.GetValue(hero);
@@ -240,6 +265,9 @@ namespace MarryAnyone
 
             if (completelyRemove)
             {
+                if (_exSpousesList == null)
+                    return; // RAS
+
                 // Remove exspouse completely from list
                 _exSpousesList = _exSpousesList.Distinct().ToList();
                 List<Hero> exSpouses = _exSpousesList.Where(exSpouse => exSpouse.IsAlive).ToList();
@@ -250,18 +278,62 @@ namespace MarryAnyone
             }
             else
             {
+                if (_exSpousesList == null)
+                    _exSpousesList = new List<Hero>();
+
                 // Standard remove duplicates spouse
-                // Get exspouse list without duplicates
-                _exSpousesList = _exSpousesList.Distinct().ToList();
-                // If exspouse is already a spouse, then remove it
-                if (_exSpousesList.Contains(hero.Spouse))
+                if (withMainHero)
                 {
-                    _exSpousesList.Remove(hero.Spouse);
+                    if (hero.Spouse != null)
+                        _exSpousesList.Add(hero.Spouse);
+                    hero.Spouse = Hero.MainHero;
                 }
+
+                _exSpousesList = _exSpousesList.Distinct().ToList(); // Get exspouse list without duplicates
+
+                // If exspouse is already a spouse, then remove it
+                if (otherSpouse != null) {
+                    foreach (Hero spouse in otherSpouse)
+                    {
+                        if (spouse != hero && _exSpousesList.IndexOf(spouse) < 0)
+                            _exSpousesList.Add(spouse);
+                    }
+                }
+
+                if (_exSpousesList.Contains(hero.Spouse))
+                    _exSpousesList.Remove(hero.Spouse);
             }
             ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
             _exSpouses.SetValue(hero, _exSpousesList);
             ExSpouses.SetValue(hero, ExSpousesReadOnlyList);
+        }
+
+        public static void RemoveDuplicatedHero()
+        {
+            CampaignObjectManager coManager = Campaign.Current.CampaignObjectManager;
+
+            FieldInfo field = AccessTools.Field(typeof(CampaignObjectManager), "<AliveHeroes>k__BackingField");
+            if (field == null)
+                throw new Exception("Property AliveHeroes not found on CampaignObjectManager instance");
+
+            List<Hero> _alivesHero = coManager.AliveHeroes.ToList();
+            _alivesHero.Sort((x, y) => {return String.Compare(x.StringId, y.StringId, StringComparison.Ordinal);});
+
+            for(int i = 0; i < _alivesHero.Count - 1; i++)
+            {
+                Hero current = _alivesHero[i];
+                Hero next = _alivesHero[i + 1];
+                if (String.Equals(current.StringId, next.StringId, StringComparison.Ordinal))
+                {
+                    Helper.Print(String.Format("Duplicated alive hero {2}\r\n\t{0}\r\n\t{1}", TraceHero(current), TraceHero(next), i), PRINT_PATCH);
+                }
+#if TRACELOAD
+                else
+                    Helper.Print(String.Format("hero {2}: {0} ({1}) not duplicated", current.Name, current.StringId, i), PRINT_PATCH);
+
+#endif
+            }
+            Helper.Print(String.Format("RemoveDuplicatedHero parcours {0} heroes", _alivesHero.Count), PRINT_PATCH);
         }
 
         public static void OccupationToLord(CharacterObject character)
@@ -288,7 +360,7 @@ namespace MarryAnyone
             }
         }
 
-        public static void SwapClan(Hero hero, Clan fromClan, Clan toClan)
+        public static void SwapClan(Hero hero, Clan? fromClan, Clan toClan)
         {
             hero.Clan = null;
             if (hero.CharacterObject.Occupation != Occupation.Lord)
@@ -300,7 +372,9 @@ namespace MarryAnyone
             if (toClan.Lords.FirstOrDefault(x => x == hero) == null)
             {
                 toClan.Lords.AddItem(hero);
-                MAHelper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), MAHelper.PRINT_TRACE_WEDDING);
+#if TRACEWEDDING
+                Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_WEDDING);
+#endif
             }
 #endif
         }
@@ -334,7 +408,7 @@ namespace MarryAnyone
                     if (child.Father == null 
                         || (child.Father != null && (child.Father == hero || !child.Father.IsAlive)))
                     {
-                        MAHelper.Print(String.Format("Hero {0} adopt a child {1} like father", toHero.Name, child.Name), PRINT_TRACE_WEDDING);
+                        Helper.Print(String.Format("Hero {0} adopt a child {1} like father", toHero.Name, child.Name), PRINT_TRACE_WEDDING);
                         child.Father = toHero;
                     }
                 }
@@ -343,7 +417,7 @@ namespace MarryAnyone
                     if (child.Mother == null
                         || (child.Mother != null && (child.Mother == hero || !child.Mother.IsAlive)))
                     {
-                        MAHelper.Print(String.Format("Hero {0} adopt a child {1} like mother", toHero.Name, child.Name), PRINT_TRACE_WEDDING);
+                        Helper.Print(String.Format("Hero {0} adopt a child {1} like mother", toHero.Name, child.Name), PRINT_TRACE_WEDDING);
                         child.Mother = toHero;
                     }
                 }
@@ -370,7 +444,6 @@ namespace MarryAnyone
             }
         }
 
-
         public static bool PatchHeroPlayerClan(Hero hero, bool canBeOtherClan = false, bool etSpouseMainHero = false)
         {
 
@@ -391,7 +464,7 @@ namespace MarryAnyone
                 if (Hero.MainHero.Clan.Lords.FirstOrDefault(x => x == hero) == null)
                 {
                     Hero.MainHero.Clan.Lords.AddItem(hero);
-                    MAHelper.Print("Add hero to Noble of the clan", PrintHow.PrintToLogAndWriteAndDisplay);
+                    Helper.Print("Add hero to Noble of the clan", PrintHow.PrintToLogAndWriteAndDisplay);
                 }
 #endif
                 ret = true;
@@ -408,7 +481,7 @@ namespace MarryAnyone
                 Print(String.Format("Patch Hero {0} with PlayerClan {1} => {2}\r\n\t{3}", hero.Name.ToString()
                                 , Clan.PlayerClan.Name.ToString()
                                 , hero.Clan.Name.ToString()
-                                , MAHelper.TraceHero(hero)), PrintHow.PrintToLogAndWriteAndDisplay);
+                                , Helper.TraceHero(hero)), PrintHow.PrintToLogAndWriteAndDisplay);
 #else
                 Print(String.Format("Patch Hero {0} with PlayerClan {1} => {2}", hero.Name.ToString()
                                 , Clan.PlayerClan.Name.ToString()
@@ -488,7 +561,8 @@ namespace MarryAnyone
         {
 #if V4
             return ((hero.CharacterObject.Occupation != Occupation.Lord
-                        || (hero.CharacterObject.Occupation == Occupation.Lord && hero.Spouse != null && hero.Spouse.IsDead))
+//                        || (hero.CharacterObject.Occupation == Occupation.Lord && hero.Spouse != null && hero.Spouse.IsDead)
+                     )
                     && hero.IsAlive 
                     && (MASettings.Notable || (!MASettings.Notable && !hero.IsNotable))
                     && (MASettings.RelationLevelMinForRomance == -1

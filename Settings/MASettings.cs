@@ -82,7 +82,7 @@ namespace MarryAnyone.Settings
                 }
                 catch (Exception exception)
                 {
-                    MAHelper.Error(exception);
+                    Helper.Error(exception);
                 }
             }
             else

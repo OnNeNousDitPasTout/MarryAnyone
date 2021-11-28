@@ -26,4 +26,6 @@ FixedPregnancyControl :
 		, new ConversationSentence.OnConsequenceDelegate(this.StartPersutionThing), 100, null);
 	StartPersutionThing
 	
-	
+
+namespace TaleWorlds.CampaignSystem.ViewModelCollection.Encyclopedia	
+	public class EncyclopediaHeroPageVM : EncyclopediaContentPageVM

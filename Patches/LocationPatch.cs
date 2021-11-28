@@ -46,11 +46,11 @@ namespace MarryAnyone.Patches
             __result = false;
             if (character == null)
             {
-                MAHelper.Print(String.Format("CanAIExit on {0} pour {1} PATH return FALSE", __instance.Name, character == null ? "character NULL" : character.ToString()), MAHelper.PrintHow.PrintToLogAndWrite);
+                Helper.Print(String.Format("CanAIExit on {0} pour {1} PATH return FALSE", __instance.Name, character == null ? "character NULL" : character.ToString()), Helper.PrintHow.PrintToLogAndWrite);
                 __result = false; // rien peux sortir de n'importe quoi !!!
                 return false;
             }
-            MAHelper.Print(String.Format("CanAIExit on {0} pour {1} VA FAIRE", __instance.Name, character == null ? "character NULL" : character.ToString()), MAHelper.PrintHow.PrintToLogAndWrite);
+            Helper.Print(String.Format("CanAIExit on {0} pour {1} VA FAIRE", __instance.Name, character == null ? "character NULL" : character.ToString()), Helper.PrintHow.PrintToLogAndWrite);
             return true;
         }
     }

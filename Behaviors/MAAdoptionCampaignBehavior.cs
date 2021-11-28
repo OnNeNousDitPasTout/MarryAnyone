@@ -43,25 +43,25 @@ namespace MarryAnyone.Behaviors
             }
             if (_notAdoptableAgents.Contains(_agent))
             {
-                MAHelper.Print("Cannot Adopt");
+                Helper.Print("Cannot Adopt", Helper.PrintHow.PrintDisplay);
                 return false;
             }
             if (_adoptableAgents.Contains(_agent))
             {
-                MAHelper.Print("Can Adopt");
+                Helper.Print("Can Adopt", Helper.PrintHow.PrintDisplay);
                 return true;
             }
             if (Campaign.Current.ConversationManager.OneToOneConversationAgent.Age < Campaign.Current.Models.AgeModel.HeroComesOfAge)
             {
-                MAHelper.Print("Adoption: " + settings.Adoption);
+                Helper.Print("Adoption: " + settings.Adoption);
                 if (!settings.Adoption)
                 {
                     return false;
                 }
-                MAHelper.Print("Adoption Chance: " + settings.AdoptionChance);
+                Helper.Print("Adoption Chance: " + settings.AdoptionChance, Helper.PrintHow.PrintDisplay);
                 // You only roll once!
                 float random = MBRandom.RandomFloat;
-                MAHelper.Print("Random Number: " + random);
+                Helper.Print("Random Number: " + random, Helper.PrintHow.PrintDisplay);
                 if (random < settings.AdoptionChance)
                 {
                     _adoptableAgents.Add(_agent);
@@ -97,7 +97,7 @@ namespace MarryAnyone.Behaviors
                 EquipmentHelper.AssignHeroEquipmentFromEquipment(hero, equipment);
                 EquipmentHelper.AssignHeroEquipmentFromEquipment(hero, equipment2);
             }
-            MAHelper.OccupationToLord(hero.CharacterObject);
+            Helper.OccupationToLord(hero.CharacterObject);
             hero.Clan = Clan.PlayerClan;
             AccessTools.Method(typeof(HeroDeveloper), "CheckInitialLevel").Invoke(hero.HeroDeveloper, null);
             hero.CharacterObject.IsFemale = character.IsFemale;
@@ -162,8 +162,8 @@ namespace MarryAnyone.Behaviors
             {
                 if (Hero.MainHero.Children.Contains(hero))
                 {
-                    MAHelper.OccupationToLord(hero.CharacterObject);
-                    MAHelper.PatchHeroPlayerClan(hero, true);
+                    Helper.OccupationToLord(hero.CharacterObject);
+                    Helper.PatchHeroPlayerClan(hero, true);
                 }
             }
 

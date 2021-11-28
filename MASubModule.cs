@@ -12,16 +12,17 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using TaleWorlds.CampaignSystem.Actions;
-using static MarryAnyone.MAHelper;
+using static MarryAnyone.Helper;
+using MarryAnyone.Patches;
 
 namespace MarryAnyone
 {
     public class MASubModule : MBSubModuleBase // NoHarmonyLoader
     {
 
-        public static string ModuleFolderName { get; } = "MarryAnyone";
+        //public static string ModuleFolderName { get; } = "MarryAnyone";
 
-        public static readonly Harmony Harmony = new Harmony(ModuleFolderName);
+        public static readonly Harmony Harmony = new Harmony(Helper.MODULE_NAME);
 
         CampaignGameStarter? _campaignGameStarter;
         //private bool bPatchOnTick = false;
@@ -59,21 +60,7 @@ namespace MarryAnyone
 
         protected override void OnSubModuleLoad()
         {
-            var dirpath = System.IO.Path.Combine(TaleWorlds.Engine.Utilities.GetLocalOutputPath(), ModuleFolderName);
-            try
-            {
-                if (!Directory.Exists(dirpath))
-                {
-                    Directory.CreateDirectory(dirpath);
-                }
-                MAHelper.Print("Output directory : " + dirpath, MAHelper.PrintHow.PrintForceDisplay);
-            }
-            catch
-            {
-                MAHelper.Print("Failed to create config directory.  Please manually create this directory: " + dirpath, MAHelper.PrintHow.PrintForceDisplay);
-            }
-
-            MAHelper.LogPath = dirpath;
+            Helper.InitLogPath(false);
             base.OnSubModuleLoad();
         }
 
@@ -84,7 +71,7 @@ namespace MarryAnyone
             if (game.GameType is Campaign)
             {
 
-                MAHelper.Print("Campaign", MAHelper.PrintHow.PrintForceDisplay);
+                Helper.Print("Campaign", Helper.PrintHow.PrintForceDisplay);
 
                 CampaignGameStarter campaignGameStarter = (CampaignGameStarter)gameStarter;
                 campaignGameStarter.LoadGameTexts(BasePath.Name + "Modules/MarryAnyone/ModuleData/ma_module_strings.xml");
@@ -117,7 +104,7 @@ namespace MarryAnyone
         {
             base.OnGameLoaded(game, initializerObject);
 
-            MAHelper.MAEtape = Etape.EtapeLoad;
+            Helper.MAEtape = Etape.EtapeLoad;
 //#if TRACELOAD
 //            MAHelper.Print(String.Format("Chemin output : '{0}'", MAHelper.LogPath), MAHelper.PrintHow.PrintForceDisplay);
 
@@ -140,14 +127,14 @@ namespace MarryAnyone
             if (Hero.MainHero.Spouse != null && Hero.MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled)
             {
                 Hero.MainHero.Spouse.ChangeState(Hero.CharacterStates.Active);
-                MAHelper.Print(string.Format("Active {0}", Hero.MainHero.Spouse.Name), MAHelper.PRINT_PATCH);
+                Helper.Print(string.Format("Active {0}", Hero.MainHero.Spouse.Name), Helper.PRINT_PATCH);
             }
             foreach (Hero hero in Hero.MainHero.ExSpouses)
             {
                 if (hero.HeroState == Hero.CharacterStates.Disabled && hero.IsAlive)
                 {
                     hero.ChangeState(Hero.CharacterStates.Active);
-                    MAHelper.Print(string.Format("Active {0}", hero.Name), MAHelper.PRINT_PATCH);
+                    Helper.Print(string.Format("Active {0}", hero.Name), Helper.PRINT_PATCH);
 
                 }
             }
@@ -164,17 +151,17 @@ namespace MarryAnyone
                         hero.Father = Hero.MainHero.Spouse;
                     else
                         hero.Mother = Hero.MainHero.Father;
-                    MAHelper.Print(string.Format("Patch Parent of {0}", hero.Name), MAHelper.PRINT_PATCH);
+                    Helper.Print(string.Format("Patch Parent of {0}", hero.Name), Helper.PRINT_PATCH);
                 }
                 if (hero.Father == null)
                 {
                     hero.Father = mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    MAHelper.Print(string.Format("Patch Father of {0}", hero.Name), MAHelper.PRINT_PATCH);
+                    Helper.Print(string.Format("Patch Father of {0}", hero.Name), Helper.PRINT_PATCH);
                 }
                 if (hero.Mother == null)
                 {
                     hero.Mother = !mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    MAHelper.Print(string.Format("Patch Mother of {0}", hero.Name), MAHelper.PRINT_PATCH);
+                    Helper.Print(string.Format("Patch Mother of {0}", hero.Name), Helper.PRINT_PATCH);
                 }
             }
         }
@@ -185,11 +172,15 @@ namespace MarryAnyone
             if (MARomanceCampaignBehavior.Instance != null)
                 MARomanceCampaignBehavior.Instance.Dispose();
 
+#if PATCHEENCYCLOPEDIA
+            EncyclopediaHeroPageVM_allRelatedHeroesPatch.Dispose();
+#endif
+
             Instance = null;
             _campaignGameStarter = null;
 
             base.OnGameEnd(game);
-            MAHelper.LogClose();
+            Helper.LogClose();
         }
 
 

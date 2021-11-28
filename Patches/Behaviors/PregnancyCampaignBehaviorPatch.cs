@@ -37,16 +37,16 @@ namespace MarryAnyone.Patches.Behaviors
                     if (!otherHero.IsAlive || otherHero.Age < Campaign.Current.Models.AgeModel.HeroComesOfAge)
                         return false;
 
-                    if (MAHelper.MASettings.RelationLevelMinForSex >= 0)
+                    if (Helper.MASettings.RelationLevelMinForSex >= 0)
                     {
                         int relation = hero.GetRelation(otherHero);
 
-                        int compatible = MAHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
-                                        + MAHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Generosity) * 2
-                                        + MAHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Valor)
-                                        + MAHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Honor); // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
+                        int compatible = Helper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
+                                        + Helper.TraitCompatibility(hero, otherHero, DefaultTraits.Generosity) * 2
+                                        + Helper.TraitCompatibility(hero, otherHero, DefaultTraits.Valor)
+                                        + Helper.TraitCompatibility(hero, otherHero, DefaultTraits.Honor); // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
 
-                        return relation + compatible > MAHelper.MASettings.RelationLevelMinForSex;
+                        return relation + compatible > Helper.MASettings.RelationLevelMinForSex;
                     }
                 }
                 return true;
@@ -82,7 +82,7 @@ namespace MarryAnyone.Patches.Behaviors
                 else if (hero == Hero.MainHero || isPartner || hero == Hero.MainHero.Spouse || Hero.MainHero.ExSpouses.Contains(hero)) // If you are the MainHero go through advanced process
                 {
                     _playerRelation = true;
-                    MASettings settings = MAHelper.MASettings;
+                    MASettings settings = Helper.MASettings;
 
                     if (_spouses == null)
                         _spouses = new List<Hero>();
@@ -190,7 +190,7 @@ namespace MarryAnyone.Patches.Behaviors
 #endif
                     }
                     int attractionRandom = MBRandom.RandomInt(attraction);
-                    MAHelper.Print("Random: " + attractionRandom, MAHelper.PRINT_TRACE_PREGNANCY);
+                    Helper.Print("Random: " + attractionRandom, Helper.PRINT_TRACE_PREGNANCY);
                     int i = 0;
                     while (i < _spouses.Count)
                     {
@@ -242,13 +242,13 @@ namespace MarryAnyone.Patches.Behaviors
 #if TRACEPREGNANCY
             String traceAff = "";
 #endif
-            if (MAHelper.MASettings.ImproveRelation && hero != null && (hero.Spouse != null || _sideFemaleHero != null))
+            if (Helper.MASettings.ImproveRelation && hero != null && (hero.Spouse != null || _sideFemaleHero != null))
             {
                 if (_sideFemaleHero == null)
                     _sideFemaleHero = hero.Spouse;
 
                 bool needNotify = _playerRelation;
-                if (needNotify && !MAHelper.MASettings.NotifyRelationImprovementWithinFamily)
+                if (needNotify && !Helper.MASettings.NotifyRelationImprovementWithinFamily)
                     needNotify = (hero == Hero.MainHero) || (_sideFemaleHero == Hero.MainHero);
 
 
@@ -257,9 +257,9 @@ namespace MarryAnyone.Patches.Behaviors
                 float zeroAUn = MBRandom.RandomFloat;
 
                 int relactionActuelle = hero.GetRelation(_sideFemaleHero);
-                int compatible = (MAHelper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Calculating)
-                                + MAHelper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Generosity) * 3
-                                + MAHelper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Valor)) / 2; // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
+                int compatible = (Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Calculating)
+                                + Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Generosity) * 3
+                                + Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Valor)) / 2; // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
 
 #if TRACEPREGNANCY
                 traceAff = String.Format("relactionActuelle ?= {0}, compatible ?= {1} zeroAUn ?= {2}", relactionActuelle, compatible, zeroAUn);
@@ -293,12 +293,12 @@ namespace MarryAnyone.Patches.Behaviors
                         if (justPregnant)
                         {
                             TextObject textObject = new TextObject("{=TheTwoOfThemHaveAGoodTime}{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points");
-                            MAHelper.PrintWithColor(textObject.ToString(), MAHelper.yellowCollor);
+                            Helper.PrintWithColor(textObject.ToString(), Helper.yellowCollor);
                         }
                         else
                         {
                             TextObject textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points");
-                            MAHelper.PrintWithColor(textObject.ToString(), Color.White);
+                            Helper.PrintWithColor(textObject.ToString(), Color.White);
                         }
                     }
 
@@ -314,6 +314,11 @@ namespace MarryAnyone.Patches.Behaviors
                 MAHelper.Print(String.Format("Post Pregnancy Hero {0} justPregnant ?= {1}\r\n{2}", hero.Name, justPregnant, traceAff), MAHelper.PRINT_TRACE_PREGNANCY);
             }
 #endif
+            bool areMarriedWithMainHero = false;
+            if (hero != null && hero.Spouse != null)
+                areMarriedWithMainHero = MARomanceCampaignBehavior.Instance != null
+                        && MARomanceCampaignBehavior.Instance.SpouseOrNot(hero, hero.Spouse);
+
             if (hero == Hero.MainHero)
             {
 #if TRACEPREGNANCY
@@ -326,22 +331,20 @@ namespace MarryAnyone.Patches.Behaviors
                                     && MARomanceCampaignBehavior.Instance.Partners != null
                                     && MARomanceCampaignBehavior.Instance.Partners.Contains(hero);
 
-            if ((Hero.MainHero.ExSpouses.Contains(hero) || hero.Spouse == Hero.MainHero) && !isPartner)
+            if (areMarriedWithMainHero && !isPartner)
             {
 #if TRACEPREGNANCY
                 MAHelper.Print(string.Format("Post Pregnancy {0} IsPregnant {1} ", hero.Name, hero.IsPregnant), MAHelper.PRINT_TRACE_PREGNANCY | MAHelper.PrintHow.UpdateLog);
 #endif
                 if (hero.Spouse is null || hero.Spouse != Hero.MainHero)
                 {
-                    ISettingsProvider settings = new MASettings();
-
 #if TRACEPREGNANCY
                     MAHelper.Print("   Spouse is Main Hero", MAHelper.PRINT_TRACE_PREGNANCY);
 #endif
-                    if (!MAHelper.MASettings.Polyamory)
+                    if (!Helper.MASettings.Polyamory)
                     {
                         // Remove any extra duplicate exspouses
-                        MAHelper.RemoveExSpouses(hero, true);
+                        Helper.RemoveExSpouses(hero, true);
                     }
                     hero.Spouse = Hero.MainHero;
                 }
@@ -351,11 +354,11 @@ namespace MarryAnyone.Patches.Behaviors
                 hero.Spouse = _sauveSpouse;
             }
 
-            MAHelper.RemoveExSpouses(hero);
+            Helper.RemoveExSpouses(hero);
 
             foreach (Hero exSpouse in hero.ExSpouses.ToList())
             {
-                MAHelper.RemoveExSpouses(exSpouse);
+                Helper.RemoveExSpouses(exSpouse);
             }
         }
 

@@ -85,7 +85,7 @@ namespace PatchViaHarmony.Patches
 
 #endif
 
-#if V1560LESS || V1640 || V1620 || V1610
+#if V1650LESS || V1640 || V1620 || V1610
 
 		[HarmonyPatch(typeof(TournamentGame), "GetParticipantCharacters", new Type[] {typeof(Settlement), typeof(int), typeof(bool), typeof(bool)})]
         [HarmonyPrefix]
@@ -98,7 +98,7 @@ namespace PatchViaHarmony.Patches
 #endif
         {
 
-			if (!MAHelper.MASettings.SpouseJoinArena)
+			if (!Helper.MASettings.SpouseJoinArena)
 				return true;
 
 #if TRACE_ARENA_PARTICIPANT_START
@@ -126,7 +126,7 @@ namespace PatchViaHarmony.Patches
 			{
 				while (num < settlement.Parties.Count && list.Count < maxParticipantCount12)
 				{
-#if V1560LESS || V1640 || V1620 || V1610
+#if V1650LESS || V1640 || V1620 || V1610
 					CharacterObject leader = settlement.Parties[num].Leader;
 					if (leader != null && includeHeroes && leader.HeroObject != null && !leader.HeroObject.IsWounded && !leader.HeroObject.Noncombatant && !list.Contains(leader) && leader != CharacterObject.PlayerCharacter)
 					{
@@ -182,7 +182,7 @@ namespace PatchViaHarmony.Patches
 								|| Hero.MainHero.ExSpouses.Contains(troopRosterElement.Character.HeroObject))
 						&& !list.Contains(troopRosterElement.Character))
 					{
-						MAHelper.Print(String.Format("Ajoute le caractère {0}", troopRosterElement.Character.ToString()), MAHelper.PrintHow.PrintToLog);
+						Helper.Print(String.Format("Ajoute le caractère {0}", troopRosterElement.Character.ToString()), Helper.PrintHow.PrintToLog);
 						list.Add(troopRosterElement.Character);
 						num++;
 					}

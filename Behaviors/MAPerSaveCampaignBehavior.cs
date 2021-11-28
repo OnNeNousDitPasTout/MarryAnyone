@@ -41,7 +41,7 @@ namespace MarryAnyone.Behaviors
             }
             catch (Exception exception)
             {
-                MAHelper.Error(exception);
+                Helper.Error(exception);
             }
         }
 

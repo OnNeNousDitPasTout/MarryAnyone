@@ -13,7 +13,7 @@ namespace MarryAnyone.Models
 
         public static bool IsCoupleSuitableForMarriageStatic(Hero firstHero, Hero secondHero, bool canCheat)
         {
-            ISettingsProvider settings = MAHelper.MASettings; // new MASettings();
+            ISettingsProvider settings = Helper.MASettings; // new MASettings();
             bool isMainHero = firstHero == Hero.MainHero || secondHero == Hero.MainHero;
             bool isHomosexual = settings.SexualOrientation == "Homosexual" && isMainHero;
             bool isBisexual = settings.SexualOrientation == "Bisexual" && isMainHero;
@@ -122,10 +122,10 @@ namespace MarryAnyone.Models
         public static bool IsSuitableForCheatingStatic(Hero maidenOrSuitor)
         {
 
-            if (!MAHelper.IsSuitableForMarriagePathMA(maidenOrSuitor))
+            if (!Helper.IsSuitableForMarriagePathMA(maidenOrSuitor))
                 return false;
 
-            if (!MAHelper.MASettings.Cheating) return false;
+            if (!Helper.MASettings.Cheating) return false;
 
             if (maidenOrSuitor.Spouse != null
                 || (maidenOrSuitor.ExSpouses != null &&
@@ -142,18 +142,18 @@ namespace MarryAnyone.Models
 
         public static bool IsSuitableForMarriageStatic(Hero maidenOrSuitor, bool canCheat = false)
         {
-            if (!MAHelper.IsSuitableForMarriagePathMA(maidenOrSuitor))
+            if (!Helper.IsSuitableForMarriagePathMA(maidenOrSuitor))
                 return false;
 
             bool inConversation, isCheating, isPolygamous;
             inConversation = isCheating = isPolygamous = false;
             if (maidenOrSuitor == Hero.MainHero)
             {
-                isCheating = MAHelper.MASettings.Cheating;  
-                isPolygamous = MAHelper.MASettings.Polygamy; 
+                isCheating = Helper.MASettings.Cheating;  
+                isPolygamous = Helper.MASettings.Polygamy; 
             }
             else if (canCheat)
-                isCheating = MAHelper.MASettings.Cheating;  
+                isCheating = Helper.MASettings.Cheating;  
 
             if (isPolygamous || isCheating || (maidenOrSuitor.Spouse is null && !maidenOrSuitor.ExSpouses.Any(exSpouse => exSpouse.IsAlive)))
             {

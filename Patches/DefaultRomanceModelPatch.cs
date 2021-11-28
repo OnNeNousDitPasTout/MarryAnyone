@@ -27,7 +27,7 @@ namespace MarryAnyone.Patches
                 && Campaign.Current.Models.MarriageModel.IsCoupleSuitableForMarriage(person1, person2);
 
 #if TRACEROMANCE
-            MAHelper.Print(String.Format("CourtshipPossibleBetweenNPCs entre {0} et {1} répond {2}", person1.Name.ToString(), person2.Name.ToString(), __result.ToString()), MAHelper.PRINT_TRACE_ROMANCE) ;
+            Helper.Print(String.Format("CourtshipPossibleBetweenNPCs entre {0} et {1} répond {2}", person1.Name.ToString(), person2.Name.ToString(), __result.ToString()), Helper.PRINT_TRACE_ROMANCE) ;
 #endif
 
             return false; // On retourne false pour inhiber l'appel classique

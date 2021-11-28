@@ -62,7 +62,7 @@ namespace MarryAnyone.Patches.Behaviors
         {
             if (Hero.OneToOneConversationHero != null && Hero.OneToOneConversationHero.Clan != Hero.MainHero.Clan)
             {
-                MAHelper.FamilyJoinClan(Hero.OneToOneConversationHero, Hero.MainHero.Clan, Hero.OneToOneConversationHero.Clan);
+                Helper.FamilyJoinClan(Hero.OneToOneConversationHero, Hero.MainHero.Clan, Hero.OneToOneConversationHero.Clan);
             }
         }
 
