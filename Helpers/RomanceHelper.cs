@@ -20,7 +20,7 @@ namespace MarryAnyone.Helpers
                 }
 
             }
-            return false;
+            return true;
         }
     }
 }

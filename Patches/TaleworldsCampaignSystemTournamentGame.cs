@@ -7,12 +7,17 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
 using TaleWorlds.Core;
 
 namespace PatchViaHarmony.Patches
 {
-    [HarmonyPatch(typeof(TournamentGame))]
-    public static class TaleworldsCampaignSystemTournamentGame161
+#if V1650MORE
+	[HarmonyPatch(typeof(FightTournamentGame))]
+#else
+	[HarmonyPatch(typeof(TournamentGame))]
+#endif
+	public static class TaleworldsCampaignSystemTournamentGame161
     {
 
 		private static void GetUpgradeTargetsPatch(CharacterObject troop, ref List<CharacterObject> list)
@@ -92,14 +97,19 @@ namespace PatchViaHarmony.Patches
         internal static bool GetParticipantCharactersPatch(Settlement settlement, int maxParticipantCount, bool includePlayer, bool includeHeroes, ref List<CharacterObject> __result)
 #endif
 #if V1650MORE
-		[HarmonyPatch(typeof(TournamentGame), "GetParticipantCharacters", new Type[] { typeof(Settlement), typeof(int), typeof(TournamentGame), typeof(bool), typeof(bool) })]
+		[HarmonyPatch(typeof(FightTournamentGame), "GetParticipantCharacters", new Type[] { typeof(Settlement), typeof(bool), typeof(bool) })]
 		[HarmonyPrefix]
-		internal static bool GetParticipantCharactersPatch(Settlement settlement, int maxParticipantCount, TournamentGame tournament, bool includePlayer , bool includeHeroes , ref List<CharacterObject> __result)
+		internal static bool GetParticipantCharactersPatch(FightTournamentGame __instance, Settlement settlement, bool includePlayer , bool includeHeroes , ref List<CharacterObject> __result)
 #endif
         {
 
 			if (!Helper.MASettings.SpouseJoinArena)
 				return true;
+
+#if V1650MORE
+			int maxParticipantCount = __instance.MaximumParticipantCount;
+#endif
+
 
 #if TRACE_ARENA_PARTICIPANT_START
 
@@ -112,8 +122,13 @@ namespace PatchViaHarmony.Patches
 			Helper.Print(aff, Helper.PrintHow.PrintForceDisplay);
 #endif
 
+#if V1650MORE
+			MethodInfo methodInfoCanNpcJoinTournament = typeof(TournamentGame).GetMethod("CanNpcJoinTournament", BindingFlags.NonPublic);
+			MethodInfo methodInfoSortTournamentParticipants = typeof(TournamentGame).GetMethod("SortTournamentParticipants", BindingFlags.NonPublic);
+#else
 			MethodInfo methodInfoCanNpcJoinTournament = typeof(TournamentGame).GetMethod("CanNpcJoinTournament", BindingFlags.Static | BindingFlags.NonPublic);
 			MethodInfo methodInfoSortTournamentParticipants = typeof(TournamentGame).GetMethod("SortTournamentParticipants", BindingFlags.Static | BindingFlags.NonPublic);
+#endif
 
 			List<CharacterObject> list = new List<CharacterObject>();
 			if (includePlayer)
@@ -134,7 +149,7 @@ namespace PatchViaHarmony.Patches
 					}
 #else
 					Hero leaderHero = settlement.Parties[num].LeaderHero;
-					if ((bool)methodInfoCanNpcJoinTournament.Invoke(null, new Object[] { leaderHero, list, true, tournament }) && leaderHero.IsNoble)
+					if ((bool)methodInfoCanNpcJoinTournament.Invoke(__instance, new Object[] { leaderHero, list, true}) && leaderHero.IsNoble)
 					{
 						list.Add(leaderHero.CharacterObject);
 					}
@@ -314,7 +329,11 @@ namespace PatchViaHarmony.Patches
 			}
 
 			//SortTournamentParticipantsPatch(list);
+#if V1650MORE
+			methodInfoSortTournamentParticipants.Invoke(__instance, new Object[] { list });
+#else
 			methodInfoSortTournamentParticipants.Invoke(null, new Object[] { list });
+#endif
 
 			__result = list;
 
