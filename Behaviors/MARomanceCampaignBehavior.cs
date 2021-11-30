@@ -1142,13 +1142,26 @@ namespace MarryAnyone.Behaviors
             if (newLeader != null)
             {
                 ChangeClanLeaderAction.ApplyWithSelectedNewLeader(clan, newLeader);
+                ancLeader.Clan = Hero.MainHero.Clan;
             }
             else
             {
+
+                ancLeader.Clan = Hero.MainHero.Clan;
+
+                Helper.Print(String.Format("AncLeader {0} is alive {1} his clan {2}"
+                                , ancLeader.Name
+                                , ancLeader.IsAlive.ToString()
+                                , (ancLeader.Clan != null ? ancLeader.Clan.Name : "NULL")), Helper.PRINT_PATCH);
+
+                if (ancLeader.IsAlive)
+                {
+                    Helper.Print("ancLeader TRY to leave the clan", Helper.PRINT_PATCH);
+                    Helper.RemoveFromClan(ancLeader, clan);
+                }
                 DestroyClanAction.Apply(clan);
                 supprimeClan = true;
             }
-            ancLeader.Clan = Hero.MainHero.Clan;
 
             if (supprimeClan)
                 Helper.Print(String.Format("PATCH Leader for the clan {0} ERASE the clan", clan.Name), Helper.PRINT_PATCH);
@@ -1215,7 +1228,8 @@ namespace MarryAnyone.Behaviors
             List<Hero> spouses = new List<Hero>();
             if (Hero.MainHero.Spouse != null)
             {
-                spouses.Add(Hero.MainHero.Spouse);
+                if (Hero.MainHero.Spouse != Hero.MainHero)
+                    spouses.Add(Hero.MainHero.Spouse);
 #if TRACELOAD
                 Helper.Print("Main spouse " + Helper.TraceHero(Hero.MainHero.Spouse), Helper.PRINT_TRACE_LOAD);
 #endif
@@ -1239,7 +1253,7 @@ namespace MarryAnyone.Behaviors
 
                 foreach (Hero hero in Hero.MainHero.ExSpouses)
                 {
-                    if (hero.IsAlive && NoMoreSpouse.IndexOf(hero) < 0)
+                    if (hero.IsAlive && NoMoreSpouse.IndexOf(hero) < 0 && hero != Hero.MainHero)
                         spouses.Add(hero);
 #if TRACELOAD
                     Helper.Print("Other spouse " + Helper.TraceHero(hero), Helper.PRINT_TRACE_LOAD);
@@ -1251,6 +1265,9 @@ namespace MarryAnyone.Behaviors
             {
                 if (clan.Leader != null && SpouseOfPlayer(clan.Leader))
                 {
+#if TRACEPATCH
+                    Helper.Print(String.Format("Will try to patch Clan {0} Leader is a spouse {1}\r\n\tMainHero ?= {2}", clan.Name, clan.Leader.Name, Hero.MainHero.Name), Helper.PRINT_PATCH);
+#endif
                     patchClanLeader(clan);
                 }
             }

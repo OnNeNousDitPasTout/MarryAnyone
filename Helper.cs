@@ -262,7 +262,6 @@ namespace MarryAnyone
             FieldInfo _exSpouses = AccessTools.Field(typeof(Hero), "_exSpouses");
             List<Hero> _exSpousesList = (List<Hero>)_exSpouses.GetValue(hero);
             FieldInfo ExSpouses = AccessTools.Field(typeof(Hero), "ExSpouses");
-            MBReadOnlyList<Hero> ExSpousesReadOnlyList;
 
             if (completelyRemove)
             {
@@ -301,10 +300,15 @@ namespace MarryAnyone
                     }
                 }
 
-                if (_exSpousesList.Contains(hero.Spouse))
-                    _exSpousesList.Remove(hero.Spouse);
+                if (hero.Spouse != null)
+                    while (_exSpousesList.Contains(hero.Spouse))
+                        _exSpousesList.Remove(hero.Spouse);
+
+                while (_exSpousesList.Contains(hero))
+                    _exSpousesList.Remove(hero);
             }
-            ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
+
+            MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
             _exSpouses.SetValue(hero, _exSpousesList);
             ExSpouses.SetValue(hero, ExSpousesReadOnlyList);
         }
@@ -361,6 +365,44 @@ namespace MarryAnyone
             }
         }
 
+
+        public static void RemoveFromClan(Hero hero, Clan fromClan, bool canPatchLeader = false)
+        {
+            List<Hero> lords = fromClan.Lords.ToList();
+            if (lords.IndexOf(hero) >= 0)
+            {
+                while (lords.IndexOf(hero) >= 0)
+                    lords.Remove(hero);
+
+                FieldInfo infoLords = AccessTools.Field(typeof(Clan), "<Lords>k__BackingField");
+                if (infoLords == null)
+                    throw new Exception("<Lords>k__BackingField not found");
+                infoLords.SetValue(fromClan, new MBReadOnlyList<Hero>(lords));
+                Print(String.Format("Patch Clan lords of clan {0}", fromClan.Name.ToString()), PRINT_PATCH);
+            }
+
+            List<Hero> heroes = fromClan.Heroes.ToList();
+            if (heroes.IndexOf(hero) >= 0)
+            {
+                while (heroes.IndexOf(hero) >= 0)
+                    heroes.Remove(hero);
+
+                FieldInfo infoHeroes = AccessTools.Field(typeof(Clan), "<Lords>k__BackingField");
+                if (infoHeroes == null)
+                    throw new Exception("<Heroes>k__BackingField not found");
+                infoHeroes.SetValue(fromClan, new MBReadOnlyList<Hero>(heroes));
+                Print(String.Format("Patch Clan heroes of clan {0}", fromClan.Name.ToString()), PRINT_PATCH);
+            }
+            if (canPatchLeader && fromClan.Leader == hero)
+            {
+                FieldInfo infoLeader = AccessTools.Field(typeof(Clan), "_leader");
+                if (infoLeader == null)
+                    throw new Exception("_leader not found");
+                Print(String.Format("Patch Clan Leader of clan {0} set Leader = null", fromClan.Name.ToString()), PRINT_PATCH);
+                infoLeader.SetValue(fromClan, null);
+            }
+        }
+
         public static void SwapClan(Hero hero, Clan? fromClan, Clan toClan)
         {
             hero.Clan = null;
@@ -376,6 +418,11 @@ namespace MarryAnyone
 #if TRACEWEDDING
                 Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_WEDDING);
 #endif
+
+                if (fromClan != null 
+                    && (fromClan.Lords.IndexOf(hero) >= 0 
+                        || fromClan.Heroes.IndexOf(hero) >= 0))
+                    RemoveFromClan(hero, fromClan);
             }
 #endif
         }
