@@ -124,46 +124,7 @@ namespace MarryAnyone
 //            MAHelper.Print("List spouse and Companions END", MAHelper.PrintHow.PrintToLogAndWrite);
 //#endif
 
-            if (Hero.MainHero.Spouse != null && Hero.MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled)
-            {
-                Hero.MainHero.Spouse.ChangeState(Hero.CharacterStates.Active);
-                Helper.Print(string.Format("Active {0}", Hero.MainHero.Spouse.Name), Helper.PRINT_PATCH);
-            }
-            foreach (Hero hero in Hero.MainHero.ExSpouses)
-            {
-                if (hero.HeroState == Hero.CharacterStates.Disabled && hero.IsAlive)
-                {
-                    hero.ChangeState(Hero.CharacterStates.Active);
-                    Helper.Print(string.Format("Active {0}", hero.Name), Helper.PRINT_PATCH);
 
-                }
-            }
-
-            // Parent patch
-            bool hadSpouse = Hero.MainHero.Spouse != null;
-            bool mainHeroIsFemale = Hero.MainHero.IsFemale;
-
-            foreach (Hero hero in Hero.MainHero.Children)
-            {
-                if (hadSpouse && hero.Father == Hero.MainHero && hero.Mother == Hero.MainHero)
-                {
-                    if (mainHeroIsFemale)
-                        hero.Father = Hero.MainHero.Spouse;
-                    else
-                        hero.Mother = Hero.MainHero.Father;
-                    Helper.Print(string.Format("Patch Parent of {0}", hero.Name), Helper.PRINT_PATCH);
-                }
-                if (hero.Father == null)
-                {
-                    hero.Father = mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    Helper.Print(string.Format("Patch Father of {0}", hero.Name), Helper.PRINT_PATCH);
-                }
-                if (hero.Mother == null)
-                {
-                    hero.Mother = !mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    Helper.Print(string.Format("Patch Mother of {0}", hero.Name), Helper.PRINT_PATCH);
-                }
-            }
         }
 
         public override void OnGameEnd(Game game)

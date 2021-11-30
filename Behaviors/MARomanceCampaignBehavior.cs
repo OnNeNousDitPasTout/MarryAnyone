@@ -1164,6 +1164,54 @@ namespace MarryAnyone.Behaviors
 
             bool bPatchExecute = false;
 
+            if (Hero.MainHero.Spouse != null && Hero.MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled)
+            {
+                Hero.MainHero.Spouse.ChangeState(Hero.CharacterStates.Active);
+                Helper.Print(string.Format("Active {0}", Hero.MainHero.Spouse.Name), Helper.PRINT_PATCH);
+            }
+            foreach (Hero hero in Hero.MainHero.ExSpouses)
+            {
+                if (hero.HeroState == Hero.CharacterStates.Disabled && hero.IsAlive)
+                {
+                    hero.ChangeState(Hero.CharacterStates.Active);
+                    Helper.Print(string.Format("Active {0}", hero.Name), Helper.PRINT_PATCH);
+
+                }
+            }
+
+            // Parent patch
+            bool hadSpouse = Hero.MainHero.Spouse != null;
+            bool mainHeroIsFemale = Hero.MainHero.IsFemale;
+
+            //foreach (Hero hero in Hero.MainHero.Children)
+            int i = 0;
+            while (i < Hero.MainHero.Children.Count)
+            {
+                Hero hero = Hero.MainHero.Children[i];
+                if (hadSpouse && hero.Father == Hero.MainHero && hero.Mother == Hero.MainHero)
+                {
+                    Helper.Print(string.Format("Will Patch Parent of {0}", hero.Name), Helper.PRINT_PATCH);
+                    if (mainHeroIsFemale)
+                        hero.Father = Hero.MainHero.Spouse;
+                    else
+                        hero.Mother = Hero.MainHero.Spouse;
+                    i--;
+                }
+                if (hero.Father == null)
+                {
+                    Helper.Print(string.Format("Will patch Father of {0}", hero.Name), Helper.PRINT_PATCH);
+                    hero.Father = mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
+                    i--;
+                }
+                if (hero.Mother == null)
+                {
+                    Helper.Print(string.Format("Will patch Mother of {0}", hero.Name), Helper.PRINT_PATCH);
+                    hero.Mother = !mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
+                    i--;
+                }
+                i++;
+            }
+
             List<Hero> spouses = new List<Hero>();
             if (Hero.MainHero.Spouse != null)
             {

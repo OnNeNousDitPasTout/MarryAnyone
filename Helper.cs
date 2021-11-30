@@ -50,6 +50,7 @@ namespace MarryAnyone
             PrintToLogAndWriteAndForceDisplay = 14,
             CanInitLogPath = 16,
             PrintToLogAndWriteAndInit = 12 | CanInitLogPath,
+            PrintToLogAndWriteAndInitAndForceDisplay = PrintToLogAndWriteAndForceDisplay | CanInitLogPath
         }
 
         public enum Etape
@@ -88,7 +89,7 @@ namespace MarryAnyone
 #endif
 
 #if TRACELOAD
-        public const PrintHow PRINT_PATCH = PrintHow.PrintToLogAndWriteAndDisplay;
+        public const PrintHow PRINT_PATCH = PrintHow.PrintToLogAndWriteAndInitAndForceDisplay;
 #else
         public const PrintHow PRINT_PATCH = PrintHow.PrintToLogAndWrite;
 #endif
