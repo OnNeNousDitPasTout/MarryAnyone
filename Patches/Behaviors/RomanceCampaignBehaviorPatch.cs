@@ -156,11 +156,11 @@ namespace MarryAnyone.Patches.Behaviors
             {
                 if (romanceLevel == Romance.RomanceLevelEnum.Ended)
                     Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero);
-
                 remove = 2;
+                newRomanceLevel = Romance.RomanceLevelEnum.CourtshipStarted;
             }
             else if (romanceLevel == Romance.RomanceLevelEnum.FailedInPracticalities) {
-                remove = 2;
+                remove = 3;
                 newRomanceLevel = Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible;
             }
 
@@ -169,6 +169,10 @@ namespace MarryAnyone.Patches.Behaviors
                 Helper.Print(string.Format("conversation_player_opens_courtship_on_consequence::Remove 2 of relation with {0}", Hero.OneToOneConversationHero), Helper.PRINT_TRACE_ROMANCE);
                 ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, -remove, false, true);
             }
+
+            Helper.Print(string.Format("Romance new level swap to {0}", newRomanceLevel), Helper.PrintHow.PrintDisplay | Helper.PrintHow.PrintToLogAndWrite);
+            ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, newRomanceLevel);
+
             return;
         }
 
