@@ -3,7 +3,7 @@
 	<!-- Marry Anyone -->
   <PropertyGroup>
 		<ModuleName>$(MSBuildProjectName)</ModuleName>
-		<Version>2.5.6</Version>
+		<Version>2.5.7</Version>
 		<Authors>RoGreat, GrandesMarees</Authors>
 	</PropertyGroup>
 	
@@ -46,7 +46,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <!-- <DefineConstants>TRACE,DEBUG,V2,V1640,TRACELOAD,TRACELOCATION,TRACEROMANCE,TRACECREATECLAN</DefineConstants>
 	  <DefineConstants>RELEASE,V4,V1640,V1640MORE,V1650LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANT_MA_UPPER,TRACELOAD,TRACEROMANCE,TRACEWEDDING</DefineConstants> -->
-	  <DefineConstants>TRACE,DEBUG,V2,V1650,V1640MORE,TRACEROMANCE,TRACEROMANCEISSUITABLE</DefineConstants>
+	  <DefineConstants>TRACE,DEBUG,V2,V1650,V1640MORE,TRACEROMANCE,TRACEROMANCEISSUITABLE,TRACKTOMUCHSPOUSE</DefineConstants>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -54,7 +54,7 @@
     <DefineConstants>RELEASE,V1620,V2,V1650LESS</DefineConstants>
 	  <DefineConstants>RELEASE,V1620,V2,V1650LESS</DefineConstants>
 	  <DefineConstants>RELEASE,V2,V1640,V1640MORE,TRACELOAD,TRACECREATECLAN,TRACEROMANCE</DefineConstants>-->
-	  <DefineConstants>RELEASE,V4,V1640,V1640MORE,V1650LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANT_MA_UPPER,TRACELOAD,TRACEPATCH</DefineConstants>
+	  <DefineConstants>RELEASE,V4,V1640,V1640MORE,V1650LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANT_MA_UPPER,TRACELOAD,TRACEPATCH,TRACKTOMUCHSPOUSE,TRACEPREGNANCY</DefineConstants>
 	  <!--<DefineConstants>RELEASE,V4,V1650,V1640MORE,V1650MORE,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANT_MA_UPPER,TRACELOAD,TRACEPATCH</DefineConstants> -->
   </PropertyGroup>
 

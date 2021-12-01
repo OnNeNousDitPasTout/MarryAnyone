@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MarryAnyone.Behaviors;
 using TaleWorlds.CampaignSystem;
 
 namespace MarryAnyone.Patches
@@ -8,10 +9,19 @@ namespace MarryAnyone.Patches
     {
         private static bool Prefix()
         {
+
+#if TRACKTOMUCHSPOUSE
+            MARomanceCampaignBehavior.VerifySpoue(0, string.Format("LeaveEncounter with {0}", (Hero.OneToOneConversationHero != null ? Hero.OneToOneConversationHero.Name.ToString() : "NULL")));
+#endif
+
             if (Hero.OneToOneConversationHero is not null)
             {
                 if (Hero.OneToOneConversationHero.PartyBelongedTo == MobileParty.MainParty)
                 {
+#if TRACKTOMUCHSPOUSE
+                    Helper.Print(string.Format("Don't leave {0}", Hero.OneToOneConversationHero.Name), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+#endif
+
                     return false;
                 }
             }

@@ -14,6 +14,7 @@ using System.Linq;
 using TaleWorlds.CampaignSystem.Actions;
 using static MarryAnyone.Helper;
 using MarryAnyone.Patches;
+using MarryAnyone.Helpers;
 
 namespace MarryAnyone
 {
@@ -139,6 +140,10 @@ namespace MarryAnyone
 
             Instance = null;
             _campaignGameStarter = null;
+
+#if TRACKTOMUCHSPOUSE
+            TrackTooMuchSpouse.Instance().Dispose();
+#endif
 
             base.OnGameEnd(game);
             Helper.LogClose();

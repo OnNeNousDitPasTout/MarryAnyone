@@ -127,6 +127,40 @@ namespace MarryAnyone.Behaviors
         }
         #endregion
 
+        #if TRACKTOMUCHSPOUSE
+
+        public List<Hero> Spouses
+        {
+            get 
+            {
+                List<Hero> spouses = Hero.MainHero.ExSpouses.ToList();
+                if (Hero.MainHero.Spouse != null)
+                    spouses.Add(Hero.MainHero.Spouse);
+
+                if (Partners != null)
+                    spouses.RemoveAll(x => Partners.IndexOf(x) >= 0);
+
+                if (NoMoreSpouse != null)
+                    spouses.RemoveAll(x => NoMoreSpouse.IndexOf(x) >= 0);
+
+                return spouses;
+            }
+        }
+
+        public static void VerifySpoue(int diff, string prefix)
+        {
+
+            if (Instance != null)
+            {
+                List<Hero> spouses = Instance.Spouses;
+                if (TrackTooMuchSpouse.Instance().Verify(spouses, diff, prefix))
+                {
+                    TrackTooMuchSpouse.Instance().Validate(spouses);
+                }
+            }
+        }
+        #endif
+
         #region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
@@ -1109,7 +1143,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#region chargements et patch
+        #region chargements et patch
 
         private void patchClanLeader(Clan clan)
         {
@@ -1264,6 +1298,10 @@ namespace MarryAnyone.Behaviors
                 }
             }
 
+#if TRACKTOMUCHSPOUSE
+            TrackTooMuchSpouse.Instance().Initialise(Spouses);
+#endif
+
             foreach (Clan clan in Clan.FindAll(c => c.IsClan))
             {
                 if (clan.Leader != null && SpouseOfPlayer(clan.Leader))
@@ -1326,12 +1364,11 @@ namespace MarryAnyone.Behaviors
 
 #if TRACELOAD
             Version version = Helper.VersionGet;
-            Version versionTest = new Version(4, 5, 3);
-            Helper.Print(String.Format("MARomanceCampaignBehavior::OnSessionLaunched Assembly version ?= {0} Save ?= {1} test ?= {2}, compare ?= {3}"
+            //Version versionTest = new Version(4, 5, 3);
+            Helper.Print(String.Format("MARomanceCampaignBehavior::OnSessionLaunched Assembly version ?= {0} Save ?= {1}, compare ?= {2}"
                             , version.ToString()
                             , (SaveVersion == null ? "NULL" : SaveVersion.ToString())
-                            , versionTest.ToString()
-                            , (version.CompareTo(versionTest).ToString())), Helper.PRINT_TRACE_LOAD) ;
+                            , (SaveVersion != null ? version.CompareTo(SaveVersion).ToString() : "No Comparison")), Helper.PRINT_TRACE_LOAD) ;
 
             if (Hero.MainHero.Siblings != null)
             {
@@ -1401,6 +1438,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-#endregion
+        #endregion
     }
 }

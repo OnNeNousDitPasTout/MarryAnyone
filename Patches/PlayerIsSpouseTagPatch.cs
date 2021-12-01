@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MarryAnyone.Behaviors;
 using System;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Conversation.Tags;
@@ -16,7 +17,11 @@ namespace MarryAnyone.Patches
             {
                 return;
             }
-            __result = character.IsHero && Hero.MainHero.ExSpouses.Contains(character.HeroObject);
+            //__result = character.IsHero && Hero.MainHero.ExSpouses.Contains(character.HeroObject);
+            if (MARomanceCampaignBehavior.Instance != null && character.IsHero)
+                __result = MARomanceCampaignBehavior.Instance.SpouseOfPlayer(character.HeroObject);
+            else
+                __result = false;
         }
     }
 }

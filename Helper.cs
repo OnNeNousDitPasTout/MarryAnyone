@@ -256,9 +256,24 @@ namespace MarryAnyone
             Log(message, "ERROR");
         }
 
+        private static int NbSpouse(Hero hero)
+        {
+            return (hero.Spouse != null ? 1 : 0) + hero.ExSpouses.Count;
+        }
+
         // completelyRemove : remove all spouse alive
         public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false)
         {
+
+//#if TRACKTOMUCHSPOUSE
+//            String aff = String.Format("RemoveExSpouses for Hero {0} NbSpouse ?= {1} completelyRemove ?= {2} NbOtherSpouse ?= {3} withMainHero ?= {4}"
+//                                        , hero.Name.ToString()
+//                                        , NbSpouse(hero).ToString()
+//                                        , completelyRemove.ToString()
+//                                        , (otherSpouse == null ? 0 : otherSpouse.Count.ToString())
+//                                        , withMainHero);
+//#endif
+
             FieldInfo _exSpouses = AccessTools.Field(typeof(Hero), "_exSpouses");
             List<Hero> _exSpousesList = (List<Hero>)_exSpouses.GetValue(hero);
             FieldInfo ExSpouses = AccessTools.Field(typeof(Hero), "ExSpouses");
@@ -308,9 +323,15 @@ namespace MarryAnyone
                     _exSpousesList.Remove(hero);
             }
 
-            MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
             _exSpouses.SetValue(hero, _exSpousesList);
+
+            MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
             ExSpouses.SetValue(hero, ExSpousesReadOnlyList);
+
+//#if TRACKTOMUCHSPOUSE
+//            Helper.Print(String.Format("RemoveExSpouses {0}\r\n\t=> Spouses {1}", aff, hero.ExSpouses?.Count), Helper.PrintHow.PrintToLogAndWrite);
+//#endif
+
         }
 
         public static void RemoveDuplicatedHero()
