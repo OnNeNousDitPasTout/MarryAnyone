@@ -172,7 +172,7 @@ namespace MarryAnyone.Patches.Helpers
 
         private static TextObject SpousesSpouse(Hero spouse, Hero queriedHero)
         {
-            ISettingsProvider settings = new MASettings();
+            //ISettingsProvider settings = new MASettings();
             // Find out spouse's gender
             // Male spouse
             if (!spouse.IsFemale)
@@ -181,16 +181,16 @@ namespace MarryAnyone.Patches.Helpers
                 if (!queriedHero.IsFemale)
                 {
                     // Male other spouse
-                    return settings.Polyamory ? FindText("str_husband") : FindText("str_husbands_husband");
+                    return Helper.MASettings.Polyamory ? FindText("str_husband") : FindText("str_husbands_husband");
                 }
                 // Female other spouse
-                return settings.Polyamory ? FindText("str_wife") : FindText("str_husbands_wife");
+                return Helper.MASettings.Polyamory ? FindText("str_wife") : FindText("str_husbands_wife");
             }
             if (!queriedHero.IsFemale)
             {
-                return settings.Polyamory ? FindText("str_husband") : FindText("str_wifes_husband");
+                return Helper.MASettings.Polyamory ? FindText("str_husband") : FindText("str_wifes_husband");
             }
-            return settings.Polyamory ? FindText("str_wife") : FindText("str_wifes_wife");
+            return Helper.MASettings.Polyamory ? FindText("str_wife") : FindText("str_wifes_wife");
         }
     }
 }

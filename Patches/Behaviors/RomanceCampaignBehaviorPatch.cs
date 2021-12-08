@@ -62,7 +62,10 @@ namespace MarryAnyone.Patches.Behaviors
             Romance.RomanceLevelEnum romanceLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
 
 #if TRACEROMANCE
-            Helper.Print("Couple suitable for mariage: " + MADefaultMarriageModel.IsCoupleSuitableForMarriageStatic(Hero.MainHero, Hero.OneToOneConversationHero, canCheat).ToString(), Helper.PRINT_TRACE_ROMANCE);
+            Helper.Print(String.Format("Couple suitable for mariage: {0}\r\n\tbetween{1} and {2} areMarried {3}"
+                        ,MADefaultMarriageModel.IsCoupleSuitableForMarriageStatic(Hero.MainHero, Hero.OneToOneConversationHero, canCheat).ToString()
+                        , Hero.MainHero.Name, Hero.OneToOneConversationHero.Name, areMarried), Helper.PRINT_TRACE_ROMANCE);
+
             Helper.Print("Courtship Possible: " + Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, Hero.OneToOneConversationHero).ToString(), Helper.PRINT_TRACE_ROMANCE);
             Helper.Print("Romantic Level: " + Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero).ToString(), Helper.PRINT_TRACE_ROMANCE);
             Helper.Print("Retry Courtship: " + Helper.MASettings.RetryCourtship.ToString(), Helper.PRINT_TRACE_ROMANCE);

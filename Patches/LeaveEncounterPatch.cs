@@ -11,7 +11,7 @@ namespace MarryAnyone.Patches
         {
 
 #if TRACKTOMUCHSPOUSE
-            MARomanceCampaignBehavior.VerifySpoue(0, string.Format("LeaveEncounter with {0}", (Hero.OneToOneConversationHero != null ? Hero.OneToOneConversationHero.Name.ToString() : "NULL")));
+            MARomanceCampaignBehavior.VerifySpouse(0, string.Format("LeaveEncounter with {0}", (Hero.OneToOneConversationHero != null ? Hero.OneToOneConversationHero.Name.ToString() : "NULL")));
 #endif
 
             if (Hero.OneToOneConversationHero is not null)

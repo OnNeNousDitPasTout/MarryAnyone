@@ -121,10 +121,19 @@ namespace PatchViaHarmony.Patches
 
 			Helper.Print(aff, Helper.PrintHow.PrintForceDisplay);
 #endif
-
+			
 #if V1650MORE
-			MethodInfo methodInfoCanNpcJoinTournament = typeof(TournamentGame).GetMethod("CanNpcJoinTournament", BindingFlags.NonPublic);
-			MethodInfo methodInfoSortTournamentParticipants = typeof(TournamentGame).GetMethod("SortTournamentParticipants", BindingFlags.NonPublic);
+			MethodInfo methodInfoCanNpcJoinTournament =
+					//AccessTools.Method(typeof(TournamentGame), "CanNpcJoinTournament", new Type[] { typeof(Hero), typeof(List<CharacterObject>), typeof(bool) });
+					//typeof(TournamentGame).GetMethod("CanNpcJoinTournament", BindingFlags.NonPublic | BindingFlags.Instance | );
+					__instance.GetType().GetMethod("CanNpcJoinTournament", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (methodInfoCanNpcJoinTournament == null)
+				throw new Exception("CanNpcJoinTournament inacessible");
+			MethodInfo methodInfoSortTournamentParticipants =
+					AccessTools.Method(__instance.GetType(), "SortTournamentParticipants", new Type[] { typeof(List<CharacterObject>)});
+					// typeof(TournamentGame).GetMethod("SortTournamentParticipants", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (methodInfoSortTournamentParticipants == null)
+				throw new Exception("methodInfoSortTournamentParticipants inacessible");
 #else
 			MethodInfo methodInfoCanNpcJoinTournament = typeof(TournamentGame).GetMethod("CanNpcJoinTournament", BindingFlags.Static | BindingFlags.NonPublic);
 			MethodInfo methodInfoSortTournamentParticipants = typeof(TournamentGame).GetMethod("SortTournamentParticipants", BindingFlags.Static | BindingFlags.NonPublic);

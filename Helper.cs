@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MarryAnyone.Patches;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
@@ -258,25 +259,41 @@ namespace MarryAnyone
 
         private static int NbSpouse(Hero hero)
         {
+#if TRACEEXSPOUSE
+            return (hero.Spouse != null ? 1 : 0) + HeroPatch.HeroExspouses(hero).Count;
+#else
             return (hero.Spouse != null ? 1 : 0) + hero.ExSpouses.Count;
+#endif
         }
 
         // completelyRemove : remove all spouse alive
-        public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false)
+        public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false, Hero removeHero = null)
         {
 
-//#if TRACKTOMUCHSPOUSE
-//            String aff = String.Format("RemoveExSpouses for Hero {0} NbSpouse ?= {1} completelyRemove ?= {2} NbOtherSpouse ?= {3} withMainHero ?= {4}"
-//                                        , hero.Name.ToString()
-//                                        , NbSpouse(hero).ToString()
-//                                        , completelyRemove.ToString()
-//                                        , (otherSpouse == null ? 0 : otherSpouse.Count.ToString())
-//                                        , withMainHero);
-//#endif
+            //#if TRACKTOMUCHSPOUSE
+            //            String aff = String.Format("RemoveExSpouses for Hero {0} NbSpouse ?= {1} completelyRemove ?= {2} NbOtherSpouse ?= {3} withMainHero ?= {4}"
+            //                                        , hero.Name.ToString()
+            //                                        , NbSpouse(hero).ToString()
+            //                                        , completelyRemove.ToString()
+            //                                        , (otherSpouse == null ? 0 : otherSpouse.Count.ToString())
+            //                                        , withMainHero);
+            //#endif
+
+
+#if TRACEEXSPOUSE
+            HeroPatch.heroJustifie = hero;
+#endif
 
             FieldInfo _exSpouses = AccessTools.Field(typeof(Hero), "_exSpouses");
             List<Hero> _exSpousesList = (List<Hero>)_exSpouses.GetValue(hero);
             FieldInfo ExSpouses = AccessTools.Field(typeof(Hero), "ExSpouses");
+
+            if (removeHero != null && hero.Spouse == removeHero)
+            {
+                hero.Spouse = null;
+                if (Romance.GetRomanticLevel(hero, removeHero) == Romance.RomanceLevelEnum.Marriage)
+                    Helpers.Util.CleanRomance(hero, removeHero, Romance.RomanceLevelEnum.Ended);
+            }
 
             if (completelyRemove)
             {
@@ -290,6 +307,9 @@ namespace MarryAnyone
                 {
                     _exSpousesList.Remove(exSpouse);
                 }
+
+                if (removeHero != null)
+                    _exSpousesList.Remove(removeHero);
             }
             else
             {
@@ -321,11 +341,16 @@ namespace MarryAnyone
 
                 while (_exSpousesList.Contains(hero))
                     _exSpousesList.Remove(hero);
+
+                if (removeHero != null)
+                    while (_exSpousesList.Contains(removeHero))
+                        _exSpousesList.Remove(removeHero);
             }
 
             _exSpouses.SetValue(hero, _exSpousesList);
 
-            MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
+            //MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
+            MBReadOnlyList<Hero> ExSpousesReadOnlyList = _exSpousesList.GetReadOnlyList<Hero>();
             ExSpouses.SetValue(hero, ExSpousesReadOnlyList);
 
 //#if TRACKTOMUCHSPOUSE
@@ -366,7 +391,7 @@ namespace MarryAnyone
         {
             if (character.Occupation != Occupation.Lord)
             {
-#if V1640MORE 
+#if V1640MORE
                 Hero hero = character.HeroObject;
                 if (hero != null)
                 {
@@ -665,7 +690,8 @@ namespace MarryAnyone
 
             if (!hero.IsAlive)
                 aff += ", DEAD";
-
+            else
+                aff += ", Age " + hero.Age.ToString();
             if (hero.IsDead)
                 aff += ", REALY DEAD";
 
@@ -695,6 +721,13 @@ namespace MarryAnyone
             if (hero.Spouse != null)
                 aff += ", Spouse " + hero.Spouse.Name;
 
+#if TRACEEXSPOUSE
+            if (HeroPatch.HeroExspouses(hero) != null)
+                aff += ", ExSpouses (" + String.Join(",", HeroPatch.HeroExspouses(hero).Select<Hero, String>(x => x.Name.ToString()).ToList()) + ")";
+#else
+            if (hero.ExSpouses != null && hero.ExSpouses.Count > 0)
+                aff += ", ExSpouses (" + String.Join(",", hero.ExSpouses.Select<Hero, String>(x => x.Name.ToString()).ToList()) + ")";
+#endif
             if (hero.CurrentSettlement != null)
                 aff += ", Settlement " + hero.CurrentSettlement.Name;
 
@@ -718,5 +751,5 @@ namespace MarryAnyone
         }
 #endif
 
-    }
+        }
 }

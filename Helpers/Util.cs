@@ -78,18 +78,31 @@ namespace MarryAnyone.Helpers
             if (newRomanceLevel != RomanceLevelEnum.Untested)
             {
                 RomanticState romanticState = null;
-                if (lastRomance == null) {
+#if TRACEPATCH
+                RomanceLevelEnum ancRomanceLevel = RomanceLevelEnum.Untested;
+#endif
+                if (lastRomance == null)
+                {
                     romanticState = new RomanticState();
                     romanticState.Person1 = hero;
                     romanticState.Person2 = otherHero;
                 }
                 else
+                {
                     romanticState = lastRomance;
+#if TRACEPATCH
+                    ancRomanceLevel = lastRomance.Level;
+#endif
+                }
 
+#if OLDBUG
                 romanticState.Level = RomanceLevelEnum.Untested;
-
-                Helper.Print(String.Format("PATCH Romance between {0} and {1} to {2}", hero.Name, otherHero.Name, newRomanceLevel), Helper.PRINT_PATCH);
-
+#else
+                romanticState.Level = newRomanceLevel; // RomanceLevelEnum.Untested;
+#endif
+#if TRACEPATCH
+                Helper.Print(String.Format("PATCH Romance between {0} and {1} swap from {2} to {3}", hero.Name, otherHero.Name, ancRomanceLevel, newRomanceLevel), Helper.PRINT_PATCH);
+#endif
                 Romance.RomanticStateList.Add(romanticState);
             }
 

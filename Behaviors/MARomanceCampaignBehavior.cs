@@ -2,6 +2,7 @@
 using Helpers;
 using MarryAnyone.Helpers;
 using MarryAnyone.Models;
+using MarryAnyone.Patches;
 using MarryAnyone.Patches.Behaviors;
 using MarryAnyone.Settings;
 using System;
@@ -93,7 +94,9 @@ namespace MarryAnyone.Behaviors
 
         public bool SpouseOfPlayer(Hero spouse)
         {
-            return (Hero.MainHero.ExSpouses.IndexOf(spouse) >= 0 && NoMoreSpouse.IndexOf(spouse) < 0);
+            return (Hero.MainHero.Spouse == spouse 
+                    || (Hero.MainHero.ExSpouses.IndexOf(spouse) >= 0 
+                        && NoMoreSpouse.IndexOf(spouse) < 0));
         }
 
         public bool SpouseOrNot(Hero spouseA, Hero spouseB)
@@ -147,7 +150,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        public static void VerifySpoue(int diff, string prefix)
+        public static void VerifySpouse(int diff, string prefix)
         {
 
             if (Instance != null)
@@ -329,13 +332,27 @@ namespace MarryAnyone.Behaviors
                 // And we must have only have one romance status for each relation
                 if (Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero) == Romance.RomanceLevelEnum.Untested)
                 {
+
+#if OLDBUG
                     Helpers.Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero);
+#endif
                     bool areMarried = MARomanceCampaignBehavior.Instance.SpouseOrNot(Hero.MainHero, Hero.OneToOneConversationHero);
                     if (areMarried)
                     {
-                        ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.Ended);
+#if !OLDBUG
+#if PATCHROMANCE
+                        Helpers.Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.Marriage);
+#else
+
+                        Helpers.Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.Eneded);
+#endif
+#endif
                         Helper.Print("PATCH Married New Romantic Level: " + Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero).ToString(), Helper.PRINT_PATCH);
                     }
+#if !OLDBUG
+                    else
+                        Helpers.Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero);
+#endif
                 }
 #if TRACEROMANCE
                 Helper.Print(String.Format("conversation_begin_courtship_for_hero_on_condition with {0} va répondre {1}"
@@ -406,7 +423,7 @@ namespace MarryAnyone.Behaviors
             return ret;
         }
 
-        #region persuasion Cheat
+#region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -551,9 +568,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-        #endregion
+#endregion
 
-        #region persuasion system
+#region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -731,7 +748,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-        #endregion
+#endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1143,7 +1160,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #region chargements et patch
+#region chargements et patch
 
         private void patchClanLeader(Clan clan)
         {
@@ -1213,6 +1230,7 @@ namespace MarryAnyone.Behaviors
         {
 
             bool bPatchExecute = false;
+            int nbMainHero = 0;
 
             if (Hero.MainHero.Spouse != null && Hero.MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled)
             {
@@ -1286,7 +1304,9 @@ namespace MarryAnyone.Behaviors
 #if TRACELOAD
                 if (nb != Hero.MainHero.ExSpouses.Count)
                     Helper.Print(String.Format("Patch duplicate spouse for mainHero from {0} to {1}", nb, Hero.MainHero.ExSpouses.Count), Helper.PRINT_TRACE_LOAD);
+                Helper.Print(String.Format("MainHero {0}", Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_LOAD);
 #endif
+                nbMainHero = nb;
 
                 foreach (Hero hero in Hero.MainHero.ExSpouses)
                 {
@@ -1319,21 +1339,46 @@ namespace MarryAnyone.Behaviors
                     Helper.PatchHeroPlayerClan(hero, false, true);
 
                 int nb = 0;
+#if TRACEEXSPOUSE
+                if (HeroPatch.HeroExspouses(hero) != null)
+                    nb = HeroPatch.HeroExspouses(hero).Count;
+#endif
                 if (hero.ExSpouses != null)
                     nb = hero.ExSpouses.Count;
 
 #if PATCHROMANCE
-                if (Romance.GetRomanticLevel(hero, Hero.MainHero) == Romance.RomanceLevelEnum.Ended)
+                Romance.RomanceLevelEnum romance = Romance.GetRomanticLevel(hero, Hero.MainHero);
+                if (romance == Romance.RomanceLevelEnum.Ended
+                    || romance == Romance.RomanceLevelEnum.Untested)
                 {
                     Helpers.Util.CleanRomance(hero, Hero.MainHero, Romance.RomanceLevelEnum.Marriage);
+                }
+                if (nbMainHero != Hero.MainHero.ExSpouses.Count)
+                {
+#if TRACELOAD
+                    Helper.Print(String.Format("Patch Romance with spouse {2} for mainHero from {0} to {1}\r\n\t=>{3}"
+                                , nbMainHero, Hero.MainHero.ExSpouses.Count
+                                , hero.Name
+                                , Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_LOAD);
+#endif
+                    Helper.RemoveExSpouses(Hero.MainHero, false);
+                    nbMainHero = Hero.MainHero.ExSpouses.Count;
                 }
 #endif
                 Helper.RemoveExSpouses(hero, false, spouses, true);
 #if TRACELOAD
+#if TRACEEXSPOUSE
+                if (nb != HeroPatch.HeroExspouses(hero).Count)
+#else
                 if (nb != hero.ExSpouses.Count)
+#endif
                     Helper.Print(String.Format("Patch duplicate spouse for {2} from {0} to {1}"
                             , nb
+#if TRACEEXSPOUSE
+                            , HeroPatch.HeroExspouses(hero).Count
+#else
                             , hero.ExSpouses.Count
+#endif
                             , hero.Name), Helper.PRINT_TRACE_LOAD);
 #endif
 
@@ -1390,12 +1435,51 @@ namespace MarryAnyone.Behaviors
             foreach (Hero hero in Hero.AllAliveHeroes.ToList())
             {
                 // The old fix for occupations not sticking
-                if (hero.Spouse == Hero.MainHero || Hero.MainHero.ExSpouses.Contains(hero))
+                //if (hero.Spouse == Hero.MainHero || Hero.MainHero.ExSpouses.Contains(hero))
+                //{
+                //    Helper.OccupationToLord(hero.CharacterObject);
+                //    Helper.PatchHeroPlayerClan(hero, false, true);
+                //}
+                String affAncien = null;
+                bool move = false;
+
+                if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
+                    affAncien = Helper.TraceHero(hero);
+
+                if ((hero.Spouse == Hero.MainHero 
+                    || (hero.ExSpouses != null && hero.ExSpouses.Contains(Hero.MainHero)))
+                    && !SpouseOfPlayer(hero))
+                {
+#if TRACEPATCH
+                    Helper.Print(String.Format("Remove MainHero from spouse for hero {0}", hero.Name.ToString()), Helper.PRINT_PATCH);
+#endif
+                    Helper.RemoveExSpouses(hero, false, null, false, Hero.MainHero);
+                    move = true;
+                }
+                else if (SpouseOfPlayer(hero))
                 {
                     Helper.OccupationToLord(hero.CharacterObject);
                     Helper.PatchHeroPlayerClan(hero, false, true);
+                    move = true;
                 }
+#if TRACKTOMUCHSPOUSE
+#if TRACEEXSPOUSE
+                if (HeroPatch.HeroExspouses(hero) != null)
+#else
+                if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
+#endif
+                {
+                    if (affAncien != null && move)
+                        Helper.Print(String.Format("Hero alive {0}\r\n\tfrom {1}", Helper.TraceHero(hero), affAncien), Helper.PRINT_TRACE_LOAD);
+                    else
+                        Helper.Print(String.Format("Hero alive {0}", Helper.TraceHero(hero)), Helper.PRINT_TRACE_LOAD);
+                }
+#endif
             }
+
+#if TRACKTOMUCHSPOUSE
+            MARomanceCampaignBehavior.VerifySpouse(0, "After patch");
+#endif
 
             AddDialogs(campaignGameStarter);
         }
@@ -1438,6 +1522,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-        #endregion
+#endregion
     }
 }

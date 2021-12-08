@@ -367,7 +367,7 @@ namespace MarryAnyone.Patches.Behaviors
             }
 
 #if TRACKTOMUCHSPOUSE
-            MARomanceCampaignBehavior.VerifySpoue(0, String.Format("After DailiTick between {0} and {1}", hero.Name, (spouse != null ? spouse.Name : "NULL")));
+            MARomanceCampaignBehavior.VerifySpouse(0, String.Format("After DailiTick between {0} and {1}", hero.Name, (spouse != null ? spouse.Name : "NULL")));
 #endif
         }
 
