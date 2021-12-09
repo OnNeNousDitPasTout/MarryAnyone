@@ -218,7 +218,8 @@ namespace MarryAnyone
             if (_sw != null)
             {
                 //string version = ModuleInfo.GetModules().Where(x => x.Name == "Tournaments XPanded").FirstOrDefault().Version.ToString();
-                _sw.WriteLine(string.Concat(ModuleNameGet, "(", VersionGet, ") ", prefix != null ? prefix + "" : "", "[", DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"), "]::", text));
+                string prefixCalcule = string.Concat(ModuleNameGet, "(", VersionGet, ") ", prefix != null ? prefix + "" : "", "[", DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"), "]::");
+                _sw.WriteLine(prefixCalcule + text.Replace("\r\n", "\r\n" + prefixCalcule + "\t"));
             }
         }
 
@@ -264,6 +265,11 @@ namespace MarryAnyone
 #else
             return (hero.Spouse != null ? 1 : 0) + hero.ExSpouses.Count;
 #endif
+        }
+
+        public static bool IsSpouseOrExSpouseOf(Hero hero, Hero spouse)
+        {
+            return (hero.Spouse == spouse || (hero.ExSpouses != null && hero.ExSpouses.Contains(spouse)));
         }
 
         // completelyRemove : remove all spouse alive
@@ -324,6 +330,9 @@ namespace MarryAnyone
                     hero.Spouse = Hero.MainHero;
                 }
 
+                if (removeHero != null && hero.Spouse == removeHero)
+                    hero.Spouse = null;
+
                 _exSpousesList = _exSpousesList.Distinct().ToList(); // Get exspouse list without duplicates
 
                 // If exspouse is already a spouse, then remove it
@@ -345,6 +354,15 @@ namespace MarryAnyone
                 if (removeHero != null)
                     while (_exSpousesList.Contains(removeHero))
                         _exSpousesList.Remove(removeHero);
+#if CANHAVESPOUSE
+                if (!withMainHero && otherSpouse == null)
+                {
+                    if (hero.Spouse == null && _exSpousesList.Count > 0 && _exSpousesList[_exSpousesList.Count - 1].Spouse == null)
+                    {
+                        hero.Spouse = _exSpousesList[_exSpousesList.Count - 1];
+                    }
+                }
+#endif
             }
 
             _exSpouses.SetValue(hero, _exSpousesList);
@@ -686,12 +704,12 @@ namespace MarryAnyone
 #if TRACELOAD || TRACEROMANCE || TRACEWEDDING
         public static String TraceHero(Hero hero, String? prefix = null)
         {
-            String aff = (String.IsNullOrWhiteSpace(prefix) ? "" : (prefix + "::")) + hero.Name;
+            String aff = (String.IsNullOrWhiteSpace(prefix) ? "" : (prefix + "::")) + hero.Name + (hero.IsFemale ? "(F)" : "(M)");
 
             if (!hero.IsAlive)
                 aff += ", DEAD";
             else
-                aff += ", Age " + hero.Age.ToString();
+                aff += String.Format(", Age {0:0}", hero.Age);
             if (hero.IsDead)
                 aff += ", REALY DEAD";
 

@@ -94,9 +94,9 @@ namespace MarryAnyone.Behaviors
 
         public bool SpouseOfPlayer(Hero spouse)
         {
-            return (Hero.MainHero.Spouse == spouse 
-                    || (Hero.MainHero.ExSpouses.IndexOf(spouse) >= 0 
-                        && NoMoreSpouse.IndexOf(spouse) < 0));
+            return ((Hero.MainHero.Spouse == spouse 
+                    || Hero.MainHero.ExSpouses.IndexOf(spouse) >= 0)
+                    && (NoMoreSpouse == null || NoMoreSpouse.IndexOf(spouse) < 0));
         }
 
         public bool SpouseOrNot(Hero spouseA, Hero spouseB)
@@ -526,6 +526,10 @@ namespace MarryAnyone.Behaviors
 
             this._allReservations = null;
             ConversationManager.EndPersuasion();
+
+#if TRACKTOMUCHSPOUSE
+            MARomanceCampaignBehavior.VerifySpouse(0, "conversation_characacter_success_to_cheat_go");
+#endif
         }
 
 
@@ -1160,7 +1164,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#region chargements et patch
+        #region chargements et patch
 
         private void patchClanLeader(Clan clan)
         {
@@ -1462,6 +1466,13 @@ namespace MarryAnyone.Behaviors
                     Helper.PatchHeroPlayerClan(hero, false, true);
                     move = true;
                 }
+#if CANHAVESPOUSE
+                else if (hero.Spouse == null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
+                {
+                    Helper.RemoveExSpouses(hero);
+                    move = true;
+                }
+#endif
 #if TRACKTOMUCHSPOUSE
 #if TRACEEXSPOUSE
                 if (HeroPatch.HeroExspouses(hero) != null)
@@ -1522,6 +1533,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-#endregion
+        #endregion
     }
 }

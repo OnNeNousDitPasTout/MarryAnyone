@@ -16,6 +16,89 @@ using static TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper;
 
 namespace MarryAnyone.Patches.Behaviors
 {
+
+    internal class ForHero
+    {
+        public Hero _hero;
+        public Hero? _spouse = null;
+        public Hero? _sauveHeroSpouse = null;
+        public Hero? _sauveSpouseSpouse = null;
+        public bool _wasPregnant = false;
+        public bool _wasSpousePregnant = false;
+        private bool _needRemove = false;
+
+        public bool Swap = false;
+
+
+        public ForHero(Hero hero)
+        {
+            _hero = hero;
+            _wasPregnant = hero.IsPregnant;
+            if (hero.Spouse != null)
+            {
+                _spouse = hero.Spouse;
+                _wasSpousePregnant = hero.Spouse.IsPregnant;
+            }
+        }
+
+
+        public void SwapSpouse(Hero spouse)
+        {
+            if (spouse != _hero.Spouse) {
+                Swap = true;
+                _sauveHeroSpouse = _hero.Spouse;
+                _sauveSpouseSpouse = null;
+                _spouse = spouse;
+                if (_spouse != null)
+                {
+                    if (_hero == Hero.MainHero)
+                        _needRemove = !Helper.IsSpouseOrExSpouseOf(_hero, _spouse);
+                    else
+                        _needRemove = !Helper.IsSpouseOrExSpouseOf(_spouse, _hero);
+
+                    _sauveSpouseSpouse = _spouse.Spouse;
+                    _spouse.Spouse = _hero;
+                    _wasSpousePregnant = _spouse.IsPregnant;
+                }
+                else
+                {
+                    _sauveSpouseSpouse = null;
+                    _wasSpousePregnant = false;
+                }
+                _hero.Spouse = _spouse;
+            }
+        }
+        public void UnSwap()
+        {
+            if (Swap)
+            {
+                if (_spouse != null)
+                {
+                    _spouse.Spouse = _sauveSpouseSpouse;
+                    Helper.RemoveExSpouses(_spouse, removeHero: (_needRemove ? _hero : null));
+
+                    if (_sauveSpouseSpouse != null)
+                        Helper.RemoveExSpouses(_sauveSpouseSpouse);
+                }
+                _hero.Spouse = _sauveHeroSpouse;
+                Helper.RemoveExSpouses(_hero, removeHero: (_needRemove ? _spouse : null));
+
+                if (_sauveHeroSpouse != null)
+                    Helper.RemoveExSpouses(_sauveHeroSpouse);
+#if TRACEPREGNANCY
+                Helper.Print(String.Format("UnSwap:: _needRemove ?= {1} Hero {0}", Helper.TraceHero(_hero), _needRemove), Helper.PRINT_TRACE_PREGNANCY);
+                if (_spouse != null)
+                    Helper.Print(String.Format("UnSwap:: _needRemove ?= {1} spouse {0}", Helper.TraceHero(_spouse), _needRemove), Helper.PRINT_TRACE_PREGNANCY);
+
+                if (_sauveHeroSpouse != null && _sauveHeroSpouse != _spouse)
+                    Helper.Print(String.Format("UnSwap:: _sauveHeroSpouse {0}", Helper.TraceHero(_sauveHeroSpouse)), Helper.PRINT_TRACE_PREGNANCY);
+#endif
+                Swap = false;
+            }
+        }
+
+    }
+
     // Add in a setting for enabling polyamory so it does not have to be a harem
     [HarmonyPatch(typeof(PregnancyCampaignBehavior))]
     internal static class PregnancyCampaignBehaviorPatch
@@ -23,9 +106,8 @@ namespace MarryAnyone.Patches.Behaviors
 
         private static List<Hero>? _spouses;
         private static Hero? _sideFemaleHero;
-        private static Hero? _sauveSpouse;
-        private static bool _wasPregnant = false;
         private static bool _playerRelation = false;
+        private static ForHero? _forHero = null;
 #if TRACEPREGNANCY
         private static bool _needTrace = false;
 #endif
@@ -59,10 +141,12 @@ namespace MarryAnyone.Patches.Behaviors
         [HarmonyPrefix]
         private static void DailyTickHeroPrefix(Hero hero)
         {
+            if (_forHero != null && _forHero.Swap)
+                _forHero.UnSwap();
+
+            _forHero = new ForHero(hero);
             _spouses = null;
             _sideFemaleHero = null;
-            _sauveSpouse = hero.Spouse;
-            _wasPregnant = hero.IsPregnant;
             _playerRelation = false;
 #if TRACEPREGNANCY
             _needTrace = false;
@@ -95,7 +179,9 @@ namespace MarryAnyone.Patches.Behaviors
                     if ((isPartner || Hero.MainHero.ExSpouses.Contains(hero)) && okToDoIt(hero, Hero.MainHero) && hero.CurrentSettlement == Hero.MainHero.CurrentSettlement)
                     {
 #if TRACEPREGNANCY
-                        Helper.Print(string.Format("DailyTickHero::{0} ISPartener or exSpouse add mainHero", hero.Name), Helper.PRINT_TRACE_PREGNANCY);
+                        Helper.Print(string.Format("DailyTickHero::{0} ISPartener or exSpouse add mainHero\r\n=>{1}"
+                                                    , hero.Name
+                                                    , Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                         _spouses.Add(Hero.MainHero);
 
@@ -175,7 +261,8 @@ namespace MarryAnyone.Patches.Behaviors
                     }
                 }
 
-                if (_spouses != null && _spouses.Count() > 1)
+                int i = -1;
+                if (_spouses != null && _spouses.Count > 1)
                 {
                     // The shuffle!
                     List<int> attractionGoal = new();
@@ -192,7 +279,7 @@ namespace MarryAnyone.Patches.Behaviors
                     }
                     int attractionRandom = MBRandom.RandomInt(attraction);
                     Helper.Print("Random: " + attractionRandom, Helper.PRINT_TRACE_PREGNANCY);
-                    int i = 0;
+                    i = 0;
                     while (i < _spouses.Count)
                     {
                         if (attractionRandom <= attractionGoal[i])
@@ -204,20 +291,30 @@ namespace MarryAnyone.Patches.Behaviors
                         }
                         i++;
                     }
-                    hero.Spouse = _spouses[i];
-                    _spouses[i].Spouse = hero;
                 }
                 else if (_spouses != null && _spouses.Count() == 1)
+                    i = 0;
+
+                if (i >= 0) 
                 {
-                    Hero spouse = _spouses[0];
-                    hero.Spouse = spouse;
-                    spouse.Spouse = hero;
+                    if (i >= _spouses.Count) i = _spouses.Count - 1; // Sécurity
+#if TRACKTOMUCHSPOUSE
+                    Helper.Print(String.Format("Will swap between {0} \r\nand {1}", Helper.TraceHero(hero), Helper.TraceHero(_spouses[i])), Helper.PrintHow.PrintToLogAndWrite);
+#endif
+                    _forHero.SwapSpouse(_spouses[i]);
                 }
                 else
                 {
                     hero.Spouse = null;
                 }
             }
+//#if TRACEPREGNANCY
+//            else
+//            {
+//                Helper.Print(string.Format("DailyTickHero:: avoid for {0}", Helper.TraceHero(hero)), Helper.PRINT_TRACE_PREGNANCY);
+//                _needTrace = true;
+//            }
+//#endif
 
             // Outside of female pregnancy behavior
             if (hero.Spouse is not null)
@@ -247,24 +344,36 @@ namespace MarryAnyone.Patches.Behaviors
 #if TRACEPREGNANCY
             String traceAff = "";
 #endif
-            if (Helper.MASettings.ImproveRelation && hero != null && (hero.Spouse != null || _sideFemaleHero != null))
+
+            if (hero.Spouse == null && _sideFemaleHero != null)
+                hero.Spouse = _sideFemaleHero;
+
+            bool forHeroOk = _forHero != null && _forHero._hero == hero && _forHero._spouse == hero.Spouse;
+
+            Hero ? otherMainHero = null;
+            if (hero == Hero.MainHero)
+                otherMainHero = hero.Spouse;
+            else if (hero.Spouse == Hero.MainHero)
+                otherMainHero = hero;
+
+            bool justPregnant = false;
+
+            if (Helper.MASettings.ImproveRelation && hero != null && hero.Spouse != null)
             {
-                if (_sideFemaleHero == null)
-                    _sideFemaleHero = hero.Spouse;
 
                 bool needNotify = _playerRelation;
                 if (needNotify && !Helper.MASettings.NotifyRelationImprovementWithinFamily)
-                    needNotify = (hero == Hero.MainHero) || (_sideFemaleHero == Hero.MainHero);
+                    needNotify = otherMainHero != null;
 
 
-                bool justPregnant = hero.IsPregnant && !_wasPregnant;
+                justPregnant = hero.IsPregnant && forHeroOk && !_forHero._wasPregnant;
                 int relationChange = 0;
                 float zeroAUn = MBRandom.RandomFloat;
 
-                int relactionActuelle = hero.GetRelation(_sideFemaleHero);
-                int compatible = (Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Calculating)
-                                + Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Generosity) * 3
-                                + Helper.TraitCompatibility(hero, _sideFemaleHero, DefaultTraits.Valor)) / 2; // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
+                int relactionActuelle = hero.GetRelation(hero.Spouse);
+                int compatible = (Helper.TraitCompatibility(hero, hero.Spouse, DefaultTraits.Calculating)
+                                + Helper.TraitCompatibility(hero, hero.Spouse, DefaultTraits.Generosity) * 3
+                                + Helper.TraitCompatibility(hero, hero.Spouse, DefaultTraits.Valor)) / 2; // TaleWorlds.CampaignSystem.Conversation.Tags.ConversationTagHelper.TraitCompatibility(hero, otherHero, DefaultTraits.Calculating)
 
 #if TRACEPREGNANCY
                 traceAff = String.Format("relactionActuelle ?= {0}, compatible ?= {1} zeroAUn ?= {2}", relactionActuelle, compatible, zeroAUn);
@@ -293,7 +402,7 @@ namespace MarryAnyone.Patches.Behaviors
                     if (needNotify)
                     {
                         StringHelpers.SetCharacterProperties("HEROONE", hero.CharacterObject);
-                        StringHelpers.SetCharacterProperties("HEROTOW", _sideFemaleHero.CharacterObject);
+                        StringHelpers.SetCharacterProperties("HEROTOW", hero.Spouse.CharacterObject);
                         MBTextManager.SetTextVariable("INCREMENT", relationChange);
                         if (justPregnant)
                         {
@@ -308,63 +417,39 @@ namespace MarryAnyone.Patches.Behaviors
                     }
 
                     if (relationChange != 0) 
-                        ChangeRelationAction.ApplyRelationChangeBetweenHeroes(hero, _sideFemaleHero, relationChange, false);
+                        ChangeRelationAction.ApplyRelationChangeBetweenHeroes(hero, hero.Spouse, relationChange, false);
                 }
             }
 
 #if TRACEPREGNANCY
-            if (_needTrace)
-            {
-                bool justPregnant = hero.IsPregnant && !_wasPregnant;
+            justPregnant = hero.IsPregnant && forHeroOk && !_forHero._wasPregnant;
+            if (_needTrace || justPregnant)
                 Helper.Print(String.Format("Post Pregnancy Hero {0} justPregnant ?= {1}\r\n{2}", hero.Name, justPregnant, traceAff), Helper.PRINT_TRACE_PREGNANCY);
-            }
+
+            justPregnant = hero.Spouse != null && hero.Spouse.IsPregnant && forHeroOk && !_forHero._wasSpousePregnant;
+            if (_needTrace || justPregnant)
+                Helper.Print(String.Format("Post Pregnancy Spouse {0} justPregnant ?= {1}", hero.Name, justPregnant), Helper.PRINT_TRACE_PREGNANCY);
+
 #endif
-            bool areMarriedWithMainHero = false;
-            if (hero != null && hero.Spouse != null)
-                areMarriedWithMainHero = MARomanceCampaignBehavior.Instance != null
-                        && MARomanceCampaignBehavior.Instance.SpouseOrNot(hero, hero.Spouse);
+            //bool areMarriedWithMainHero = false;
+            //bool isPartner = false;
+            //if (otherMainHero != null && MARomanceCampaignBehavior.Instance != null)
+            //{
+            //    areMarriedWithMainHero = MARomanceCampaignBehavior.Instance.SpouseOfPlayer(otherMainHero);
+            //    isPartner =  MARomanceCampaignBehavior.Instance.Partners != null
+            //                && (MARomanceCampaignBehavior.Instance.Partners.Contains(otherMainHero));
 
-            if (hero == Hero.MainHero)
-            {
-#if TRACEPREGNANCY
-                Helper.Print(string.Format("Post Pregnancy main hero {0} IsPregnant {1} Check unassigne spouse", hero.Name, hero.IsPregnant), Helper.PRINT_TRACE_PREGNANCY);
-#endif
-                hero.Spouse = null;
-            }
+            //}
 
-            bool isPartner = MARomanceCampaignBehavior.Instance != null
-                                    && MARomanceCampaignBehavior.Instance.Partners != null
-                                    && MARomanceCampaignBehavior.Instance.Partners.Contains(hero);
+            if (_forHero != null)
+                _forHero.UnSwap();
 
-            if (areMarriedWithMainHero && !isPartner)
-            {
-#if TRACEPREGNANCY
-                Helper.Print(string.Format("Post Pregnancy {0} IsPregnant {1} ", hero.Name, hero.IsPregnant), Helper.PRINT_TRACE_PREGNANCY | Helper.PrintHow.UpdateLog);
-#endif
-                if (hero.Spouse is null || hero.Spouse != Hero.MainHero)
-                {
-#if TRACEPREGNANCY
-                    Helper.Print("   Spouse is Main Hero", Helper.PRINT_TRACE_PREGNANCY);
-#endif
-                    if (!Helper.MASettings.Polyamory)
-                    {
-                        // Remove any extra duplicate exspouses
-                        Helper.RemoveExSpouses(hero, true);
-                    }
-                    hero.Spouse = Hero.MainHero;
-                }
-            }
-            else if (hero != Hero.MainHero)
-            {
-                hero.Spouse = _sauveSpouse;
-            }
-
-            Helper.RemoveExSpouses(hero);
-
-            foreach (Hero exSpouse in hero.ExSpouses.ToList())
-            {
-                Helper.RemoveExSpouses(exSpouse);
-            }
+            _forHero = null;
+            //Helper.RemoveExSpouses(hero);
+            //foreach (Hero exSpouse in hero.ExSpouses.ToList())
+            //{
+            //    Helper.RemoveExSpouses(exSpouse);
+            //}
 
 #if TRACKTOMUCHSPOUSE
             MARomanceCampaignBehavior.VerifySpouse(0, String.Format("After DailiTick between {0} and {1}", hero.Name, (spouse != null ? spouse.Name : "NULL")));
