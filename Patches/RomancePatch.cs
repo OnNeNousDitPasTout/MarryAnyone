@@ -76,6 +76,7 @@ namespace MarryAnyone.Patches
                 }
             }
 
+#if !SPOUSEALLWAYSWITHYOU
             if (forHero == Hero.MainHero && forHero.Spouse != null) {
 #if TRACEROMANCE
                 Helper.Print(String.Format("EndAllCourtshipsPrefix for {0} Swap spouse {1} in exSpouse", forHero.Name, forHero.Spouse), Helper.PRINT_TRACE_ROMANCE);
@@ -84,7 +85,7 @@ namespace MarryAnyone.Patches
                 forHero.Spouse = null;
                 Helper.RemoveExSpouses(forHero);
             }
-
+#endif
 
             return false;
         }

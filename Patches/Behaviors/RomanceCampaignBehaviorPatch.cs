@@ -281,7 +281,7 @@ namespace MarryAnyone.Patches.Behaviors
                 && Hero.OneToOneConversationHero.Clan != null
                 && Hero.OneToOneConversationHero.Clan.Leader == Hero.OneToOneConversationHero
 #if CANT_MA_UPPER
-                && RomanceHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero)
+                && HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero)
 #endif
                 )
             {

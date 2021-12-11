@@ -77,6 +77,7 @@ namespace MarryAnyone.Behaviors
         {
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(OnSessionLaunched));
             CampaignEvents.HeroesMarried.AddNonSerializedListener(this, new Action<Hero, Hero, bool>(OnHeroesMarried));
+            CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, new Action(OnHourTickEvent));
         }
 
         public void Dispose()
@@ -121,13 +122,28 @@ namespace MarryAnyone.Behaviors
             return spouseA.Spouse == spouseB || spouseB.Spouse == spouseA;
         }
 
+
+        public Hero? FirstHeroExSpouseOkToDoIt()
+        {
+            Hero? spouse = null;
+            if (Hero.MainHero.ExSpouses != null)
+            {
+                spouse = Hero.MainHero.ExSpouses.LastOrDefault(h => h.IsAlive && NoMoreSpouse.IndexOf(h) < 0 && HeroInteractionHelper.OkToDoIt(Hero.MainHero, h));
+            }
+            return spouse;
+        }
+
         public Hero? FirstHeroExSpouse()
         {
             Hero? spouse = null;
             if (Hero.MainHero.ExSpouses != null)
-                spouse = Hero.MainHero.ExSpouses.FirstOrDefault(h => h.IsAlive && NoMoreSpouse.IndexOf(h) < 0);
+            {
+                spouse = Hero.MainHero.ExSpouses.LastOrDefault(h => h.IsAlive && NoMoreSpouse.IndexOf(h) < 0);
+            }
             return spouse;
         }
+
+
         #endregion
 
         #if TRACKTOMUCHSPOUSE
@@ -771,7 +787,7 @@ namespace MarryAnyone.Behaviors
             Romance.RomanticState romanticState = Romance.GetRomanticState(Hero.MainHero, Hero.OneToOneConversationHero);
 
 #if CANT_MA_UPPER
-            if (!Helpers.RomanceHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
+            if (!Helpers.HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
                 return false;
 #endif
 
@@ -1135,7 +1151,21 @@ namespace MarryAnyone.Behaviors
             return supprimeClan;
         }
 
-#endregion
+        #endregion
+
+        private void OnHourTickEvent()
+        {
+            if (Hero.MainHero.Spouse != null && HeroInteractionHelper.OkToDoIt(Hero.MainHero, Hero.MainHero.Spouse))
+                return;
+
+            Hero otherSpouse = FirstHeroExSpouseOkToDoIt();
+            if (otherSpouse != null)
+            {
+                Hero.MainHero.Spouse = otherSpouse;
+                Helper.RemoveExSpouses(Hero.MainHero);
+                Helper.RemoveExSpouses(otherSpouse);
+            }
+        }
 
         private void OnHeroesMarried(Hero arg1, Hero arg2, bool arg3)
         {
@@ -1292,7 +1322,9 @@ namespace MarryAnyone.Behaviors
 #if TRACELOAD
                 Helper.Print("Main spouse " + Helper.TraceHero(Hero.MainHero.Spouse), Helper.PRINT_TRACE_LOAD);
 #endif
+#if !SPOUSEALLWAYSWITHYOU
                 Hero.MainHero.Spouse = null;
+#endif
             }
 
             if (Hero.MainHero.ExSpouses != null)

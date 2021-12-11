@@ -29,3 +29,7 @@ FixedPregnancyControl :
 
 namespace TaleWorlds.CampaignSystem.ViewModelCollection.Encyclopedia	
 	public class EncyclopediaHeroPageVM : EncyclopediaContentPageVM
+
+
+Report incompatibility with ServeAsSoldier : 
+https://crash.butr.dev/report/661538AD.html

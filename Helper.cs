@@ -296,7 +296,11 @@ namespace MarryAnyone
 
             if (removeHero != null && hero.Spouse == removeHero)
             {
+#if SPOUSEALLWAYSWITHYOU
+                SetSpouse(hero, null, enuSetSpouse.JustSet);
+#else
                 hero.Spouse = null;
+#endif
                 if (Romance.GetRomanticLevel(hero, removeHero) == Romance.RomanceLevelEnum.Marriage)
                     Helpers.Util.CleanRomance(hero, removeHero, Romance.RomanceLevelEnum.Ended);
             }
@@ -327,11 +331,19 @@ namespace MarryAnyone
                 {
                     if (hero.Spouse != null)
                         _exSpousesList.Add(hero.Spouse);
+#if SPOUSEALLWAYSWITHYOU
+                    SetSpouse(hero, Hero.MainHero, enuSetSpouse.JustSet);
+#else
                     hero.Spouse = Hero.MainHero;
+#endif
                 }
 
                 if (removeHero != null && hero.Spouse == removeHero)
+#if SPOUSEALLWAYSWITHYOU
+                    SetSpouse(hero, null, enuSetSpouse.JustSet);
+#else
                     hero.Spouse = null;
+#endif
 
                 _exSpousesList = _exSpousesList.Distinct().ToList(); // Get exspouse list without duplicates
 
@@ -357,17 +369,22 @@ namespace MarryAnyone
 #if CANHAVESPOUSE
                 if (!withMainHero && otherSpouse == null)
                 {
-                    if (hero.Spouse == null && _exSpousesList.Count > 0 && _exSpousesList[_exSpousesList.Count - 1].Spouse == null)
+#if SPOUSEALLWAYSWITHYOU
+                    if (hero.Spouse == null && _exSpousesList.Count > 0)
                     {
-                        hero.Spouse = _exSpousesList[_exSpousesList.Count - 1];
+                        SetSpouse(hero, _exSpousesList[_exSpousesList.Count - 1], enuSetSpouse.SetReciproqueIFNullOnReciproque);
+                        _exSpousesList.RemoveAt(_exSpousesList.Count - 1);
                     }
+#else
+                    if (hero.Spouse == null && _exSpousesList.Count > 0 && _exSpousesList[_exSpousesList.Count - 1].Spouse == null)
+                        hero.Spouse = _exSpousesList[_exSpousesList.Count - 1];
+#endif
                 }
 #endif
             }
 
             _exSpouses.SetValue(hero, _exSpousesList);
 
-            //MBReadOnlyList<Hero> ExSpousesReadOnlyList = new MBReadOnlyList<Hero>(_exSpousesList);
             MBReadOnlyList<Hero> ExSpousesReadOnlyList = _exSpousesList.GetReadOnlyList<Hero>();
             ExSpouses.SetValue(hero, ExSpousesReadOnlyList);
 
@@ -376,6 +393,49 @@ namespace MarryAnyone
 //#endif
 
         }
+
+#if SPOUSEALLWAYSWITHYOU
+
+        public enum enuSetSpouse
+        {
+            JustSet = 0,
+            SetReciproque = 1,
+            TestNullReciproque = 2,
+            TestNull = 4,
+            SetReciproqueIFNullOnReciproque = SetReciproque | TestNullReciproque,
+            UseStandartAffectation = 8
+
+        }
+
+        // return false if not do
+        internal static bool SetSpouse(Hero hero, Hero? spouse, enuSetSpouse comment)
+        {
+            if ((comment & enuSetSpouse.TestNull) != 0 && hero.Spouse != null)
+                return false;
+
+            if ((comment & enuSetSpouse.UseStandartAffectation) != 0)
+            {
+                if ((comment & enuSetSpouse.TestNullReciproque) != 0 && spouse != null && spouse.Spouse != null)
+                    return false;
+
+                hero.Spouse = spouse;
+                return true;
+            }
+            FieldInfo _spouse = AccessTools.Field(typeof(Hero), "_spouse");
+            if (_spouse == null)
+                throw new Exception("_spouse property nof found on Hero Class !");
+            _spouse.SetValue(hero, spouse);
+
+            if (spouse != null 
+                && (comment & enuSetSpouse.SetReciproque) != 0
+                && ((comment & enuSetSpouse.TestNullReciproque) == 0
+                    || spouse.Spouse == null)
+                )
+                _spouse.SetValue(spouse, hero);
+
+            return true;
+        }
+#endif
 
         public static void RemoveDuplicatedHero()
         {
