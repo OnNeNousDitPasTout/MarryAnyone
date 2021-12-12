@@ -489,6 +489,30 @@ namespace MarryAnyone
             }
         }
 
+        public static void OccupationToCompanion(CharacterObject character)
+        {
+            if (character.Occupation != Occupation.Wanderer)
+            {
+#if V1640MORE
+                Hero hero = character.HeroObject;
+                if (hero != null)
+                {
+                    hero.SetNewOccupation(Occupation.Wanderer);
+                }
+                //    AccessTools.Property(typeof(Hero), "Occupation").SetValue(hero, Occupation.Lord);
+                AccessTools.Field(typeof(CharacterObject), "_occupation").SetValue(character, Occupation.Wanderer);
+#else
+                    AccessTools.Property(typeof(CharacterObject), "Occupation").SetValue(character, Occupation.Wanderer);
+#endif
+
+                AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
+                AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
+
+                Print(String.Format("Swap Occupation To Lord for {0} newOccupation ?= {1}", character.Name.ToString(), character.Occupation.ToString()), PrintHow.PrintToLogAndWriteAndDisplay);
+
+            }
+        }
+
 
         public static void RemoveFromClan(Hero hero, Clan fromClan, bool canPatchLeader = false)
         {

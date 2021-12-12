@@ -64,6 +64,10 @@ namespace MarryAnyone.Settings
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public bool ImproveRelation { get; set; } = false;
 
+        [SettingPropertyBool("{=CanJoinUpperClanThroughMAPath}Can join upper clan through MA Path", Order = 6, RequireRestart = false, HintText = "{=CanJoinUpperClanThroughMAPath_desc}Can join upper clan through MA Path (Not compatible with Calradia Expanded)")]
+        [SettingPropertyGroup("{=relationship}Relationship Options")]
+        public bool CanJoinUpperClanThroughMAPath { get; set; } = false;
+
         [SettingPropertyInteger("{=RelationLevelMinForRomance}Relation needed for romance", -1, 100, Order = 10, RequireRestart = false, HintText = "{=RelationLevelMinForRomance_desc}Relation needed for begin a romance (-1 desabled the control)")]
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public int RelationLevelMinForRomance { get; set; } = 5;

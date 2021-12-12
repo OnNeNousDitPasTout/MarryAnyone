@@ -8,6 +8,7 @@
         bool Cheating { get; set; }
         bool Notable { get; set; }
         bool ImproveRelation { get; set; }
+        bool CanJoinUpperClanThroughMAPath { get; set; }
         string Difficulty { get; set; }
         string SexualOrientation { get; set; }
         bool Adoption { get; set; }

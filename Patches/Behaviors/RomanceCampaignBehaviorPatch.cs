@@ -280,13 +280,12 @@ namespace MarryAnyone.Patches.Behaviors
                 && !Helper.MASettings.DifficultyNormalMode
                 && Hero.OneToOneConversationHero.Clan != null
                 && Hero.OneToOneConversationHero.Clan.Leader == Hero.OneToOneConversationHero
-#if CANT_MA_UPPER
-                && HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero)
-#endif
+                && (Helper.MASettings.CanJoinUpperClanThroughMAPath
+                    ||  HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
                 )
             {
 #if TRACEROMANCE
-                Helper.Print(string.Format("RomanceCampaignBehaviorPatch:: conversation_finalize_courtship_for_hero_on_conditionPatch:: with {0} FAIL For MA Path", Hero.OneToOneConversationHero), Helper.PRINT_TRACE_ROMANCE);
+                Helper.Print(string.Format("RomanceCampaignBehaviorPatch:: conversation_finalize_courtship_for_hero_on_conditionPatch:: with {0}\r\n\r FAIL normal Path For MA Path", Hero.OneToOneConversationHero), Helper.PRINT_TRACE_ROMANCE);
 #endif
                 ret = false;
             }

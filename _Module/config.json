@@ -6,6 +6,7 @@
 	"Incest": false,
 	"Notable": false,
 	"ImproveRelation": false,
+	"CanJoinUpperClanThroughMAPath": false,
 	"Cheating": false,
 	"RelationLevelMinForRomance": 5,
 	"RelationLevelMinForCheating": 10,

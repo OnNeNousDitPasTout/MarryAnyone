@@ -13,6 +13,7 @@ using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Conversation.Persuasion;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Localization;
 
@@ -189,15 +190,45 @@ namespace MarryAnyone.Behaviors
                                                 , new ConversationSentence.OnConditionDelegate(conversation_begin_courtship_for_hero_on_condition)
                                                 , null
                                                 , 120, null, null);
-            //starter.AddPlayerLine("main_option_discussions_MA", "hero_main_options", "lord_start_courtship_response", "{=OD1m1NYx}{STR_INTRIGUE_AGREEMENT}", new ConversationSentence.OnConditionDelegate(conversation_begin_courtship_for_hero_on_conditionFromMain), new ConversationSentence.OnConsequenceDelegate(this.conversation_start_courtship_persuasion_pt1_on_consequence), 120, null, null);
             starter.AddDialogLine("character_agrees_to_discussion_MA", "lord_talk_speak_diplomacy_MA", "lord_talk_speak_diplomacy_2", "{=OD1m1NYx}{STR_INTRIGUE_AGREEMENT}"
-                                                , conversation_character_agrees_to_discussion_on_condition
-                                                , RomanceCampaignBehaviorPatch.conversation_player_opens_courtship_on_consequence
-                                                , 100, null);
+                                                , new ConversationSentence.OnConditionDelegate(conversation_character_agrees_to_discussion_on_condition)
+                                                , null, 100, null);
+            // => Go to RomanceCampaingBehavior 
+
+            //starter.AddPlayerLine("player_start_courtship_MA", "lord_talk_speak_diplomacy_2", "lord_start_courtship_response", "{=!}{FLIRTATION_LINE}"
+            //                                    , conversation_begin_courtship_for_hero_on_condition
+            //                                    , null //new ConversationSentence.OnConsequenceDelegate(this.conversation_start_courtship_persuasion_pt1_on_consequence)
+            //                                    , 120, null, null);
+
+            //starter.AddDialogLine("lord_start_courtship_response", "lord_start_courtship_response", "lord_start_courtship_response_player_offer", "{=!}{INITIAL_COURTSHIP_REACTION}"
+            //                                    , conversation_courtship_initial_reaction_on_condition
+            //                                    , null
+            //                                    , 100, null);
+
+            // Bad
+            //starter.AddDialogLine("interlocutor_agrees_to_discussion_MA", "lord_start_courtship_response", "lord_start_courtship_response", "{=OD1m1NYx}{STR_INTRIGUE_AGREEMENT}"
+            //                                    , conversation_character_agrees_to_discussion_on_condition
+            //                                    , RomanceCampaignBehaviorPatch.conversation_player_opens_courtship_on_consequence
+            //                                    , 100, null);
 
             starter.AddPlayerLine("player_cheat_persuasion_start", "lord_talk_speak_diplomacy_2", "acceptcheatingornot", "{=Cheat_engage_courtship}I'm needing you for a few days and physics parties, can you join my party for a few days ?"
                                                 , conversation_characacter_agreed_to_cheat
                                                 , conversation_characacter_test_to_cheat
+                                                , 100, null);
+
+            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}There's a long time we hunt together my {RELATION_TEXT}{newline}, But all good thinks must end a day or another, let's divorce my {RELATION_TEXT}"
+                                                , conversation_can_divorce
+                                                , delegate { conversation_do_divorce(false); }
+                                                , 200, null);
+
+            starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window", "{=DivorceBug_engage_dialog}There is a bug in this Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
+                                                , conversation_can_divorce
+                                                , delegate { conversation_do_divorce(true); }
+                                                , 220, null);
+
+            starter.AddDialogLine("hero_leave_party", "goodbySpouse", "close_window", "{=LeaveSpouseParty}Hop we meet againt, better in the arena{newline}bye ..."
+                                                , null
+                                                , null
                                                 , 100, null);
 
             starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I allready give you a reply. Do you nead hearing aid ?"
@@ -301,6 +332,88 @@ namespace MarryAnyone.Behaviors
 
             //starter.AddDialogLine("hero_courtship_final_barter_setup", "hero_courtship_final_barter_conclusion", "close_window", "{=k7nGxksk}Splendid! Let us conduct the ceremony, then.", new ConversationSentence.OnConditionDelegate(this.conversation_marriage_barter_successful_on_condition), new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 100, null);
             //starter.AddDialogLine("hero_courtship_final_barter_setup", "hero_courtship_final_barter_conclusion", "close_window", "{=iunPaMFv}I guess we should put this aside, for now. But perhaps we can speak again at a later date.", () => !this.conversation_marriage_barter_successful_on_condition(), null, 100, null);
+        }
+
+        private bool conversation_courtship_initial_reaction_on_condition()
+        {
+            MBTextManager.SetTextVariable("INITIAL_COURTSHIP_REACTION", "{=KdhnBhZ1}Yes, we are considering offers. These things are not rushed into.", false);
+            return true;
+        }
+
+        private void conversation_do_divorce(bool forBug)
+        {
+            float relationBetweenPlayer = Hero.OneToOneConversationHero.GetRelationWithPlayer();
+            int mulitpe = (int)(relationBetweenPlayer / 40);
+            if (relationBetweenPlayer > 0 && mulitpe <= 0) mulitpe = 1;
+
+            Clan? clanToJoin = null;
+            if (Hero.OneToOneConversationHero.Father != null
+                && Hero.OneToOneConversationHero.Father.Clan != null
+                && !Hero.OneToOneConversationHero.Father.Clan.IsEliminated)
+                clanToJoin = Hero.OneToOneConversationHero.Father.Clan;
+
+            if (clanToJoin == null
+                && Hero.OneToOneConversationHero.Mother != null
+                && Hero.OneToOneConversationHero.Mother.Clan != null
+                && !Hero.OneToOneConversationHero.Mother.Clan.IsEliminated)
+                clanToJoin = Hero.OneToOneConversationHero.Mother.Clan;
+
+            if (forBug)
+            {
+                Helper.RemoveExSpouses(Hero.MainHero, false, null, false, Hero.OneToOneConversationHero);
+                Helper.RemoveExSpouses(Hero.OneToOneConversationHero, false, null, false, Hero.MainHero);
+            }
+            else
+            {
+                Hero.OneToOneConversationHero.Spouse = null;
+                Helper.RemoveExSpouses(Hero.MainHero, false);
+                NoMoreSpouse.Add(Hero.OneToOneConversationHero);
+            }
+
+            if (clanToJoin != null)
+            {
+                Helper.SwapClan(Hero.OneToOneConversationHero, Clan.PlayerClan, clanToJoin);
+            }
+            else
+            {
+                Helper.RemoveFromClan(Hero.OneToOneConversationHero, Clan.PlayerClan, false);
+                Helper.OccupationToCompanion(Hero.OneToOneConversationHero.CharacterObject);
+            }
+            PartyHelper.SwapPartyBelongedTo(hero: Hero.OneToOneConversationHero, null);
+            MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
+
+
+            ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int) -(relationBetweenPlayer / 5), false, true);
+
+            if (mulitpe > 0) {
+                foreach (Hero spouse in Spouses)
+                {
+                    float rela1 = spouse.GetRelation(Hero.OneToOneConversationHero);
+                    float rela2 = spouse.GetRelationWithPlayer();
+#if TRACEROMANCE
+                    Helper.Print(String.Format("Hero Relations between {0} and {1} ?= {2} ", spouse.Name, Hero.OneToOneConversationHero.Name, rela1), Helper.PRINT_TRACE_ROMANCE);
+                    Helper.Print(String.Format("Hero Relations between {0} and {1} ?= {2} ", spouse.Name, Hero.MainHero.Name, rela2), Helper.PRINT_TRACE_ROMANCE);
+#endif
+                    int multiple1 = (int) (rela1 / 20);
+                    if (multiple1 < 1) multiple1 = 1;
+                    int multiple2 = (int) (rela2 / 30);
+                    if (multiple2 < 1) multiple2 = 1;
+                    ChangeRelationAction.ApplyPlayerRelation(spouse, (int) -(mulitpe * multiple1 * multiple2), false, true);
+                }
+            }
+
+        }
+
+        private bool conversation_can_divorce()
+        {
+
+            if (this.SpouseOfPlayer(Hero.OneToOneConversationHero))
+            {
+                GameTexts.SetVariable("RELATION_TEXT", CampaignUIHelper.GetHeroRelationToHeroTextShort(Hero.MainHero, Hero.OneToOneConversationHero));
+                StringHelpers.SetCharacterProperties("INTERLOCUTOR", Hero.OneToOneConversationHero.CharacterObject);
+                return true;
+            }
+            return false;
         }
 
         private void conversation_player_end_courtship_do()
@@ -786,10 +899,9 @@ namespace MarryAnyone.Behaviors
             Romance.RomanceLevelEnum romanticLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
             Romance.RomanticState romanticState = Romance.GetRomanticState(Hero.MainHero, Hero.OneToOneConversationHero);
 
-#if CANT_MA_UPPER
-            if (!Helpers.HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
+            if (!Helper.MASettings.CanJoinUpperClanThroughMAPath
+                && !Helpers.HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
                 return false;
-#endif
 
             bool ret = Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, Hero.OneToOneConversationHero)
                         && (Hero.OneToOneConversationHero.Clan == null 
@@ -890,93 +1002,95 @@ namespace MarryAnyone.Behaviors
                     {
                         if (hero.Clan.Kingdom?.Leader != hero)
                         {
-#if CANT_MA_UPPER
-                            throw new Exception("conversation_courtship_success_on_consequence TU spouse IS MAIN FAIL");
-#else
-                            bool canDestroyClan = false;
-                            heroLeaveClan = hero.Clan;
+                            if (!Helper.MASettings.CanJoinUpperClanThroughMAPath)
+                                throw new Exception("conversation_courtship_success_on_consequence TU spouse IS MAIN FAIL");
+                            else 
+                            { 
 
-                            MobileParty? mobilePartyDest = null;
-                            if (spouse.CurrentSettlement == hero.CurrentSettlement
-                                || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
+                                bool canDestroyClan = false;
+                                heroLeaveClan = hero.Clan;
 
-                                mobilePartyDest = spouse.PartyBelongedTo;
+                                MobileParty? mobilePartyDest = null;
+                                if (spouse.CurrentSettlement == hero.CurrentSettlement
+                                    || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
 
-                            // Join kingdom due to lowborn status
-                            if (hero.Clan.Leader == hero)
-                                canDestroyClan = true;
+                                    mobilePartyDest = spouse.PartyBelongedTo;
 
-                            Action<Hero> swapPartie = (Hero h) =>
-                            {
-                                bool inParty = false;
-                                if (h.PartyBelongedTo == MobileParty.MainParty)
+                                // Join kingdom due to lowborn status
+                                if (hero.Clan.Leader == hero)
+                                    canDestroyClan = true;
+
+                                Action<Hero> swapPartie = (Hero h) =>
                                 {
-                                    inParty = true;
-                                }
-                                RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
-                                AddCompanionAction.Apply(spouse.Clan, h);
-                                if (inParty)
-                                {
-                                    if (mobilePartyDest != null)
+                                    bool inParty = false;
+                                    if (h.PartyBelongedTo == MobileParty.MainParty)
                                     {
-                                        AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
+                                        inParty = true;
                                     }
-                                    else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
-                                        AddHeroToPartyAction.Apply(h, MobileParty.MainParty, false);
-                                }
-                            };
-
-                            foreach (Hero companion in hero.Clan.Companions.ToList())
-                            {
-                                swapPartie(companion);
-                            }
-                            if (hero == Hero.MainHero && Helper.MASettings.Polygamy)
-                            {
-                                foreach (Hero exSpouse in hero.ExSpouses)
-                                {
-                                    if (SpouseOfPlayer(exSpouse))
+                                    RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
+                                    AddCompanionAction.Apply(spouse.Clan, h);
+                                    if (inParty)
                                     {
-                                        swapPartie(exSpouse);
+                                        if (mobilePartyDest != null)
+                                        {
+                                            AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
+                                        }
+                                        else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
+                                            AddHeroToPartyAction.Apply(h, MobileParty.MainParty, false);
+                                    }
+                                };
+
+                                foreach (Hero companion in hero.Clan.Companions.ToList())
+                                {
+                                    swapPartie(companion);
+                                }
+                                if (hero == Hero.MainHero && Helper.MASettings.Polygamy)
+                                {
+                                    foreach (Hero exSpouse in hero.ExSpouses)
+                                    {
+                                        if (SpouseOfPlayer(exSpouse))
+                                        {
+                                            swapPartie(exSpouse);
+                                        }
                                     }
                                 }
+
+                                Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
+
+                                if (mobilePartyDest != null)
+                                {
+                                    MobileParty oldParty = MobileParty.MainParty;
+
+                                    AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
+                                    PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
+                                    PartyHelper.SwapMainParty(mobilePartyDest);
+
+                                    DestroyPartyAction.Apply(null, oldParty);
+    #if TRACEWEDDING
+                                    Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
+    #endif
+                                }
+
+                                Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
+                                Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
+
+                                if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan))
+                                {
+                                    heroLeaveClan = null;
+                                }
+
+                                Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
+
+                                var current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
+                                Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
+    #if TRACEWEDDING
+                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
+                                if (hero.Clan == null)
+                                    Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+                                else if (hero.Clan.Lords == null)
+                                    Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+    #endif                      
                             }
-
-                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
-
-                            if (mobilePartyDest != null)
-                            {
-                                MobileParty oldParty = MobileParty.MainParty;
-
-                                AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
-                                PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
-                                PartyHelper.SwapMainParty(mobilePartyDest);
-
-                                DestroyPartyAction.Apply(null, oldParty);
-#if TRACEWEDDING
-                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
-#endif
-                            }
-
-                            Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
-                            Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
-
-                            if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan))
-                            {
-                                heroLeaveClan = null;
-                            }
-
-                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
-
-                            var current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
-                            Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
-#if TRACEWEDDING
-                            Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
-                            if (hero.Clan == null)
-                                Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-                            else if (hero.Clan.Lords == null)
-                                Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-#endif
-#endif
                         }
                         else
                         {
@@ -1092,7 +1206,7 @@ namespace MarryAnyone.Behaviors
                     PlayerEncounter.LeaveEncounter = true;
 
                 // New fix to stop some kingdom rulers from disappearing
-                if (spouse.CurrentSettlement == hero.CurrentSettlement
+                if ((spouse.CurrentSettlement != null && spouse.CurrentSettlement == hero.CurrentSettlement) 
                     || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
                 {
 #if TRACEWEDDING

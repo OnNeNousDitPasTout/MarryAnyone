@@ -25,7 +25,7 @@ namespace MarryAnyone.Helpers
 
 		}
 
-		public static void SwapPartyBelongedTo(Hero hero, MobileParty party)
+		public static void SwapPartyBelongedTo(Hero hero, MobileParty? party)
 		{
 
 			Helper.Print(String.Format("Swap PartyBelongedTo for Hero {0} to party {1}"
