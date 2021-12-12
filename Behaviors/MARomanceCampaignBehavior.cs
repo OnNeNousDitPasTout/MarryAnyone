@@ -94,6 +94,13 @@ namespace MarryAnyone.Behaviors
 
         #region Spouses
 
+        public bool PartnerOfPlayer(Hero partner)
+        {
+            if (Partners != null && Partners.IndexOf(partner) >= 0)
+                return true;
+            return false;
+        }
+
         public bool SpouseOfPlayer(Hero spouse)
         {
             return ((Hero.MainHero.Spouse == spouse 
@@ -144,14 +151,9 @@ namespace MarryAnyone.Behaviors
             return spouse;
         }
 
-
-        #endregion
-
-        #if TRACKTOMUCHSPOUSE
-
         public List<Hero> Spouses
         {
-            get 
+            get
             {
                 List<Hero> spouses = Hero.MainHero.ExSpouses.ToList();
                 if (Hero.MainHero.Spouse != null)
@@ -167,6 +169,12 @@ namespace MarryAnyone.Behaviors
             }
         }
 
+
+
+        #endregion
+
+#if TRACKTOMUCHSPOUSE
+
         public static void VerifySpouse(int diff, string prefix)
         {
 
@@ -179,7 +187,7 @@ namespace MarryAnyone.Behaviors
                 }
             }
         }
-        #endif
+#endif
 
         #region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
@@ -216,15 +224,20 @@ namespace MarryAnyone.Behaviors
                                                 , conversation_characacter_test_to_cheat
                                                 , 100, null);
 
-            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}There's a long time we hunt together my {RELATION_TEXT}{newline}, But all good thinks must end a day or another, let's divorce my {RELATION_TEXT}"
+            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}There's a long time we hunt together my {RELATION_TEXT}{newline}, but all good thinks must end a day or another, let's divorce {INTERLOCUTOR.NAME}."
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(false); }
-                                                , 200, null);
+                                                , 80, null);
 
-            starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window", "{=DivorceBug_engage_dialog}There is a bug in this Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
+            starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window", "{=DivorceBug_engage_dialog}There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(true); }
-                                                , 220, null);
+                                                , 60, null);
+
+            starter.AddPlayerLine("player_LeaveCheat_start", "lord_talk_speak_diplomacy_2", "close_window", "{=LeaveCheat_engage_dialog}Can you just leave me {INTERLOCUTOR.NAME}, i have other cats to whip."
+                                                , conversation_can_LeaveCheat
+                                                , conversaion_do_LeaveCheat 
+                                                , 60, null);
 
             starter.AddDialogLine("hero_leave_party", "goodbySpouse", "close_window", "{=LeaveSpouseParty}Hop we meet againt, better in the arena{newline}bye ..."
                                                 , null
@@ -340,11 +353,33 @@ namespace MarryAnyone.Behaviors
             return true;
         }
 
-        private void conversation_do_divorce(bool forBug)
+        private void conversaion_do_LeaveCheat()
         {
             float relationBetweenPlayer = Hero.OneToOneConversationHero.GetRelationWithPlayer();
             int mulitpe = (int)(relationBetweenPlayer / 40);
             if (relationBetweenPlayer > 0 && mulitpe <= 0) mulitpe = 1;
+
+            ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int)-(mulitpe), false, true);
+            MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
+            PartnerRemove(Hero.OneToOneConversationHero);
+        }
+
+        private bool conversation_can_LeaveCheat()
+        {
+            if (PartnerOfPlayer(Hero.OneToOneConversationHero))
+            {
+                StringHelpers.SetCharacterProperties("INTERLOCUTOR", Hero.OneToOneConversationHero.CharacterObject);
+                return true;
+            }
+            return false;
+        }
+
+
+        private void conversation_do_divorce(bool forBug)
+        {
+            float relationBetweenPlayer = Hero.OneToOneConversationHero.GetRelationWithPlayer();
+            int multiple = (int)(relationBetweenPlayer / 40);
+            if (relationBetweenPlayer > 0 && multiple <= 0) multiple = 1;
 
             Clan? clanToJoin = null;
             if (Hero.OneToOneConversationHero.Father != null
@@ -385,7 +420,7 @@ namespace MarryAnyone.Behaviors
 
             ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int) -(relationBetweenPlayer / 5), false, true);
 
-            if (mulitpe > 0) {
+            if (multiple > 0) {
                 foreach (Hero spouse in Spouses)
                 {
                     float rela1 = spouse.GetRelation(Hero.OneToOneConversationHero);
@@ -398,7 +433,7 @@ namespace MarryAnyone.Behaviors
                     if (multiple1 < 1) multiple1 = 1;
                     int multiple2 = (int) (rela2 / 30);
                     if (multiple2 < 1) multiple2 = 1;
-                    ChangeRelationAction.ApplyPlayerRelation(spouse, (int) -(mulitpe * multiple1 * multiple2), false, true);
+                    ChangeRelationAction.ApplyPlayerRelation(spouse, (int) -(multiple * multiple1 * multiple2), false, true);
                 }
             }
 
@@ -543,10 +578,10 @@ namespace MarryAnyone.Behaviors
             bool ret = false;
             if (Hero.OneToOneConversationHero != null)
             {
-
-                ret = MarryAnyone.Patches.Behaviors.RomanceCampaignBehaviorPatch.conversation_player_can_open_courtship_on_condition(true)
-                        && ((Hero.OneToOneConversationHero.Occupation != Occupation.Lord) 
-                            || (!Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero) && Hero.MainHero.CurrentSettlement != null && (Hero.MainHero.CurrentSettlement.IsTown || Hero.MainHero.CurrentSettlement.IsCastle)));
+                if (!PartnerOfPlayer(Hero.OneToOneConversationHero))
+                    ret = MarryAnyone.Patches.Behaviors.RomanceCampaignBehaviorPatch.conversation_player_can_open_courtship_on_condition(true)
+                            && ((Hero.OneToOneConversationHero.Occupation != Occupation.Lord) 
+                                || (!Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero) && Hero.MainHero.CurrentSettlement != null && (Hero.MainHero.CurrentSettlement.IsTown || Hero.MainHero.CurrentSettlement.IsCastle)));
                         //|| MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
             }
             return ret;
@@ -1272,7 +1307,8 @@ namespace MarryAnyone.Behaviors
             if (Hero.MainHero.Spouse != null && HeroInteractionHelper.OkToDoIt(Hero.MainHero, Hero.MainHero.Spouse))
                 return;
 
-            Hero otherSpouse = FirstHeroExSpouseOkToDoIt();
+            Hero? otherSpouse = FirstHeroExSpouseOkToDoIt();
+            Helper.Print(String.Format("Set Player Spouse {0}", (otherSpouse != null ? otherSpouse.Name : "noone:/")), Helper.PrintHow.PrintToLogAndWriteAndDisplay);
             if (otherSpouse != null)
             {
                 Hero.MainHero.Spouse = otherSpouse;

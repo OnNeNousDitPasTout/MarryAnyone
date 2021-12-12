@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
+using TaleWorlds.Library;
 
 namespace MarryAnyone.Behaviors
 {

@@ -88,7 +88,12 @@ namespace MarryAnyone.Behaviors
             // Add a bit of the DeliverOffspring method into the mix
             Hero hero = HeroCreator.CreateSpecialHero(character, Settlement.CurrentSettlement, null, null, (int)agent.Age);
             int becomeChildAge = Campaign.Current.Models.AgeModel.BecomeChildAge;
+#if V1700MORE
+            //FieldInfo originCharacter = AccessTools.Field(typeof(CharacterObject), "")
+            CharacterObject characterObject = CharacterObject.FindFirst((CharacterObject t) => t.Culture == character.Culture && t.Age <= becomeChildAge && t.IsFemale == character.IsFemale && t.Occupation == Occupation.Lord);
+#else
             CharacterObject characterObject = CharacterObject.ChildTemplates.FirstOrDefault((CharacterObject t) => t.Culture == character.Culture && t.Age <= becomeChildAge && t.IsFemale == character.IsFemale && t.Occupation == Occupation.Lord);
+#endif
             if (characterObject is not null)
             {
                 Equipment equipment = characterObject.FirstCivilianEquipment.Clone(false);
