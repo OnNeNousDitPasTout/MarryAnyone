@@ -100,6 +100,10 @@ namespace MarryAnyone
 #else
         public const PrintHow PRINT_TRACE_CREATE_CLAN = PrintHow.PrintDisplay;
 #endif
+#if TRACECHEAT
+        public const PrintHow PRINT_TRACE_CHEAT = PrintHow.PrintDisplay | PrintHow.PrintToLog | PrintHow.UpdateLog;
+#else
+#endif
         public static string? LogPath
         {
             get => _logPath;
@@ -752,6 +756,27 @@ namespace MarryAnyone
 
             return false;
         }
+
+#if V4
+        public static bool HeroOccupiedAndCantMarried(Hero hero)
+        {
+            if (hero.CharacterObject.Occupation != Occupation.Lord 
+                && Campaign.Current != null)
+            {
+                IssueBase issueBase;
+                Campaign.Current.IssueManager.Issues.TryGetValue(hero, out issueBase);
+                if (issueBase != null)
+                    //&& (issueBase.IsSolvingWithAlternative 
+                    //|| issueBase.IsSolvingWithQuest 
+                    //|| issueBase.IssueQuest != null)
+                    //|| issueBase. )
+                    return true;
+                return false;
+            }
+            else
+                return false;
+        }
+#endif
 
         public static bool MarryEnabledPathMA(Hero hero, Hero mainHero)
         {

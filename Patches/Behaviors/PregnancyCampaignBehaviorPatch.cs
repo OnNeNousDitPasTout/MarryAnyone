@@ -145,6 +145,15 @@ namespace MarryAnyone.Patches.Behaviors
 #if TRACEPREGNANCY
         private static bool _needTrace = false;
 #endif
+        [HarmonyPatch(typeof(PregnancyCampaignBehavior), "HeroPregnancyCheckCondition", new Type[] { typeof(Hero) })]
+        [HarmonyPrefix]
+        private static bool HeroPregnancyCheckConditionPatch(Hero hero, PregnancyCampaignBehavior __instance, ref bool __result)
+        {
+            __result = hero.IsFemale && hero.IsAlive && hero.Age > (float)Campaign.Current.Models.AgeModel.HeroComesOfAge && !CampaignOptions.IsLifeDeathCycleDisabled;
+
+            return false;
+        }
+
         [HarmonyPatch(typeof(PregnancyCampaignBehavior), "DailyTickHero", new Type[] {typeof(Hero) })]
         [HarmonyPrefix]
         private static void DailyTickHeroPrefix(Hero hero)
@@ -313,6 +322,20 @@ namespace MarryAnyone.Patches.Behaviors
                 }
                 else
                 {
+
+#if !TRACEPREGNANCY
+                    if (Helper.MASettings.Debug)
+                    {
+#endif
+                        if (hero == Hero.MainHero)
+                            Helper.Print("No spouse or cheating partner allowed for your sex time", Helper.PRINT_TRACE_PREGNANCY);
+                        else if (MARomanceCampaignBehavior.Instance != null
+                                && (MARomanceCampaignBehavior.Instance.SpouseOfPlayer(hero)
+                                || MARomanceCampaignBehavior.Instance.PartnerOfPlayer(hero)))
+                            Helper.Print(String.Format("No spouse or cheating partner allowed for {0} sex time", hero.Name), Helper.PRINT_TRACE_PREGNANCY);
+#if !TRACEPREGNANCY
+                    }
+#endif
                     hero.Spouse = null;
                 }
             }

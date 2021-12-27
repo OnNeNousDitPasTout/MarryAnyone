@@ -169,8 +169,6 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-
-
         #endregion
 
 #if TRACKTOMUCHSPOUSE
@@ -221,7 +219,7 @@ namespace MarryAnyone.Behaviors
 
             starter.AddPlayerLine("player_cheat_persuasion_start", "lord_talk_speak_diplomacy_2", "acceptcheatingornot", "{=Cheat_engage_courtship}I'm needing you for a few days and physics parties, can you join my party for a few days ?"
                                                 , conversation_characacter_agreed_to_cheat
-                                                , conversation_characacter_test_to_cheat
+                                                , null //conversation_characacter_test_to_cheat
                                                 , 100, null);
 
             starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}There's a long time we hunt together my {RELATION_TEXT}{newline}, but all good thinks must end a day or another, let's divorce {INTERLOCUTOR.NAME}."
@@ -244,15 +242,20 @@ namespace MarryAnyone.Behaviors
                                                 , null
                                                 , 100, null);
 
+            starter.AddDialogLine("hero_cheat_persuasion_no", "acceptcheatingornot", "lort_pretalk", "{=!}{CHEAT_DECLINE_REACTION}"
+                                                , conversation_characacter_notagreed_to_cheat_VariantTest
+                                                , null
+                                                , 120, null);
+
             starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I allready give you a reply. Do you nead hearing aid ?"
-                                                , conversation_cheat_allready_done
+                                                , delegate { return !conversation_characacter_notagreed_to_cheat_VariantTest() && conversation_cheat_allready_done(); }
                                                 , null
                                                 , 100, null);
 
             starter.AddDialogLine("hero_cheat_persuasion_start", "acceptcheatingornot", "heroPersuasionNextQuestion", "{=bW3ygxro}Yes, it's good to have a chance to get to know each other."
-                                                , null
-                                                , null
-                                                , 100, null);
+                                                , delegate { return !conversation_characacter_notagreed_to_cheat_VariantTest() && !conversation_cheat_allready_done(); }
+                                                , conversation_characacter_test_to_cheat
+                                                , 80, null);
 
             starter.AddDialogLine("hero_cheat_persuasion_fail", "heroPersuasionNextQuestion", "lort_pretalk", "{=!}{FAILED_PERSUASION_LINE}"
                                                 , persuasion_fail
@@ -373,7 +376,6 @@ namespace MarryAnyone.Behaviors
             }
             return false;
         }
-
 
         private void conversation_do_divorce(bool forBug)
         {
@@ -573,16 +575,42 @@ namespace MarryAnyone.Behaviors
         //        }
         //#endif
 
+        private bool conversation_characacter_notagreed_to_cheat_VariantTest()
+        {
+            bool ret = false;
+            if (Hero.OneToOneConversationHero.Occupation == Occupation.Lord)
+            {
+                if (Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero)) {
+#if TRACECHEAT
+                    Helper.Print("conversation_characacter_notagreed_to_cheat_VariantTest:: Condition OK because at war", Helper.PRINT_TRACE_CHEAT);
+#endif
+
+                    MBTextManager.SetTextVariable("CHEAT_DECLINE_REACTION", "{=maCheatNotPossibleKingdomAtWar}I am terribly sorry. Our kingdom are actualy at war.", false);
+                    ret = true;
+                }
+                else if ((Hero.OneToOneConversationHero.PartyBelongedTo != null && Hero.OneToOneConversationHero.PartyBelongedTo.LeaderHero == Hero.OneToOneConversationHero) 
+                        && (Hero.MainHero.CurrentSettlement == null || !(Hero.MainHero.CurrentSettlement.IsTown || Hero.MainHero.CurrentSettlement.IsCastle)))
+                {
+#if TRACECHEAT
+                    Helper.Print("conversation_characacter_notagreed_to_cheat_VariantTest:: Condition OK because not in town or castle", Helper.PRINT_TRACE_CHEAT);
+#endif
+                    MBTextManager.SetTextVariable("CHEAT_DECLINE_REACTION", "{=maCheatNotPossibleCantCancelParty}You are a funny {?PLAYER.GENDER}woman my lady{?}man my lord{\\?}. I Can't cancel my party in country like that.", false);
+                    ret = true;
+                }
+
+            }
+            return ret;
+        }
+
         private bool conversation_characacter_agreed_to_cheat()
         {
             bool ret = false;
             if (Hero.OneToOneConversationHero != null)
             {
                 if (!PartnerOfPlayer(Hero.OneToOneConversationHero))
-                    ret = MarryAnyone.Patches.Behaviors.RomanceCampaignBehaviorPatch.conversation_player_can_open_courtship_on_condition(true)
-                            && ((Hero.OneToOneConversationHero.Occupation != Occupation.Lord) 
-                                || (!Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero) && Hero.MainHero.CurrentSettlement != null && (Hero.MainHero.CurrentSettlement.IsTown || Hero.MainHero.CurrentSettlement.IsCastle)));
-                        //|| MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
+                    ret = MarryAnyone.Patches.Behaviors.RomanceCampaignBehaviorPatch.conversation_player_can_open_courtship_on_condition(true);
+                        // && (conversation_characacter_agreed_to_cheat_VariantTest()));
+                        ////|| MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
             }
             return ret;
         }
@@ -655,11 +683,12 @@ namespace MarryAnyone.Behaviors
             this._maximumScoreCap = (float)this._allReservations.Count<PersuasionTask>() * 1f;
             float num = 0f;
 
-            Helper.Print(String.Format("Launch Cheat Persuasion MaxScore ?= {0} Success ?= {1}, fail ?= {2}"
+#if TRACECHEAT
+            Helper.Print(String.Format("conversation_characacter_test_to_cheat:: Launch Cheat Persuasion\r\n\t MaxScore ?= {0}\r\n\t Success ?= {1},\r\n\t fail ?= {2}"
                                             , this._maximumScoreCap
                                             , this._successValue
                                             , this._failValue) , Helper.PRINT_TRACE_ROMANCE);
-
+#endif
             ConversationManager.StartPersuasion(this._maximumScoreCap, this._successValue, this._failValue, this._criticalSuccessValue, this._criticalFailValue, num
                                                 , Helper.MASettings.DifficultyNormalMode ? PersuasionDifficulty.Hard : PersuasionDifficulty.Medium);
         }
@@ -676,6 +705,10 @@ namespace MarryAnyone.Behaviors
 
         private void conversation_characacter_success_to_cheat_go()
         {
+
+#if TRACECHEAT
+            Helper.Print("conversation_characacter_success_to_cheat_go:: SUCCESS", Helper.PRINT_TRACE_CHEAT);
+#endif
 
             float scoreFromPersuasion = ConversationManager.GetPersuasionProgress() - ConversationManager.GetPersuasionGoalValue();
 
@@ -695,7 +728,6 @@ namespace MarryAnyone.Behaviors
             MARomanceCampaignBehavior.VerifySpouse(0, "conversation_characacter_success_to_cheat_go");
 #endif
         }
-
 
         private void persuasionAttemptCheatClean(Hero forHero)
         {
@@ -850,17 +882,32 @@ namespace MarryAnyone.Behaviors
             PersuasionTask currentPersuasionTask = this.GetCurrentPersuasionTask();
             if (currentPersuasionTask.Options.All((PersuasionOptionArgs x) => x.IsBlocked) && !ConversationManager.GetPersuasionProgressSatisfied())
             {
+#if TRACEROMANCE
+                Helper.Print("persuasion_go_nextStep:: Persuasion Blocked return false");
+#endif
+
                 MBTextManager.SetTextVariable("FAILED_PERSUASION_LINE", currentPersuasionTask.FinalFailLine, false);
                 return false;
             }
-            if (Helper.MASettings.DifficultyVeryEasyMode)
+            if (conversation_cheat_easy_mode())
+            {
+#if TRACEROMANCE
+                Helper.Print("persuasion_go_nextStep:: Very easy mode return false");
+#endif
                 return false;
+            }
 
             if (!ConversationManager.GetPersuasionProgressSatisfied())
             {
+#if TRACEROMANCE
+                Helper.Print("persuasion_go_nextStep:: OK");
+#endif
                 MBTextManager.SetTextVariable("PERSUASION_TASK_LINE", currentPersuasionTask.SpokenLine, false);
                 return true;
             }
+#if TRACEROMANCE
+            Helper.Print("persuasion_go_nextStep:: return false");
+#endif
             return false;
         }
 
@@ -910,6 +957,7 @@ namespace MarryAnyone.Behaviors
             PersuasionTask currentPersuasionTask = this.GetCurrentPersuasionTask();
             if (currentPersuasionTask.Options.All((PersuasionOptionArgs x) => x.IsBlocked) && !ConversationManager.GetPersuasionProgressSatisfied())
             {
+
                 MBTextManager.SetTextVariable("FAILED_PERSUASION_LINE", currentPersuasionTask.FinalFailLine, false);
                 return true;
             }
@@ -1101,9 +1149,9 @@ namespace MarryAnyone.Behaviors
                                     PartyHelper.SwapMainParty(mobilePartyDest);
 
                                     DestroyPartyAction.Apply(null, oldParty);
-    #if TRACEWEDDING
+#if TRACEWEDDING
                                     Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
-    #endif
+#endif
                                 }
 
                                 Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
@@ -1118,13 +1166,13 @@ namespace MarryAnyone.Behaviors
 
                                 var current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
                                 Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
-    #if TRACEWEDDING
+#if TRACEWEDDING
                                 Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
                                 if (hero.Clan == null)
                                     Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
                                 else if (hero.Clan.Lords == null)
                                     Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-    #endif                      
+#endif
                             }
                         }
                         else
@@ -1300,7 +1348,7 @@ namespace MarryAnyone.Behaviors
             return supprimeClan;
         }
 
-        #endregion
+#endregion
 
         private void OnHourTickEvent()
         {
@@ -1344,7 +1392,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #region chargements et patch
+#region chargements et patch
 
         private void patchClanLeader(Clan clan)
         {
@@ -1715,6 +1763,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-        #endregion
+#endregion
     }
 }

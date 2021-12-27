@@ -9,8 +9,14 @@ namespace MarryAnyone.Settings
     {
 
 
+        #region constantes
+        private const string CONFIG_FILE = "config.json";
+        private const string USER_PATH_FOR_CONFIG = "/Mount and Blade II Bannerlord/Configs/ModSettings/" + Helper.MODULE_NAME;
+        private const string GAME_PATH_CONFIG = "Modules/" + Helper.MODULE_NAME + "/" + CONFIG_FILE;
+
         public const String DIFFICULTY_VERY_EASY = "Very Easy";
         public const String DIFFICULTY_EASY = "Easy";
+        #endregion
 
         public static bool UsingMCM;
 
@@ -18,7 +24,30 @@ namespace MarryAnyone.Settings
 
         public static bool NoConfigWarning;
 
-        public static readonly string ConfigPath = BasePath.Name + "Modules/MarryAnyone/config.json";
+        //public static readonly string ConfigPath = BasePath.Name + "Modules/MarryAnyone/config.json";
+        public static string ConfigPath
+        {
+            get
+            {
+
+                string configPathUser = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + USER_PATH_FOR_CONFIG;
+                string configFileUser = configPathUser + "/" + CONFIG_FILE;
+                if (!File.Exists(configFileUser))
+                {
+                    string configGame = BasePath.Name + GAME_PATH_CONFIG;
+                    if (!File.Exists(configGame))
+                        throw new Exception(String.Format("File {0} not found !", configGame));
+
+                    Directory.CreateDirectory(configPathUser);
+
+                    File.Copy(configGame, configFileUser);
+
+                    if (!File.Exists(configFileUser))
+                        throw new Exception(String.Format("File {0} not found !", configGame));
+                }
+                return configFileUser;
+            }
+        }
 
         public bool Incest { get => _provider.Incest; set => _provider.Incest = value; }
         public bool Polygamy { get => _provider.Polygamy; set => _provider.Polygamy = value; }
