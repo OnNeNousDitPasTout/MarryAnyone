@@ -17,17 +17,28 @@ namespace MarryAnyone.Patches.Behaviors
     {
         static Hero? _heroBeingProposedTo = null;
 
-#if V4 && CANTMARRYIFBUSY
+#if V4 
 
         [HarmonyPatch("conversation_courtship_initial_reaction_on_condition")]
         [HarmonyPostfix]
         private static void conversation_courtship_initial_reaction_on_conditionPostfix(ref bool __result)
         {
-            if (Hero.OneToOneConversationHero != null && __result) {
+            if (Hero.OneToOneConversationHero != null && __result) 
+            {
+#if CANTMARRYIFBUSY
                 if (Helper.HeroOccupiedAndCantMarried(Hero.OneToOneConversationHero))
                 {
 #if TRACE
-                    Helper.Print("conversation_courtship_initial_reaction_on_condition return false", Helper.PrintHow.PrintToLogAndWrite);
+                    Helper.Print("conversation_courtship_initial_reaction_on_condition return false because busy", Helper.PrintHow.PrintToLogAndWrite);
+                    //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
+#endif
+                    __result = false;
+                }
+#endif
+                if (Helper.MASettings.RelationLevelMinForRomance >= 0 && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)
+                {
+#if TRACE
+                    Helper.Print("conversation_courtship_initial_reaction_on_condition return false because not enough relation", Helper.PrintHow.PrintToLogAndWrite);
                     //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
 #endif
                     __result = false;
@@ -48,6 +59,7 @@ namespace MarryAnyone.Patches.Behaviors
             if (Hero.OneToOneConversationHero != null && !__result)
             //if (Hero.OneToOneConversationHero != null)
             {
+#if CANTMARRYIFBUSY
                 if (Helper.HeroOccupiedAndCantMarried(Hero.OneToOneConversationHero))
                 {
                     int relation = Hero.OneToOneConversationHero.GetRelation(Hero.MainHero);
@@ -59,6 +71,14 @@ namespace MarryAnyone.Patches.Behaviors
                         MBTextManager.SetTextVariable("COURTSHIP_DECLINE_REACTION", "{=ma_tooBusyOtherMinus}Can you help me about my little issue before {?PLAYER.GENDER}my lady{?}my lord{\\?},{newline}  I will be happy to talk about that after free my mind.", false);
                     __result = true;
                     //return false;
+                }
+#endif
+                if (!__result 
+                    && Helper.MASettings.RelationLevelMinForRomance >= 0 
+                    && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)
+                {
+                    MBTextManager.SetTextVariable("COURTSHIP_DECLINE_REACTION", "{=ma_notEnoughRelation}Sorry my {?PLAYER.GENDER}lady{?}lord{\\?}, we don't know enough to talk about this subject.", false);
+                    __result = true;
                 }
             }
             //return true;

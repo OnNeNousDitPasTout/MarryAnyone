@@ -778,7 +778,7 @@ namespace MarryAnyone
         }
 #endif
 
-        public static bool MarryEnabledPathMA(Hero hero, Hero mainHero)
+        public static bool MarryEnabledPathMA(Hero hero, Hero mainHero, bool testRelationLevel = true)
         {
 #if V4
             return ((hero.CharacterObject.Occupation != Occupation.Lord
@@ -786,8 +786,10 @@ namespace MarryAnyone
                      )
                     && hero.IsAlive 
                     && (MASettings.Notable || (!MASettings.Notable && !hero.IsNotable))
-                    && (MASettings.RelationLevelMinForRomance == -1
-                        || hero.GetRelation(mainHero) >= MASettings.RelationLevelMinForRomance));
+                    && (!testRelationLevel 
+                        || (testRelationLevel 
+                            && (MASettings.RelationLevelMinForRomance == -1
+                                || hero.GetRelation(mainHero) >= MASettings.RelationLevelMinForRomance))));
 #elif V2
             return Hero.OneToOneConversationHero.IsWanderer || Hero.OneToOneConversationHero.IsPlayerCompanion;
 #else
@@ -810,7 +812,7 @@ namespace MarryAnyone
             return ret;
         }
 
-#if TRACELOAD || TRACEROMANCE || TRACEWEDDING
+#if TRACELOAD || TRACEROMANCE || TRACEWEDDING || TRACE
         public static String TraceHero(Hero hero, String? prefix = null)
         {
             String aff = (String.IsNullOrWhiteSpace(prefix) ? "" : (prefix + "::")) + hero.Name + (hero.IsFemale ? "(F)" : "(M)");

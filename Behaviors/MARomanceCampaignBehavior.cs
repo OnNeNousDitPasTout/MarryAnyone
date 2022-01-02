@@ -488,7 +488,7 @@ namespace MarryAnyone.Behaviors
 #endif
 
                 if (ret) {
-                    ret = Helper.MarryEnabledPathMA(Hero.OneToOneConversationHero, Hero.MainHero);
+                    ret = Helper.MarryEnabledPathMA(Hero.OneToOneConversationHero, Hero.MainHero, false);
                         // || MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
                 }
 
@@ -1674,12 +1674,15 @@ namespace MarryAnyone.Behaviors
                 //    Helper.OccupationToLord(hero.CharacterObject);
                 //    Helper.PatchHeroPlayerClan(hero, false, true);
                 //}
+#if TRACKTOMUCHSPOUSE
                 String affAncien = null;
+#endif
                 bool move = false;
 
+#if TRACKTOMUCHSPOUSE
                 if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
                     affAncien = Helper.TraceHero(hero);
-
+#endif
                 if ((hero.Spouse == Hero.MainHero 
                     || (hero.ExSpouses != null && hero.ExSpouses.Contains(Hero.MainHero)))
                     && !SpouseOfPlayer(hero))
