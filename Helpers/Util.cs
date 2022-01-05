@@ -73,7 +73,7 @@ namespace MarryAnyone.Helpers
             }
 
             if (n > 0)
-                Helper.Print(String.Format("Nettoyage romances entre {0} et {1} => {2} suppressions", hero.Name, otherHero.Name, n), Helper.PrintHow.PrintToLogAndWriteAndDisplay);
+                Helper.Print(String.Format("Clean romances between {0} and {1} => {2} relations erased", hero.Name, otherHero.Name, n), Helper.PrintHow.PrintToLogAndWriteAndDisplay);
 
             if (newRomanceLevel != RomanceLevelEnum.Untested)
             {

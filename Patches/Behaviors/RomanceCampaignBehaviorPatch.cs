@@ -44,6 +44,21 @@ namespace MarryAnyone.Patches.Behaviors
                     __result = false;
                 }
             }
+            else if (Hero.OneToOneConversationHero != null 
+                    && !__result
+                    && MADefaultMarriageModel.IsCoupleSuitableForMarriageStatic(Hero.MainHero, Hero.OneToOneConversationHero, false)
+                    && (Helper.MASettings.RelationLevelMinForRomance == -1
+                        || (Helper.MASettings.RelationLevelMinForRomance >= 0 && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)))
+            {
+
+                // Retry
+                __result = TryToRetryCourtship();
+#if TRACE
+                Helper.Print(String.Format("conversation_courtship_initial_reaction_on_condition return {0} == true if retry courtship", __result), Helper.PrintHow.PrintToLogAndWrite);
+                //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
+#endif
+
+            }
         }
 
         [HarmonyPatch("conversation_courtship_decline_reaction_to_player_on_condition")]
@@ -211,8 +226,9 @@ namespace MarryAnyone.Patches.Behaviors
             return false;
         }
 
-        public static void conversation_player_opens_courtship_on_consequence()
+        public static bool TryToRetryCourtship()
         {
+            bool ret = false;
             Romance.RomanceLevelEnum romanceLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
             Romance.RomanceLevelEnum newRomanceLevel = Romance.RomanceLevelEnum.CourtshipStarted;
             int remove = 0;
@@ -222,26 +238,28 @@ namespace MarryAnyone.Patches.Behaviors
                     Util.CleanRomance(Hero.MainHero, Hero.OneToOneConversationHero);
                 remove = 2;
                 newRomanceLevel = Romance.RomanceLevelEnum.CourtshipStarted;
+                ret = true;
             }
             else if (romanceLevel == Romance.RomanceLevelEnum.FailedInPracticalities) {
                 remove = 3;
                 newRomanceLevel = Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible;
+                ret = true;
             }
 
             if (remove != 0)
             {
 #if TRACEROMANCE
-                Helper.Print(string.Format("conversation_player_opens_courtship_on_consequence::Remove 2 of relation with {0}", Hero.OneToOneConversationHero), Helper.PRINT_TRACE_ROMANCE);
+                Helper.Print(string.Format("tryToRetryCourtship::Remove 2 of relation with {0}", Hero.OneToOneConversationHero), Helper.PRINT_TRACE_ROMANCE);
 #endif
                 ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, -remove, false, true);
             }
 
 #if TRACEROMANCE
-            Helper.Print(string.Format("conversation_player_opens_courtship_on_consequence::Romance new level swap to {0}", newRomanceLevel), Helper.PrintHow.PrintDisplay | Helper.PrintHow.PrintToLogAndWrite);
+            Helper.Print(string.Format("tryToRetryCourtship::Romance new level swap to {0}", newRomanceLevel), Helper.PrintHow.PrintDisplay | Helper.PrintHow.PrintToLogAndWrite);
 #endif
             ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, newRomanceLevel);
 
-            return;
+            return ret;
         }
 
         [HarmonyPatch("conversation_player_opens_courtship_on_consequence")]
@@ -264,9 +282,9 @@ namespace MarryAnyone.Patches.Behaviors
             if (__result)
             {
 #if TRACEROMANCE
-                Helper.Print("conversation_courtship_reaction_to_player_on_condition:: call conversation_player_opens_courtship_on_consequence", Helper.PRINT_TRACE_ROMANCE);
+                Helper.Print("conversation_courtship_reaction_to_player_on_condition:: call TryToRetryCourtship", Helper.PRINT_TRACE_ROMANCE);
 #endif
-                conversation_player_opens_courtship_on_consequence();
+                TryToRetryCourtship();
             }
             return;
         }

@@ -14,7 +14,7 @@ namespace MarryAnyone.Behaviors
 {
     internal class MAAdoptionCampaignBehavior : CampaignBehaviorBase
     {
-        protected void AddDialogs(CampaignGameStarter starter)
+        protected void AddDialogs(CampaignGameStarter starter) 
         {
             
             // Children

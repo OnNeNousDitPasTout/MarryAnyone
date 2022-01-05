@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 
 namespace MarryAnyone.Helpers
 {
@@ -88,6 +89,7 @@ namespace MarryAnyone.Helpers
                 }
 
                 Helper.Print(aff, Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+                InformationManager.ShowInquiry(new InquiryData("MATrackingTooMuchSpouse", aff, true, false, "Continue", null, null, null), true);
                 return true;
             }
             return false;
