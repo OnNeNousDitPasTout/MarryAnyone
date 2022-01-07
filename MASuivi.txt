@@ -33,3 +33,8 @@ namespace TaleWorlds.CampaignSystem.ViewModelCollection.Encyclopedia
 
 Report incompatibility with ServeAsSoldier : 
 https://crash.butr.dev/report/661538AD.html
+
+looking for losing spouse : 
+	
+	Farzana,Zuad,Alijin,Yana,Zuad
+	

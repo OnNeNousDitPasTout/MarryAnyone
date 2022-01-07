@@ -186,6 +186,7 @@ namespace MarryAnyone
             if ((printHow & PrintHow.UpdateLog) != 0 && LogPath != null)
                 LogClose();
         }
+
         public static void PrintWithColor(string message, Color color)
         {
             InformationManager.DisplayMessage(new InformationMessage(message, color));
@@ -516,7 +517,6 @@ namespace MarryAnyone
 
             }
         }
-
 
         public static void RemoveFromClan(Hero hero, Clan fromClan, bool canPatchLeader = false)
         {

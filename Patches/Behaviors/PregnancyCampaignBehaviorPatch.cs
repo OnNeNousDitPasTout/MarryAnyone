@@ -46,7 +46,8 @@ namespace MarryAnyone.Patches.Behaviors
 
         public void SwapSpouse(Hero spouse)
         {
-            if (spouse != _hero.Spouse) {
+            if (spouse != _hero.Spouse)
+            {
                 Swap = true;
                 _sauveHeroSpouse = _hero.Spouse;
                 _sauveSpouseSpouse = null;
@@ -63,13 +64,25 @@ namespace MarryAnyone.Patches.Behaviors
                         _canKeep = MARomanceCampaignBehavior.Instance.SpouseOfPlayer(_spouse);
                     else
                        if (_spouse == Hero.MainHero && MARomanceCampaignBehavior.Instance != null)
-                        _canKeep = MARomanceCampaignBehavior.Instance.SpouseOfPlayer(_hero);
+                            _canKeep = MARomanceCampaignBehavior.Instance.SpouseOfPlayer(_hero);
 #endif
                     _sauveSpouseSpouse = _spouse.Spouse;
 #if !SPOUSEALLWAYSWITHYOU
                     _spouse.Spouse = _hero;
 #else
-                    Helper.SetSpouse(_spouse, _hero, Helper.enuSetSpouse.JustSet);
+                    if (_canKeep)
+                    {
+                        if (_hero == Hero.MainHero)
+                            _hero.Spouse = _spouse;
+                        else
+                            _spouse.Spouse = _hero;
+
+                        Helper.RemoveExSpouses(_hero);
+                        Helper.RemoveExSpouses(_spouse);
+
+                    }
+                    else
+                        Helper.SetSpouse(_spouse, _hero, Helper.enuSetSpouse.JustSet);
 #endif
                     _wasSpousePregnant = _spouse.IsPregnant;
                 }
@@ -81,7 +94,8 @@ namespace MarryAnyone.Patches.Behaviors
 #if !SPOUSEALLWAYSWITHYOU
                 _hero.Spouse = _spouse;
 #else
-                Helper.SetSpouse(_hero, _spouse, Helper.enuSetSpouse.JustSet);
+                if (!_canKeep)
+                    Helper.SetSpouse(_hero, _spouse, Helper.enuSetSpouse.JustSet);
 #endif
             }
         }
@@ -129,6 +143,14 @@ namespace MarryAnyone.Patches.Behaviors
 #endif
                 Swap = false;
             }
+#if TRACEPREGNANCY
+            else if (Swap && _canKeep)
+            {
+                Helper.Print(String.Format("UnSwap:: NOT because _canKeep \r\nHero {0}\r\nSpouse {1}"
+                                    , Helper.TraceHero(_hero)
+                                    , (_spouse != null ? Helper.TraceHero(_spouse) : "NULL")), Helper.PRINT_TRACE_PREGNANCY);
+            }
+#endif
         }
 
     }
@@ -175,11 +197,11 @@ namespace MarryAnyone.Patches.Behaviors
                                     && MARomanceCampaignBehavior.Instance.Partners != null
                                     && MARomanceCampaignBehavior.Instance.Partners.Contains(hero);
 
-                if (hero.Spouse is null && !isPartner && (hero.ExSpouses.IsEmpty() || hero.ExSpouses is null))
+                if (hero.Spouse is null && !isPartner && (hero.ExSpouses is null || hero.ExSpouses.IsEmpty()))
                 {
-#if TRACEPREGNANCY
-                    Helper.Print(string.Format("DailyTickHero:: {0} has No Spouse", hero.Name), Helper.PRINT_TRACE_PREGNANCY);
-#endif
+//#if TRACEPREGNANCY
+//                    Helper.Print(string.Format("DailyTickHero:: {0} has No Spouse", hero.Name), Helper.PRINT_TRACE_PREGNANCY);
+//#endif
                 }
                 else if (hero == Hero.MainHero || isPartner || hero == Hero.MainHero.Spouse || Hero.MainHero.ExSpouses.Contains(hero)) // If you are the MainHero go through advanced process
                 {
