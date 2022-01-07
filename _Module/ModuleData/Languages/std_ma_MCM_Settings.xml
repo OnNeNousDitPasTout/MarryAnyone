@@ -33,6 +33,8 @@
 		<string id="retry_courtship_desc" text="Player can retry courtship after failure" />
 		<string id="spousejoinarena" text="Spouse(s) join arena" />
 	    <string id="spousejoinarena_desc" text="Spouse join arena with you" />
+		<string id="CanJoinUpperClanThroughMAPath" text="Can join upper clan through MA Path" />
+		<string id="CanJoinUpperClanThroughMAPath_desc" text="Can join upper clan through MA Path (Not compatible with Calradia Expanded)" />
 		<string id="RelationLevelMinForRomance" text="Relation needed for romance" />
 		<string id="RelationLevelMinForRomance_desc" text="Relation needed for begin a romance (-1 desabled the control)" />
 		<string id="RelationLevelMinForCheating" text="Relation needed for cheating relation" />
