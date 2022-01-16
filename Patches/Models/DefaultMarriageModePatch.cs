@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 
-namespace MarryAnyone.Patches
+namespace MarryAnyone.Patches.Models
 {
     [HarmonyPatch(typeof(DefaultMarriageModel), "IsCoupleSuitableForMarriage", new Type[] {typeof(Hero), typeof(Hero) })]
     public class DefaultMarriageModel_IsCoupleSuitableForMarriage_Patch

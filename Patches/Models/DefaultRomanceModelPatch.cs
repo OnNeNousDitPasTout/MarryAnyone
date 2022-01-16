@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 
-namespace MarryAnyone.Patches
+namespace MarryAnyone.Patches.Models
 {
     [HarmonyPatch(typeof(DefaultRomanceModel), "CourtshipPossibleBetweenNPCs", new Type[] { typeof(Hero), typeof(Hero) })]
     class DefaultRomanceModel_CourtshipPossibleBetweenNPCs_Patch

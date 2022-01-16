@@ -87,6 +87,7 @@ namespace MarryAnyone.Behaviors
             NoMoreSpouse = null;
             _previousCheatPersuasionAttempts = null;
             _allReservations = null;
+            PregnancyCampaignBehaviorPatch.Done();
             Instance = null;
         }
 
