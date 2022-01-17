@@ -71,6 +71,7 @@ namespace MarryAnyone.Settings
         public bool DifficultyEasyMode { get => String.Equals(_provider.Difficulty, DIFFICULTY_EASY, StringComparison.OrdinalIgnoreCase);  }
         public bool DifficultyVeryEasyMode { get => String.Equals(_provider.Difficulty, DIFFICULTY_VERY_EASY, StringComparison.OrdinalIgnoreCase); }
         public bool DifficultyNormalMode { get => _provider.Difficulty == null || !_provider.Difficulty.EndsWith("Easy", StringComparison.OrdinalIgnoreCase); }
+        public bool Patch { get => _provider.Patch; set => _provider.Patch = value; }
 
         public MASettings()
         {
@@ -108,6 +109,7 @@ namespace MarryAnyone.Settings
                     MAConfig.Instance.ImproveRelation = config.ImproveRelation;
                     MAConfig.Instance.NotifyRelationImprovementWithinFamily = config.NotifyRelationImprovementWithinFamily;
                     MAConfig.Instance.CanJoinUpperClanThroughMAPath = config.CanJoinUpperClanThroughMAPath;
+                    MAConfig.Instance.Patch = config.Patch;
                     NoMCMWarning = true;
                     NoConfigWarning = false;
                 }

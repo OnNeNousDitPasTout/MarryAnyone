@@ -11,6 +11,7 @@ using System.Linq;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Conversation.Persuasion;
+using TaleWorlds.CampaignSystem.LogEntries;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
@@ -158,7 +159,12 @@ namespace MarryAnyone.Behaviors
             {
                 List<Hero> spouses = Hero.MainHero.ExSpouses.ToList();
                 if (Hero.MainHero.Spouse != null)
-                    spouses.Add(Hero.MainHero.Spouse);
+                {
+                    if (spouses.Count > 0 )
+                        spouses.Insert(0, Hero.MainHero.Spouse);
+                    else
+                        spouses.Add(Hero.MainHero.Spouse);
+                }
 
                 if (Partners != null)
                     spouses.RemoveAll(x => Partners.IndexOf(x) >= 0);
@@ -1395,6 +1401,21 @@ namespace MarryAnyone.Behaviors
 
 #region chargements et patch
 
+        private bool SaveVersionOlderThen(String versionChaine)
+        {
+            if (SaveVersion == null)
+                return true;
+
+            Version versionComparaison = new Version(versionChaine);
+#if TRACELOAD
+            Helper.Print(String.Format("SaveVersionOlderThen SaveVersion ?= {0} < versionComparaison ?= {1} => {2}"
+                                    , SaveVersion.ToString()
+                                    , versionComparaison.ToString()
+                                    , (SaveVersion < versionComparaison).ToString()), Helper.PrintHow.PrintToLogAndWriteAndInit);
+#endif
+            return SaveVersion < versionComparaison;
+        }
+
         private void patchClanLeader(Clan clan)
         {
 
@@ -1459,9 +1480,40 @@ namespace MarryAnyone.Behaviors
 
         }
 
-        private void patchSpouses()
+        // Return true if patch
+        private bool patchParent(Hero children, Hero ?mainFemaleSpouseHero, Hero? mainMaleSpouseHero)
+        {
+            bool hadSpouse = mainFemaleSpouseHero != null || mainMaleSpouseHero != null;
+            bool mainHeroIsFemale = Hero.MainHero.IsFemale;
+
+            if (hadSpouse && children.Father == Hero.MainHero && children.Mother == Hero.MainHero)
+            {
+                Helper.Print(string.Format("Will Patch Parent of {0}", children.Name), Helper.PRINT_PATCH);
+                if (mainHeroIsFemale)
+                    children.Father = mainMaleSpouseHero ?? mainFemaleSpouseHero;
+                else
+                    children.Mother = mainFemaleSpouseHero ?? mainMaleSpouseHero;
+                return true;
+            }
+            if (children.Father == null)
+            {
+                Helper.Print(string.Format("Will patch Father of {0}", children.Name), Helper.PRINT_PATCH);
+                children.Father = mainHeroIsFemale && mainMaleSpouseHero != null ? mainMaleSpouseHero : Hero.MainHero;
+                return true;
+            }
+            if (children.Mother == null)
+            {
+                Helper.Print(string.Format("Will patch Mother of {0}", children.Name), Helper.PRINT_PATCH);
+                children.Mother = !mainHeroIsFemale && mainFemaleSpouseHero != null ? mainFemaleSpouseHero : Hero.MainHero;
+                return true;
+            }
+            return false;
+        }
+
+        private void patchSpouses(CampaignGameStarter campaignGameStarter)
         {
 
+            bool needPatch = Helper.MASettings.Patch;
             bool bPatchExecute = false;
             int nbMainHero = 0;
 
@@ -1478,39 +1530,6 @@ namespace MarryAnyone.Behaviors
                     Helper.Print(string.Format("Active {0}", hero.Name), Helper.PRINT_PATCH);
 
                 }
-            }
-
-            // Parent patch
-            bool hadSpouse = Hero.MainHero.Spouse != null;
-            bool mainHeroIsFemale = Hero.MainHero.IsFemale;
-
-            //foreach (Hero hero in Hero.MainHero.Children)
-            int i = 0;
-            while (i < Hero.MainHero.Children.Count)
-            {
-                Hero hero = Hero.MainHero.Children[i];
-                if (hadSpouse && hero.Father == Hero.MainHero && hero.Mother == Hero.MainHero)
-                {
-                    Helper.Print(string.Format("Will Patch Parent of {0}", hero.Name), Helper.PRINT_PATCH);
-                    if (mainHeroIsFemale)
-                        hero.Father = Hero.MainHero.Spouse;
-                    else
-                        hero.Mother = Hero.MainHero.Spouse;
-                    i--;
-                }
-                if (hero.Father == null)
-                {
-                    Helper.Print(string.Format("Will patch Father of {0}", hero.Name), Helper.PRINT_PATCH);
-                    hero.Father = mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    i--;
-                }
-                if (hero.Mother == null)
-                {
-                    Helper.Print(string.Format("Will patch Mother of {0}", hero.Name), Helper.PRINT_PATCH);
-                    hero.Mother = !mainHeroIsFemale && hadSpouse ? Hero.MainHero.Spouse : Hero.MainHero;
-                    i--;
-                }
-                i++;
             }
 
             List<Hero> spouses = new List<Hero>();
@@ -1552,6 +1571,98 @@ namespace MarryAnyone.Behaviors
 #endif
                 }
             }
+
+#if PATCHWITHLOGENTRY
+            //DefaultLogsCampaignBehavior defaultLogsCampaignBehavior = campaignGameStarter.CampaignBehaviors.OfType<DefaultLogsCampaignBehavior>().FirstOrDefault();
+            //if (defaultLogsCampaignBehavior != null)
+            //{
+
+            //}
+            List<Hero> logSpouses = new List<Hero>();
+            if (needPatch || SaveVersionOlderThen("2.6.11"))
+            {
+
+                List<CharacterMarriedLogEntry> lecture = new List<CharacterMarriedLogEntry>();
+                foreach (CharacterMarriedLogEntry characterMarriedLogEntry
+                        in Campaign.Current.LogEntryHistory.GetGameActionLogs<CharacterMarriedLogEntry>(
+                                new Func<CharacterMarriedLogEntry, bool>((logEntry) => { return (logEntry.MarriedHero == Hero.MainHero || logEntry.MarriedTo == Hero.MainHero); })))
+                {
+                    Hero otherHero = characterMarriedLogEntry.MarriedHero == Hero.MainHero ? characterMarriedLogEntry.MarriedTo : characterMarriedLogEntry.MarriedHero;
+                    if (otherHero.IsAlive && !SpouseOfPlayer(otherHero))
+                    {
+                        CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
+                        if (existe != null && existe.GameTime < characterMarriedLogEntry.GameTime)
+                        { // if we don't fint more rescent marriage
+                            lecture.Remove(existe);
+                            existe = null;
+                        }
+                        if (existe == null)
+                            lecture.Add(characterMarriedLogEntry);
+                    }
+                }
+
+                foreach (CharacterMarriedLogEntry characterMarriedLogEntry in lecture)
+                {
+                    Hero otherHero = characterMarriedLogEntry.MarriedHero == Hero.MainHero ? characterMarriedLogEntry.MarriedTo : characterMarriedLogEntry.MarriedHero;
+                    if (!Campaign.Current.LogEntryHistory.GetGameActionLogs<CharacterMarriedLogEntry>
+                            (x => x.GameTime > characterMarriedLogEntry.GameTime
+                               && ((x.MarriedHero == otherHero && x.MarriedTo != Hero.MainHero)
+                                   || (x.MarriedTo == otherHero && x.MarriedHero != Hero.MainHero))).Any())
+                    {
+                        // it's good, we have to merge
+                        spouses.Add(otherHero);
+                        logSpouses.Add(otherHero);
+#if TRACELOAD
+                        Helper.Print("Log spouse add " + Helper.TraceHero(otherHero), Helper.PRINT_TRACE_LOAD);
+#endif
+                    }
+                }
+
+                if (logSpouses.Count > 0)
+                {
+                    Helper.RemoveExSpouses(Hero.MainHero, false, spouses, false, null);
+                }
+            }
+#endif
+
+            // Parent patch
+            bool hadSpouse = Hero.MainHero.Spouse != null;
+
+            Hero mainMaleSpouse = this.Spouses.FirstOrDefault(x => !x.IsFemale);
+            Hero mainFemaleSpouse = this.Spouses.FirstOrDefault(x => x.IsFemale);
+
+            int i = 0;
+            while (i < Hero.MainHero.Children.Count)
+            {
+                Hero children = Hero.MainHero.Children[i];
+                if (patchParent(children, mainFemaleSpouse, mainMaleSpouse))
+                    i--;
+                i++;
+            }
+
+#if PATCHWITHLOGENTRY
+            if (logSpouses.Count > 0)
+            {
+                foreach (Hero spouse in logSpouses)
+                {
+                    i = 0;
+                    while (i < spouse.Children.Count)
+                    {
+                        Hero children = spouse.Children[i];
+                        if (!Hero.MainHero.Children.Any(x => x == children)
+                            && children.Clan == Hero.MainHero.Clan
+                            && !SpouseOfPlayer(children))
+                        {
+                            if (patchParent(children, mainFemaleSpouse, mainMaleSpouse))
+                                i--;
+                            else
+                                Hero.MainHero.Children.Add(children);
+                        }
+                        i++;
+                    }
+                }
+            }
+#endif
 
 #if TRACKTOMUCHSPOUSE
             TrackTooMuchSpouse.Instance().Initialise(Spouses);
@@ -1665,7 +1776,7 @@ namespace MarryAnyone.Behaviors
 
             // MAHelper.RemoveDuplicatedHero(); No Need 
 
-            patchSpouses();
+            patchSpouses(campaignGameStarter);
 
             foreach (Hero hero in Hero.AllAliveHeroes.ToList())
             {
@@ -1721,6 +1832,8 @@ namespace MarryAnyone.Behaviors
                 }
 #endif
             }
+
+            Helper.MASettings.Patch = false; // no more needed because applied
 
 #if TRACKTOMUCHSPOUSE
             MARomanceCampaignBehavior.VerifySpouse(0, "After patch");

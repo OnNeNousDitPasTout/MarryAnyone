@@ -111,6 +111,9 @@ namespace MarryAnyone.Settings
         [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 3)]
         public bool Debug { get; set; } = false;
 
+        [SettingPropertyBool("{=patch}Patch", Order = 2, RequireRestart = false, HintText = "{=patch_desc}Save and lod the save to apply the patch again")]
+        public bool Patch { get; set; } = false;
+
 
     }
 }

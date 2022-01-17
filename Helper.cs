@@ -579,6 +579,11 @@ namespace MarryAnyone
 #endif
         }
 
+        //public static addChildrens(Hero fromHero, Hero toHero)
+        //{
+
+        //}
+
         public static void FamilyJoinClan(Hero hero, Clan fromClan, Clan toClan)
         {
             if (hero.Clan == fromClan)

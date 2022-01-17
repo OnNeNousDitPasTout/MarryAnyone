@@ -23,5 +23,6 @@
         public bool CanJoinUpperClanThroughMAPath { get; set; } = false;
         public bool NotifyRelationImprovementWithinFamily { get; set; } = false;
         public bool Notable { get; set; } = false;
+        public bool Patch { get; set; } = false;
     }
 }

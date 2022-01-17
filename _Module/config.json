@@ -18,5 +18,6 @@
 	"RetryCourtship": false,
 	"Debug": false,
 	"NotifyRelationImprovementWithinFamily": false,
-	"Warning": true
+	"Warning": true,
+	"Patch": false
 }

@@ -19,7 +19,8 @@
         int RelationLevelMinForRomance { get; set; }
         int RelationLevelMinForCheating { get; set; }
         int RelationLevelMinForSex { get; set; }
-        bool Debug { get; set; }
         bool NotifyRelationImprovementWithinFamily { get; set; }
+        bool Debug { get; set; }
+        bool Patch { get; set; }
     }
 }

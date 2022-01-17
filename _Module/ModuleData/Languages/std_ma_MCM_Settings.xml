@@ -47,5 +47,7 @@
 		<string id="notable_desc" text="Player character can marry notable" />
 		<string id="NotifyRelationImprovementWithinFamily" text="Notify relation improvement in your family" />
 		<string id="NotifyRelationImprovementWithinFamily_desc" text="Display relation improvement in your family in the game's message log" />
+		<string id="patch" text="Patch on load" />
+		<string id="patch_desc" text="Save and lod the save to apply the patch again" />
   </strings>
 </base>
