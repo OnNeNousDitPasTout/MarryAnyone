@@ -160,7 +160,7 @@ namespace MarryAnyone.Patches.Behaviors
     internal static class PregnancyCampaignBehaviorPatch
     {
 
-        private static readonly ShortLifeObject _shortLifeObject = new ShortLifeObject();
+        private static readonly ShortLifeObject _shortLifeObject = new ShortLifeObject(100);
 
         private static List<Hero>? _spouses;
         private static Hero? _sideFemaleHero;

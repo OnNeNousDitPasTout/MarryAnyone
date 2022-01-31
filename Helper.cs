@@ -104,6 +104,13 @@ namespace MarryAnyone
         public const PrintHow PRINT_TRACE_CHEAT = PrintHow.PrintDisplay | PrintHow.PrintToLog | PrintHow.UpdateLog;
 #else
 #endif
+#if TRACE_ARENA_PARTICIPANT_START
+        public const PrintHow PRINT_TRACE_ARENA_PARTICIPANT = PrintHow.PrintForceDisplay | PrintHow.PrintToLog | PrintHow.UpdateLog;
+#else
+        public const PrintHow PRINT_TRACE_ARENA_PARTICIPANT = PrintHow.PrintDisplay;
+#endif
+
+#if !NOLOG
         public static string? LogPath
         {
             get => _logPath;
@@ -136,6 +143,7 @@ namespace MarryAnyone
                 LogPath = dirpath;
             }
         }
+#endif
 
         public static Version VersionGet
         {
@@ -176,6 +184,7 @@ namespace MarryAnyone
                 InformationManager.DisplayMessage(new InformationMessage(message, color));
             }
 
+#if !NOLOG
             if ((printHow & PrintHow.PrintToLog) != 0 && (printHow & PrintHow.CanInitLogPath) != 0 && LogPath == null)
                 InitLogPath(false);
 
@@ -185,6 +194,7 @@ namespace MarryAnyone
             }
             if ((printHow & PrintHow.UpdateLog) != 0 && LogPath != null)
                 LogClose();
+#endif
         }
 
         public static void PrintWithColor(string message, Color color)
@@ -192,6 +202,7 @@ namespace MarryAnyone
             InformationManager.DisplayMessage(new InformationMessage(message, color));
         }
 
+#if !NOLOG
         public static void Log(string text, string? prefix = null)
         {
             if (_sw == null && !string.IsNullOrEmpty(LogPath))
@@ -255,12 +266,15 @@ namespace MarryAnyone
 
             }
         }
+#endif
 
         public static void Error(Exception exception)
         {
             String message = ModuleNameGet + ": " + exception.Message;
             InformationManager.DisplayMessage(new InformationMessage(message, Colors.Red));
+#if !NOLOG
             Log(message, "ERROR");
+#endif
         }
 
         private static int NbSpouse(Hero hero)
@@ -457,14 +471,13 @@ namespace MarryAnyone
             {
                 Hero current = _alivesHero[i];
                 Hero next = _alivesHero[i + 1];
+#if TRACELOAD
                 if (String.Equals(current.StringId, next.StringId, StringComparison.Ordinal))
                 {
                     Helper.Print(String.Format("Duplicated alive hero {2}\r\n\t{0}\r\n\t{1}", TraceHero(current), TraceHero(next), i), PRINT_PATCH);
                 }
-#if TRACELOAD
                 else
                     Helper.Print(String.Format("hero {2}: {0} ({1}) not duplicated", current.Name, current.StringId, i), PRINT_PATCH);
-
 #endif
             }
             Helper.Print(String.Format("RemoveDuplicatedHero parcours {0} heroes", _alivesHero.Count), PRINT_PATCH);
@@ -485,12 +498,17 @@ namespace MarryAnyone
 #else
                     AccessTools.Property(typeof(CharacterObject), "Occupation").SetValue(character, Occupation.Lord);
 #endif
+                if (CharacterObject.PlayerCharacter != null)
+                {
+                    AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
+                    AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
 
-                AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
-                AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
-
+                }
+#if TRACE
+                else
+                    Print("OccupationToLord not full because CharacterObject.PlayerCharacter is NULL", PRINT_PATCH);
+#endif
                 Print(String.Format("Swap Occupation To Lord for {0} newOccupation ?= {1}", character.Name.ToString(), character.Occupation.ToString()), PrintHow.PrintToLogAndWriteAndDisplay);
-
             }
         }
 
@@ -569,7 +587,10 @@ namespace MarryAnyone
                 toClan.Lords.AddItem(hero);
 #if TRACEWEDDING
                 Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_WEDDING);
+#elif TRACECREATECLAN
+                Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_CREATE_CLAN);
 #endif
+
 
                 if (fromClan != null 
                     && (fromClan.Lords.IndexOf(hero) >= 0 
@@ -593,11 +614,17 @@ namespace MarryAnyone
             {
                 if (child.Father == hero || child.Mother == hero)
                 {
+#if TRACECREATECLAN
+                    Helper.Print(String.Format("FamilyJoinClan for child {0}", child.Name), Helper.PRINT_TRACE_CREATE_CLAN);
+#endif
                     FamilyJoinClan(child, fromClan, toClan);
                 }
             }
             if (hero.Spouse != null && hero.Spouse.Clan == fromClan)
             {
+#if TRACECREATECLAN
+                Helper.Print(String.Format("FamilyJoinClan for spouse {0}", hero.Spouse.Name), Helper.PRINT_TRACE_CREATE_CLAN);
+#endif
                 FamilyJoinClan(hero.Spouse, fromClan, toClan);
             }
         }

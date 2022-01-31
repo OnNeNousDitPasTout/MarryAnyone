@@ -61,7 +61,9 @@ namespace MarryAnyone
 
         protected override void OnSubModuleLoad()
         {
+#if !NOLOG
             Helper.InitLogPath(false);
+#endif
             base.OnSubModuleLoad();
         }
 
@@ -146,7 +148,9 @@ namespace MarryAnyone
 #endif
 
             base.OnGameEnd(game);
+#if !NOLOG
             Helper.LogClose();
+#endif
         }
 
 

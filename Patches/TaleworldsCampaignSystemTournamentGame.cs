@@ -119,7 +119,7 @@ namespace PatchViaHarmony.Patches
 									, includePlayer
 									, includeHeroes);
 
-			Helper.Print(aff, Helper.PrintHow.PrintForceDisplay);
+			Helper.Print(aff, Helper.PRINT_TRACE_ARENA_PARTICIPANT);
 #endif
 			
 #if V1650MORE
@@ -192,7 +192,7 @@ namespace PatchViaHarmony.Patches
 						if (troopRosterElement.Character.HeroObject.IsWounded)
 							aff += " Wounded";
 
-						Helper.Print(aff, Helper.PrintHow.PrintToLog);
+						Helper.Print(aff, Helper.PRINT_TRACE_ARENA_PARTICIPANT);
 					}
 #endif
 
@@ -206,7 +206,9 @@ namespace PatchViaHarmony.Patches
 								|| Hero.MainHero.ExSpouses.Contains(troopRosterElement.Character.HeroObject))
 						&& !list.Contains(troopRosterElement.Character))
 					{
-						Helper.Print(String.Format("Ajoute le caractère {0}", troopRosterElement.Character.ToString()), Helper.PrintHow.PrintToLog);
+#if TRACE_ARENA_PARTICIPANT_START
+						Helper.Print(String.Format("Ajoute le caractère {0}", troopRosterElement.Character.ToString()), Helper.PRINT_TRACE_ARENA_PARTICIPANT);
+#endif
 						list.Add(troopRosterElement.Character);
 						num++;
 					}
@@ -347,7 +349,7 @@ namespace PatchViaHarmony.Patches
 			__result = list;
 
 #if TRACE_ARENA_PARTICIPANT_START
-			Helper.Print("GetParticipantCharacters::FAIT", Helper.PrintHow.PrintToLogAndWrite);
+			Helper.Print("GetParticipantCharacters::DONE", Helper.PRINT_TRACE_ARENA_PARTICIPANT);
 #endif
 
 			return false; // Skip default execution

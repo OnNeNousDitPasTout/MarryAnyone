@@ -48,7 +48,7 @@ namespace MarryAnyone.Patches.Behaviors
                 else if (Hero.MainHero.Mother != null && IsChild(Hero.OneToOneConversationHero, Hero.MainHero.Mother))
                     __result = true;
 #if TRACECREATECLAN
-                MAHelper.Print(String.Format("turn_companion_to_lord_on_conditionPatch __result ?= {0}", __result.ToString()), MAHelper.PRINT_TRACE_CREATE_CLAN);
+                Helper.Print(String.Format("turn_companion_to_lord_on_conditionPatch __result ?= {0}", __result.ToString()), Helper.PRINT_TRACE_CREATE_CLAN);
 #endif
 
                 return false;

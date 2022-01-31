@@ -11,11 +11,13 @@ namespace MarryAnyone.Helpers
 
         private Object? _o;
         private DateTime _born;
+        private int _delayInMicroseconde;
 
-        public ShortLifeObject()
+        public ShortLifeObject(int delayInMicroseconde)
         {
             _o = null;
             _born = DateTime.Now;
+            _delayInMicroseconde = delayInMicroseconde;
         }
 
         public bool Swap(Object pO)
@@ -23,7 +25,7 @@ namespace MarryAnyone.Helpers
             DateTime now = DateTime.Now;
             if (_o == null 
                 || _o != pO 
-                || (_o == pO && _born.Subtract(now).TotalMilliseconds > 100))
+                || (_o == pO && now.Subtract(_born).TotalMilliseconds > _delayInMicroseconde)) // _born.Subtract(now).TotalMilliseconds > 100))
             {
                 _o = pO;
                 _born = now;
