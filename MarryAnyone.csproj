@@ -3,7 +3,7 @@
 	<!-- Marry Anyone -->
   <PropertyGroup>
 		<ModuleName>$(MSBuildProjectName)</ModuleName>
-		<Version>2.6.12</Version>
+		<Version>2.6.13</Version>
 		<Authors>RoGreat, GrandesMarees</Authors>
 	</PropertyGroup>
 	

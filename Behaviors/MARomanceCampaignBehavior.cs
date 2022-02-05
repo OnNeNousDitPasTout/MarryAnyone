@@ -740,11 +740,9 @@ namespace MarryAnyone.Behaviors
         {
             if (_previousCheatPersuasionAttempts != null)
             {
-                foreach (PersuasionAttempt persuasionAttempt in _previousCheatPersuasionAttempts)
-                {
-                    if (persuasionAttempt.PersuadedHero == forHero)
-                        _previousCheatPersuasionAttempts.Remove(persuasionAttempt);
-                }
+                PersuasionAttempt? persuasionAttempt = null;
+                while ((persuasionAttempt = _previousCheatPersuasionAttempts.FirstOrDefault(x => x.PersuadedHero == forHero)) != null)
+                    _previousCheatPersuasionAttempts.Remove(persuasionAttempt);
             }
         }
 
