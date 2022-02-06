@@ -502,7 +502,6 @@ namespace MarryAnyone
                 {
                     AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
                     AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
-
                 }
 #if TRACE
                 else
@@ -610,14 +609,17 @@ namespace MarryAnyone
             if (hero.Clan == fromClan)
                 SwapClan(hero, fromClan, toClan);
 
-            foreach (Hero child in fromClan.Lords)
+            //foreach (Hero child in fromClan.Lords)
+            for (int i = 0; i < fromClan.Lords.Count; i++)
             {
+                Hero child = fromClan.Lords[i];
                 if (child.Father == hero || child.Mother == hero)
                 {
 #if TRACECREATECLAN
                     Helper.Print(String.Format("FamilyJoinClan for child {0}", child.Name), Helper.PRINT_TRACE_CREATE_CLAN);
 #endif
                     FamilyJoinClan(child, fromClan, toClan);
+                    i--;
                 }
             }
             if (hero.Spouse != null && hero.Spouse.Clan == fromClan)
