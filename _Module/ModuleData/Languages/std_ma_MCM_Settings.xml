@@ -32,15 +32,15 @@
 		<string id="retry_courtship" text="Retry Courtship" />
 		<string id="retry_courtship_desc" text="Player can retry courtship after failure" />
 		<string id="spousejoinarena" text="Spouse(s) join arena" />
-	    <string id="spousejoinarena_desc" text="Spouse join arena with you" />
+	    <string id="spousejoinarena_desc" text="Spouse will join arena with you" />
 		<string id="CanJoinUpperClanThroughMAPath" text="Can join upper clan through MA Path" />
 		<string id="CanJoinUpperClanThroughMAPath_desc" text="Can join upper clan through MA Path (Not compatible with Calradia Expanded)" />
 		<string id="RelationLevelMinForRomance" text="Relation needed for romance" />
-		<string id="RelationLevelMinForRomance_desc" text="Relation needed for begin a romance (-1 desabled the control)" />
-		<string id="RelationLevelMinForCheating" text="Relation needed for cheating relation" />
-		<string id="RelationLevelMinForRomance_desc" text="Relation needed for begin a cheating romance (-1 desabled the control)" />
+		<string id="RelationLevelMinForRomance_desc" text="Relation needed to start a romance (-1 disable the control)" />
+		<string id="RelationLevelMinForCheating" text="Relation needed for a cheating relation" />
+		<string id="RelationLevelMinForCheating_desc" text="Relation needed for a cheating relation (-1 disable the control)" />
 		<string id="RelationLevelMinForSex" text="Relation needed for sexual relation" />
-		<string id="RelationLevelMinForSex_desc" text="Relation needed for sexual relation (-1 desabled the control)" />
+		<string id="RelationLevelMinForSex_desc" text="Relation needed for sexual relation (-1 disable the control)" />
 		<string id="ImproveRelation" text="Improve relation" />
 	    <string id="ImproveRelation_desc" text="Improve relation when heroes have sexual relation" />
 		<string id="notable" text="With notable" />

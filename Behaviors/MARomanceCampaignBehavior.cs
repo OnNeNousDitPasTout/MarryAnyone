@@ -224,12 +224,13 @@ namespace MarryAnyone.Behaviors
             //                                    , RomanceCampaignBehaviorPatch.conversation_player_opens_courtship_on_consequence
             //                                    , 100, null);
 
-            starter.AddPlayerLine("player_cheat_persuasion_start", "lord_talk_speak_diplomacy_2", "acceptcheatingornot", "{=Cheat_engage_courtship}I'm needing you for a few days and physics parties, can you join my party for a few days ?"
+            starter.AddPlayerLine("player_cheat_persuasion_start", "lord_talk_speak_diplomacy_2", "acceptcheatingornot"
+                                                , "{=Cheat_engage_courtship}I would love to spend some time with you, can you join my party for a few days ?"
                                                 , conversation_characacter_agreed_to_cheat
                                                 , null //conversation_characacter_test_to_cheat
                                                 , 100, null);
 
-            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}There's a long time we hunt together my {RELATION_TEXT}{newline}, but all good thinks must end a day or another, let's divorce {INTERLOCUTOR.NAME}."
+            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}We have been together for too long my {RELATION_TEXT}{newline}, I think it is time to explore new horizons. I want a divorce {INTERLOCUTOR.NAME}."
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(false); }
                                                 , 80, null);
@@ -239,12 +240,13 @@ namespace MarryAnyone.Behaviors
                                                 , delegate { conversation_do_divorce(true); }
                                                 , 60, null);
 
-            starter.AddPlayerLine("player_LeaveCheat_start", "lord_talk_speak_diplomacy_2", "close_window", "{=LeaveCheat_engage_dialog}Can you just leave me {INTERLOCUTOR.NAME}, i have other cats to whip."
+            starter.AddPlayerLine("player_LeaveCheat_start", "lord_talk_speak_diplomacy_2", "close_window"
+                                                , "{=LeaveCheat_engage_dialog}I think you need to go away {INTERLOCUTOR.NAME}, I have other things to do."
                                                 , conversation_can_LeaveCheat
                                                 , conversaion_do_LeaveCheat 
                                                 , 60, null);
 
-            starter.AddDialogLine("hero_leave_party", "goodbySpouse", "close_window", "{=LeaveSpouseParty}Hop we meet againt, better in the arena{newline}bye ..."
+            starter.AddDialogLine("hero_leave_party", "goodbySpouse", "close_window", "{=LeaveSpouseParty}Hope we meet again, maybe in the arena{newline}, so long ..."
                                                 , null
                                                 , null
                                                 , 100, null);
@@ -254,7 +256,7 @@ namespace MarryAnyone.Behaviors
                                                 , null
                                                 , 120, null);
 
-            starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I allready give you a reply. Do you nead hearing aid ?"
+            starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I have already given you my answer, off you go"
                                                 , delegate { return !conversation_characacter_notagreed_to_cheat_VariantTest() && conversation_cheat_allready_done(); }
                                                 , null
                                                 , 100, null);
@@ -275,7 +277,7 @@ namespace MarryAnyone.Behaviors
                                                 , null
                                                 , 100, null);
 
-            starter.AddDialogLine("hero_cheat_persuasion_success", "heroPersuasionNextQuestion", "close_window", "{=Cheat_success}Let's do it !! I join your party."
+            starter.AddDialogLine("hero_cheat_persuasion_success", "heroPersuasionNextQuestion", "close_window", "{=Cheat_success}Yes, let's have some fun ! I will join your party."
                                                 , null
                                                 , this.conversation_characacter_success_to_cheat_go
                                                 , 100, null);
@@ -348,7 +350,7 @@ namespace MarryAnyone.Behaviors
                                                 , new ConversationSentence.OnConditionDelegate(conversation_finalize_courtship_for_hero_on_condition)
                                                 , new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 140, null);
 
-            starter.AddPlayerLine("hero_want_to_marry", "hero_main_options", "lord_pretalk", "{=endcourthip}Sorry {INTERLOCUTOR.NAME}, i don't want marry you anymore."
+            starter.AddPlayerLine("hero_want_to_marry", "hero_main_options", "lord_pretalk", "{=endcourthip}Sorry {INTERLOCUTOR.NAME}, I don't want to marry you anymore."
                                                 , conversation_player_end_courtship
                                                 , conversation_player_end_courtship_do
                                                 , 100, null, null);
@@ -649,35 +651,35 @@ namespace MarryAnyone.Behaviors
 
             PersuasionTask persuasionTask = new PersuasionTask(0);
             list.Add(persuasionTask);
-            persuasionTask.FinalFailLine = new TextObject("{=cheatTestFail}I'm bored..", null);
-            persuasionTask.TryLaterLine = new TextObject("{=cheatTestRetry}Well, it would take a bit long to discuss this.", null);
-            persuasionTask.SpokenLine = new TextObject("{=cheatFirstToken}What do you have in mind...", null);
+            persuasionTask.FinalFailLine = new TextObject("{=cheatTestFail}I am not interested.", null);
+            persuasionTask.TryLaterLine = new TextObject("{=cheatTestRetry}Well, I think you may want to try some other time.", null);
+            persuasionTask.SpokenLine = new TextObject("{=cheatFirstToken}What do you have in mind ?", null);
 
             Tuple<TraitObject, int>[] traitCorrelations = this.GetTraitCorrelations(1, -1, 0, 1, -1);
             PersuasionArgumentStrength argumentStrengthBasedOnTargetTraits = Campaign.Current.Models.PersuasionModel.GetArgumentStrengthBasedOnTargetTraits(CharacterObject.OneToOneConversationCharacter, traitCorrelations);
 
             PersuasionOptionArgs option = new PersuasionOptionArgs(DefaultSkills.Leadership, DefaultTraits.Valor, TraitEffect.Positive, argumentStrengthBasedOnTargetTraits, false
-                                                                    , new TextObject("{=CheatLeaderChoice}Just follow me {?INTERLOCUTOR.GENDER}Miss{?}Mister{\\?}, do not worry.", null)
+                                                                    , new TextObject("{=CheatLeaderChoice}Don't worry, just follow me {?INTERLOCUTOR.GENDER}Miss{?}Mister{\\?}.", null)
                                                                     , traitCorrelations, false, true, false);
             persuasionTask.AddOptionToTask(option);
 
             Tuple<TraitObject, int>[] traitCorrelations2 = this.GetTraitCorrelations(1, 0, 0, -1, 1);
             PersuasionArgumentStrength argumentStrengthBasedOnTargetTraits2 = Campaign.Current.Models.PersuasionModel.GetArgumentStrengthBasedOnTargetTraits(CharacterObject.OneToOneConversationCharacter, traitCorrelations2);
             PersuasionOptionArgs option2 = new PersuasionOptionArgs(DefaultSkills.Roguery, DefaultTraits.Valor, TraitEffect.Positive, argumentStrengthBasedOnTargetTraits2, false
-                                                                    , new TextObject("{=CheatCalculateChoice}If the two of us have the same think in mind, let's go", null)
+                                                                    , new TextObject("{=CheatCalculateChoice}If we are both thinking the same thing, then let's go", null)
                                                                     , traitCorrelations2, false, true, false);
 
             persuasionTask.AddOptionToTask(option2);
             Tuple<TraitObject, int>[] traitCorrelations3 = this.GetTraitCorrelations(0, 1, 1, 0, -1);
             PersuasionArgumentStrength argumentStrengthBasedOnTargetTraits3 = Campaign.Current.Models.PersuasionModel.GetArgumentStrengthBasedOnTargetTraits(CharacterObject.OneToOneConversationCharacter, traitCorrelations3);
             PersuasionOptionArgs option3 = new PersuasionOptionArgs(DefaultSkills.Charm, DefaultTraits.Mercy, TraitEffect.Positive, argumentStrengthBasedOnTargetTraits3, false
-                                                    , new TextObject("{=CheatMercyChoice}I do not allow {?INTERLOCUTOR.GENDER}a beautifull woman{?}a lovely young man{\\?} can be hurt in this dangerous land, i'll save you.", null)
+                                                    , new TextObject("{=CheatMercyChoice}I cannot let {?INTERLOCUTOR.GENDER}a beautiful woman{?}a handsome young man{\\?} get hurt in this dangerous world, I'll protect you.", null)
                                                     , traitCorrelations3, false, true, false);
             persuasionTask.AddOptionToTask(option3);
             Tuple<TraitObject, int>[] traitCorrelations4 = this.GetTraitCorrelations(-1, 0, -1, -1, 0);
             PersuasionArgumentStrength argumentStrengthBasedOnTargetTraits4 = Campaign.Current.Models.PersuasionModel.GetArgumentStrengthBasedOnTargetTraits(CharacterObject.OneToOneConversationCharacter, traitCorrelations4);
             PersuasionOptionArgs option4 = new PersuasionOptionArgs(DefaultSkills.Charm, DefaultTraits.Generosity, TraitEffect.Negative, argumentStrengthBasedOnTargetTraits4, false
-                                                    , new TextObject("{=CheatGenerosityCharm}It is a sunny day today, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurer man{\\?} like your, need breathe and see other horizons.", null)
+                                                    , new TextObject("{=CheatGenerosityCharm}It is a beautiful day outside, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurous man{\\?} like you, needs to enjoy the fresh air.", null)
                                                     , traitCorrelations4, false, true, false);
             persuasionTask.AddOptionToTask(option4);
 

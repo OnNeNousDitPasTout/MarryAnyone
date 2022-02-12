@@ -68,15 +68,15 @@ namespace MarryAnyone.Settings
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public bool CanJoinUpperClanThroughMAPath { get; set; } = false;
 
-        [SettingPropertyInteger("{=RelationLevelMinForRomance}Relation needed for romance", -1, 100, Order = 10, RequireRestart = false, HintText = "{=RelationLevelMinForRomance_desc}Relation needed for begin a romance (-1 desabled the control)")]
+        [SettingPropertyInteger("{=RelationLevelMinForRomance}Relation needed for romance", -1, 100, Order = 10, RequireRestart = false, HintText = "{=RelationLevelMinForRomance_desc}Relation needed to start a romance (-1 disable the control)")]
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public int RelationLevelMinForRomance { get; set; } = 5;
 
-        [SettingPropertyInteger("{=RelationLevelMinForCheating}Relation needed for cheating relation", -1, 100, Order = 11, RequireRestart = false, HintText = "{=RelationLevelMinForRomance_desc}Relation needed for begin a cheating romance (-1 desabled the control)")]
+        [SettingPropertyInteger("{=RelationLevelMinForCheating}Relation needed for a cheating relation", -1, 100, Order = 11, RequireRestart = false, HintText = "{=RelationLevelMinForCheating_desc}Relation needed for a cheating relation (-1 disable the control)")]
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public int RelationLevelMinForCheating { get; set; } = 10;
 
-        [SettingPropertyInteger("{=RelationLevelMinForSex}Relation needed for sexual relation", -1, 100, Order = 12, RequireRestart = false, HintText = "{=RelationLevelMinForSex_desc}Relation needed for sexual relation (-1 desabled the control)")]
+        [SettingPropertyInteger("{=RelationLevelMinForSex}Relation needed for sexual relation", -1, 100, Order = 12, RequireRestart = false, HintText = "{=RelationLevelMinForSex_desc}Relation needed for sexual relation (-1 disable the control)")]
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public int RelationLevelMinForSex { get; set; } = 10;
 
@@ -87,7 +87,7 @@ namespace MarryAnyone.Settings
         public string Difficulty { get => DifficultyDropdown.SelectedValue; set => DifficultyDropdown.SelectedValue = value; }
         public string SexualOrientation { get => SexualOrientationDropdown.SelectedValue; set => SexualOrientationDropdown.SelectedValue = value; }
 
-        [SettingPropertyBool("{=spousejoinarena}Spouse(s) join arena", Order = 1, RequireRestart = false, HintText = "{=spousejoinarena_desc}Spouse join arena with you")]
+        [SettingPropertyBool("{=spousejoinarena}Spouse(s) join arena", Order = 1, RequireRestart = false, HintText = "{=spousejoinarena_desc}Spouse will join arena with you")]
         [SettingPropertyGroup("{=Side}Side Options")]
         public bool SpouseJoinArena { get; set; } = false;
 

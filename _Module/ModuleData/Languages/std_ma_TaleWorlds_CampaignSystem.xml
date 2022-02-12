@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <base xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" type="string">
-  <tags>
-    <tag language="English" />
-  </tags>  
-  <strings>
+	<tags>
+		<tag language="English" />
+	</tags>
+	<strings>
 		<!-- Romance -->
-		<string id="lord_flirt" text="My lord, I note that you have not yet taken a spouse." />
-		<string id="lord_cheating_flirt" text="My lord, I note that you might wish for a new spouse." /> 
-		<string id="goodman_flirt" text="Goodman, I note that you have not yet taken a wife." />
-		<string id="goodwife_flirt" text="Goodwife, I wish to profess myself your most ardent admirer." />  	
-		<string id="goodman_chance" text="Goodman, may you give me another chance to prove myself?" /> 
-		<string id="goodwife_chance" text="Goodwife, may you give me another chance to prove myself?" />
+		<string id="lord_flirt" text="My lord, I see that you have not taken a spouse yet." />
+		<string id="lord_cheating_flirt" text="My lord, me think your heart yearns for a new spouse." />
+		<string id="goodman_flirt" text="My good man, I see that you have not taken a spouse yet." />
+		<string id="goodwife_flirt" text="My dear lady, I wish to profess myself your most ardent admirer." />
+		<string id="goodman_chance" text="My good man, would you give me another chance to prove myself ?" />
+		<string id="goodwife_chance" text="My dear lady, would you give me another chance to prove myself ?" />
 
-	  <string id="Divorce_engage_dialog" text="There's a long time we hunt together my {RELATION_TEXT}{newline}, but all good thinks must end a day or another, let's divorce {INTERLOCUTOR.NAME}." />
-	  <string id="DivorceBug_engage_dialog" text="There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!" />
-	  <string id="LeaveSpouseParty" text="Hop we meet againt, better in the arena{newline}bye ..." />
-	  <string id="endcourthip" text="Sorry {INTERLOCUTOR.NAME}, i don't want marry you anymore." />
+		<string id="Divorce_engage_dialog" text="We have been together for too long my {RELATION_TEXT}{newline}, I think it is time to explore new horizons. I want a divorce {INTERLOCUTOR.NAME}." />
+		<string id="DivorceBug_engage_dialog" text="There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!" />
+		<string id="LeaveSpouseParty" text="Hope we meet again, maybe in the arena{newline}, so long ..." />
+		<string id="endcourthip" text="Sorry {INTERLOCUTOR.NAME}, I don't want to marry you anymore." />
 
-	  <!-- Adoption -->
-		<string id="adoption_offer_child" text="I can tell you have no parents to go back to child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if that is the case." />  
-		<string id="adoption_response_child" text="You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? Okay then![rf:happy][rb:very_positive]" /> 		
-		<string id="adoption_offer_teen" text="Do you not have any parents to take care of you young {?CONVERSATION_CHARACTER.GENDER}woman{?}man{\\?}? You are welcome to be a part of my family." />  
-		<string id="adoption_response_teen" text="Thanks for allowing me to be a part of your family {?PLAYER.GENDER}milady{?}sir{\\?}. I gratefully accept![rf:happy][rb:very_positive]" />
-	  
-	  
-	  <!-- Cheating -->
-	  <string id="Cheat_engage_courtship" text="I'm needing you for a few days and physics parties, can you join my party for a few days ?" />
-	  <string id="LeaveCheat_engage_dialog" text="Can you just leave me {INTERLOCUTOR.NAME}, i have other cats to whip." />
-	  <string id="allready_reply" text="I allready give you a reply. Do you nead hearing aid ?" />
-	  <string id="Cheat_success" text="Let's do it !! I join your party." />
-	  <string id="cheatTestFail" text="I'm bored.." />
-	  <string id="cheatTestRetry" text="Well, it would take a bit long to discuss this." />
-	  <string id="cheatFirstToken" text="What do you have in mind..." />
-	  <string id="CheatLeaderChoice" text="Just follow me {?INTERLOCUTOR.GENDER}Miss{?}Mister{\\?}, do not worry." />
-	  <string id="CheatCalculateChoice" text="If the two of us have the same think in mind, let's go" />
-	  <string id="CheatMercyChoice" text="I do not allow {?INTERLOCUTOR.GENDER}a beautifull woman{?}a lovely young man{\\?} can be hurt in this dangerous land, i'll save you." />
-	  <string id="CheatGenerosityCharm" text="It is a sunny day today, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurer man{\\?} like your, need breathe and see other horizons." />
-	  
-	  <!-- Relation improvement-->
-	  <string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points" />
-	  <string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points" />
+		<!-- Adoption -->
+		<string id="adoption_offer_child" text="I can tell you have no parents to go back to, my child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if you wish." />
+		<string id="adoption_response_child" text="You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? very well then![rf:happy][rb:very_positive]" />
+		<string id="adoption_offer_teen" text="Don’t you have any parents to take care of you, young {?CONVERSATION_CHARACTER.GENDER}woman{?}man{\\?} ? I'd love for you to be a part of my family." />
+		<string id="adoption_response_teen" text="Thank you for allowing me to be a part of your family {?PLAYER.GENDER}my Lady{?}Sir{\\?}. I humbly accept![rf:happy][rb:very_positive]" />
 
-  </strings>
+
+		<!-- Cheating -->
+		<string id="Cheat_engage_courtship" text="I would love to spend some time with you, can you join my party for a few days ?" />
+		<string id="LeaveCheat_engage_dialog" text="I think you need to go away {INTERLOCUTOR.NAME}, I have other things to do." />
+		<string id="allready_reply" text="I have already given you my answer, off you go" />
+		<string id="Cheat_success" text="Yes, let's have some fun ! I will join your party." />
+		<string id="cheatTestFail" text="I am not interested." />
+		<string id="cheatTestRetry" text="Well, I think you may want to try some other time." />
+		<string id="cheatFirstToken" text="What do you have in mind ?" />
+		<string id="CheatLeaderChoice" text="Don't worry, just follow me {?INTERLOCUTOR.GENDER}Miss{?}Mister{\\?}." />
+		<string id="CheatCalculateChoice" text="If we are both thinking the same thing, then let's go" />
+		<string id="CheatMercyChoice" text="I cannot let {?INTERLOCUTOR.GENDER}a beautiful woman{?}a handsome young man{\\?} get hurt in this dangerous world, I'll protect you." />
+		<string id="CheatGenerosityCharm" text="It is a beautiful day outside, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurous man{\\?} like you, needs to enjoy the fresh air." />
+
+		<!-- Relation improvement-->
+		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points" />
+		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points" />
+
+	</strings>
 </base>

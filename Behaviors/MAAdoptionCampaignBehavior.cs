@@ -18,11 +18,19 @@ namespace MarryAnyone.Behaviors
         {
             
             // Children
-            starter.AddPlayerLine("adoption_discussion_MA", "town_or_village_children_player_no_rhyme", "adoption_child_MA", "{=adoption_offer_child}I can tell you have no parents to go back to child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if that is the case.", new ConversationSentence.OnConditionDelegate(conversation_adopt_child_on_condition), null, 120, null, null);
-            starter.AddDialogLine("character_adoption_response_MA", "adoption_child_MA", "close_window", "{=adoption_response_child}You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? Okay then![rf:happy][rb:very_positive]", null, new ConversationSentence.OnConsequenceDelegate(conversation_adopt_child_on_consequence), 100, null);
+            starter.AddPlayerLine("adoption_discussion_MA", "town_or_village_children_player_no_rhyme", "adoption_child_MA"
+                                    , "{=adoption_offer_child}I can tell you have no parents to go back to, my child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if you wish."
+                                    , new ConversationSentence.OnConditionDelegate(conversation_adopt_child_on_condition), null, 120, null, null);
+            starter.AddDialogLine("character_adoption_response_MA", "adoption_child_MA", "close_window"
+                                    , "{=adoption_response_child}You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? very well then![rf:happy][rb:very_positive]"
+                                    , null, new ConversationSentence.OnConsequenceDelegate(conversation_adopt_child_on_consequence), 100, null);
             // Teens
-            starter.AddPlayerLine("adoption_discussion_MA", "town_or_village_player", "adoption_teen_MA", "{=adoption_offer_teen}Do you not have any parents to take care of you young {?CONVERSATION_CHARACTER.GENDER}woman{?}man{\\?}? You are welcome to be a part of my family.", new ConversationSentence.OnConditionDelegate(conversation_adopt_child_on_condition), null, 120, null, null);
-            starter.AddDialogLine("character_adoption_response_MA", "adoption_teen_MA", "close_window", "{=adoption_response_teen}Thanks for allowing me to be a part of your family {?PLAYER.GENDER}milady{?}sir{\\?}. I gratefully accept![rf:happy][rb:very_positive]", null, new ConversationSentence.OnConsequenceDelegate(conversation_adopt_child_on_consequence), 100, null);
+            starter.AddPlayerLine("adoption_discussion_MA", "town_or_village_player", "adoption_teen_MA"
+                                    , "{=adoption_offer_teen}Don’t you have any parents to take care of you, young {?CONVERSATION_CHARACTER.GENDER}woman{?}man{\\?} ? I'd love for you to be a part of my family."
+                                    , new ConversationSentence.OnConditionDelegate(conversation_adopt_child_on_condition), null, 120, null, null);
+            starter.AddDialogLine("character_adoption_response_MA", "adoption_teen_MA", "close_window"
+                                    , "{=adoption_response_teen}Thank you for allowing me to be a part of your family {?PLAYER.GENDER}my Lady{?}Sir{\\?}. I humbly accept![rf:happy][rb:very_positive]"
+                                    , null, new ConversationSentence.OnConsequenceDelegate(conversation_adopt_child_on_consequence), 100, null);
         }
 
         private static int _agent;

@@ -172,14 +172,14 @@ namespace MarryAnyone.Patches.Behaviors
                         {
                             MBTextManager.SetTextVariable("FLIRTATION_LINE",
                                 InterlocutorIsMale
-                                    ? "{=lord_flirt}My lord, I note that you have not yet taken a spouse."
+                                    ? "{=lord_flirt}My lord, I see that you have not taken a spouse yet."
                                     : "{=v1hC6Aem}My lady, I wish to profess myself your most ardent admirer.", false);
                         }
                         else
                         {
                             MBTextManager.SetTextVariable("FLIRTATION_LINE",
                                 InterlocutorIsMale
-                                    ? "{=lord_cheating_flirt}My lord, I note that you might wish for a new spouse."
+                                    ? "{=lord_cheating_flirt}My lord, I see that you have not taken a spouse yet."
                                     : "{=v1hC6Aem}My lady, I wish to profess myself your most ardent admirer.", false);
                         }
                     }
@@ -187,8 +187,8 @@ namespace MarryAnyone.Patches.Behaviors
                     {
                         MBTextManager.SetTextVariable("FLIRTATION_LINE",
                             InterlocutorIsMale
-                                ? "{=goodman_flirt}Goodman, I note that you have not yet taken a spouse."
-                                : "{=goodwife_flirt}Goodwife, I wish to profess myself your most ardent admirer.", false);
+                                ? "{=goodman_flirt}My good man, I see that you have not taken a spouse yet."
+                                : "{=goodwife_flirt}My dear lady, I wish to profess myself your most ardent admirer.", false);
                     }
                     return true;
                 }
@@ -212,8 +212,8 @@ namespace MarryAnyone.Patches.Behaviors
                             {
                                 MBTextManager.SetTextVariable("FLIRTATION_LINE",
                                     InterlocutorIsMale
-                                        ? "{=goodman_chance}Goodman, may you give me another chance to prove myself?"
-                                        : "{=goodwife_chance}Goodwife, may you give me another chance to prove myself?", false);
+                                        ? "{=goodman_chance}My good man, would you give me another chance to prove myself ?"
+                                        : "{=goodwife_chance}My dear lady, would you give me another chance to prove myself ?", false);
                             }
                             return true;
                         }
