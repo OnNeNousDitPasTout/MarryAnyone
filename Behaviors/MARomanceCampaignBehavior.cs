@@ -132,7 +132,6 @@ namespace MarryAnyone.Behaviors
             return spouseA.Spouse == spouseB || spouseB.Spouse == spouseA;
         }
 
-
         public Hero? FirstHeroExSpouseOkToDoIt()
         {
             Hero? spouse = null;
@@ -1094,93 +1093,116 @@ namespace MarryAnyone.Behaviors
                         {
                             if (!Helper.MASettings.CanJoinUpperClanThroughMAPath)
                                 throw new Exception("conversation_courtship_success_on_consequence TU spouse IS MAIN FAIL");
-                            else 
-                            { 
 
-                                bool canDestroyClan = false;
-                                heroLeaveClan = hero.Clan;
+                            bool canDestroyClan = false;
+                            heroLeaveClan = hero.Clan;
 
-                                MobileParty? mobilePartyDest = null;
-                                if (spouse.CurrentSettlement == hero.CurrentSettlement
-                                    || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
+                            MobileParty? mobilePartyDest = null;
+                            if (spouse.CurrentSettlement == hero.CurrentSettlement
+                                || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
 
-                                    mobilePartyDest = spouse.PartyBelongedTo;
+                                mobilePartyDest = spouse.PartyBelongedTo;
 
-                                // Join kingdom due to lowborn status
-                                if (hero.Clan.Leader == hero)
-                                    canDestroyClan = true;
+                            // Join kingdom due to lowborn status
+                            if (hero.Clan.Leader == hero)
+                                canDestroyClan = true;
 
-                                Action<Hero> swapPartie = (Hero h) =>
+                            Action<Hero> swapPartie = (Hero h) =>
+                            {
+                                bool inParty = false;
+                                if (h.PartyBelongedTo == MobileParty.MainParty)
                                 {
-                                    bool inParty = false;
-                                    if (h.PartyBelongedTo == MobileParty.MainParty)
-                                    {
-                                        inParty = true;
-                                    }
-                                    RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
-                                    AddCompanionAction.Apply(spouse.Clan, h);
-                                    if (inParty)
-                                    {
-                                        if (mobilePartyDest != null)
-                                        {
-                                            AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
-                                        }
-                                        else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
-                                            AddHeroToPartyAction.Apply(h, MobileParty.MainParty, false);
-                                    }
-                                };
-
-                                foreach (Hero companion in hero.Clan.Companions.ToList())
-                                {
-                                    swapPartie(companion);
+                                    inParty = true;
                                 }
-                                if (hero == Hero.MainHero && Helper.MASettings.Polygamy)
+                                RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
+                                AddCompanionAction.Apply(spouse.Clan, h);
+                                if (inParty)
                                 {
-                                    foreach (Hero exSpouse in hero.ExSpouses)
+                                    if (mobilePartyDest != null)
                                     {
-                                        if (SpouseOfPlayer(exSpouse))
-                                        {
-                                            swapPartie(exSpouse);
-                                        }
+                                        AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
+                                    }
+                                    else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
+                                        AddHeroToPartyAction.Apply(h, MobileParty.MainParty, false);
+                                }
+                            };
+
+                            foreach (Hero companion in hero.Clan.Companions.ToList())
+                            {
+                                swapPartie(companion);
+                            }
+                            if (hero == Hero.MainHero && Helper.MASettings.Polygamy)
+                            {
+                                foreach (Hero exSpouse in hero.ExSpouses)
+                                {
+                                    if (SpouseOfPlayer(exSpouse))
+                                    {
+                                        swapPartie(exSpouse);
                                     }
                                 }
+                            }
 
-                                Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
+                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
 
-                                if (mobilePartyDest != null)
+                            if (mobilePartyDest != null)
+                            {
+                                MobileParty oldParty = MobileParty.MainParty;
+
+                                if (oldParty != null)
                                 {
-                                    MobileParty oldParty = MobileParty.MainParty;
+                                    if (oldParty.PrisonRoster?.Count > 0)
+                                    {
+                                        mobilePartyDest.Party.AddPrisoners(oldParty.PrisonRoster);
+                                        oldParty.PrisonRoster.Clear();
+                                    }
 
-                                    AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
-                                    PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
-                                    PartyHelper.SwapMainParty(mobilePartyDest);
+                                    if (oldParty.ItemRoster?.Count > 0)
+                                    {
+                                        mobilePartyDest.ItemRoster.Add(oldParty.ItemRoster);
+                                        oldParty.ItemRoster.Clear();
+                                    }
+                                }
+                                AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
+                                PartyHelper.SwapMainParty(mobilePartyDest);
 
-                                    DestroyPartyAction.Apply(null, oldParty);
+                                PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
+                                mobilePartyDest.ChangePartyLeader(Hero.MainHero);
+                                mobilePartyDest.Party.SetCustomOwner(Hero.MainHero);
+
+                                PartyHelper.SetLeaderAtTop(mobilePartyDest.Party);
+
+                                if (oldParty != null)
+                                {
+                                    MergePartiesAction.Apply(mobilePartyDest.Party, oldParty.Party);
+                                }
+
+                                //DestroyPartyAction.Apply(null, oldParty);
 #if TRACEWEDDING
-                                    Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
-#endif
-                                }
-
-                                Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
-                                Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
-
-                                if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan))
-                                {
-                                    heroLeaveClan = null;
-                                }
-
-                                Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
-
-                                var current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
-                                Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
-#if TRACEWEDDING
-                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
-                                if (hero.Clan == null)
-                                    Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-                                else if (hero.Clan.Lords == null)
-                                    Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
 #endif
                             }
+
+                            Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
+                            Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
+
+                            if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan, spouse.Clan))
+                            {
+                                heroLeaveClan = null;
+                            }
+
+#if V1700LESS
+                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
+#endif
+                            Campaign current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
+                            Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
+#if TRACEWEDDING
+                            Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
+                            if (hero.Clan == null)
+                                Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+                            else if (hero.Clan.Lords == null)
+                                Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+#endif
+                            ChangeClanLeaderAction.ApplyWithSelectedNewLeader(spouse.Clan, Hero.MainHero);
                         }
                         else
                         {
@@ -1229,7 +1251,7 @@ namespace MarryAnyone.Behaviors
                 }
 
 #if V1640MORE
-                if (hero.Clan.Lords.FirstOrDefault(x => x == spouse) == null)
+                if (hero.Clan?.Lords.FirstOrDefault(x => x == spouse) == null)
                 {
                     hero.Clan.Lords.AddItem(spouse);
                     Helper.Print("Add Spouse to Noble", Helper.PRINT_TRACE_WEDDING);
@@ -1269,12 +1291,18 @@ namespace MarryAnyone.Behaviors
                 if (!spouse.IsActive)
                 {
                     spouse.ChangeState(Hero.CharacterStates.Active);
+#if TRACEWEDDING
+
                     Helper.Print("Activated Spouse", Helper.PRINT_TRACE_WEDDING);
+#endif
                 }
                 if (spouse.IsPlayerCompanion)
                 {
                     spouse.CompanionOf = null;
+#if TRACEWEDDING
+
                     Helper.Print("Spouse No Longer Companion", Helper.PRINT_TRACE_WEDDING);
+#endif
                 }
                 if (/*MAHelper.MASettings.Cheating &&*/ cheatedSpouse is not null)
                 {
@@ -1316,15 +1344,14 @@ namespace MarryAnyone.Behaviors
         }
 
         // Return true, if destroy the clan
-        private bool HeroLeaveClanLeaderAndDestroyClan(Clan clan, Clan newClan = null)
+        private bool HeroLeaveClanLeaderAndDestroyClan(Clan fromClan, Clan newClan = null)
         {
-            Hero? ancLeader = clan.Leader;
+            Hero? ancLeader = fromClan.Leader;
             Hero? newLeader = null;
             Hero? heroRAS = null;
             bool supprimeClan = false;
 
-            ancLeader.Clan = clan; // to ApplyWithoutSelectedNewLeader work fine
-            Dictionary<Hero, int> heirApparents = clan.GetHeirApparents(); // ne fonctionne pas car les héros ne sont pas encores listés dans les clans
+            Dictionary<Hero, int> heirApparents = fromClan.GetHeirApparents(); // ne fonctionne pas car les héros ne sont pas encores listés dans les clans
 
             if (heirApparents.Count > 0)
             {
@@ -1335,23 +1362,34 @@ namespace MarryAnyone.Behaviors
 
             if (newLeader != null)
             {
-                ChangeClanLeaderAction.ApplyWithSelectedNewLeader(clan, newLeader);
+                ancLeader.Clan = fromClan; // to ApplyWithoutSelectedNewLeader work fine
+                ChangeClanLeaderAction.ApplyWithSelectedNewLeader(fromClan, newLeader);
             }
             else
             {
-                DestroyClanAction.Apply(clan);
+                Helper.RemoveFromClan(ancLeader, fromClan);
+                DestroyClanAction.Apply(fromClan);
                 supprimeClan = true;
             }
             if (ancLeader != null)
+            {
                 ancLeader.Clan = newClan;
+#if TRACEWEDDING
+                Helper.Print(String.Format("Swap Leader for the clan {0} SET The New Clan {1} for AncLeader {2}"
+                                            , fromClan.Name
+                                            , newClan.Name
+                                            , ancLeader.Name), Helper.PRINT_TRACE_WEDDING);
 
+#endif
+            }
+#if TRACEWEDDING
             if (supprimeClan)
-                Helper.Print(String.Format("Swap Leader for the clan {0} ERASE the clan", clan.Name), Helper.PRINT_TRACE_WEDDING);
-            else if (clan.Leader == ancLeader)
-                Helper.Print(String.Format("Swap Leader for the clan {0} FAIL because leader unchanged", clan.Name), Helper.PRINT_TRACE_WEDDING);
+                Helper.Print(String.Format("Swap Leader for the clan {0} ERASE the clan", fromClan.Name), Helper.PRINT_TRACE_WEDDING);
+            else if (fromClan.Leader == ancLeader)
+                Helper.Print(String.Format("Swap Leader for the clan {0} FAIL because leader unchanged", fromClan.Name), Helper.PRINT_TRACE_WEDDING);
             else
-                Helper.Print(String.Format("Swap Leader for the clan {0} SUCCESS swap the leader from {1} to {2}", clan.Name, ancLeader.Name, clan.Leader == null ? "NULL" : clan.Leader.Name), Helper.PRINT_TRACE_WEDDING);
-
+                Helper.Print(String.Format("Swap Leader for the clan {0} SUCCESS swap the leader from {1} to {2}", fromClan.Name, ancLeader.Name, fromClan.Leader == null ? "NULL" : fromClan.Leader.Name), Helper.PRINT_TRACE_WEDDING);
+#endif
             return supprimeClan;
         }
 

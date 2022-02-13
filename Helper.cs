@@ -530,8 +530,9 @@ namespace MarryAnyone
                 AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
                 AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
 
+#if TRACEPATCH
                 Print(String.Format("Swap Occupation To Lord for {0} newOccupation ?= {1}", character.Name.ToString(), character.Occupation.ToString()), PrintHow.PrintToLogAndWriteAndDisplay);
-
+#endif
             }
         }
 
@@ -547,7 +548,9 @@ namespace MarryAnyone
                 if (infoLords == null)
                     throw new Exception("<Lords>k__BackingField not found");
                 infoLords.SetValue(fromClan, new MBReadOnlyList<Hero>(lords));
+#if TRACEPATCH
                 Print(String.Format("Patch Clan lords of clan {0}", fromClan.Name.ToString()), PRINT_PATCH);
+#endif
             }
 
             List<Hero> heroes = fromClan.Heroes.ToList();
@@ -560,7 +563,9 @@ namespace MarryAnyone
                 if (infoHeroes == null)
                     throw new Exception("<Heroes>k__BackingField not found");
                 infoHeroes.SetValue(fromClan, new MBReadOnlyList<Hero>(heroes));
+#if TRACEPATCH
                 Print(String.Format("Patch Clan heroes of clan {0}", fromClan.Name.ToString()), PRINT_PATCH);
+#endif
             }
             if (canPatchLeader && fromClan.Leader == hero)
             {
@@ -568,7 +573,9 @@ namespace MarryAnyone
                 if (infoLeader == null)
                     throw new Exception("_leader not found");
                 Print(String.Format("Patch Clan Leader of clan {0} set Leader = null", fromClan.Name.ToString()), PRINT_PATCH);
+#if TRACEPATCH
                 infoLeader.SetValue(fromClan, null);
+#endif
             }
         }
 
