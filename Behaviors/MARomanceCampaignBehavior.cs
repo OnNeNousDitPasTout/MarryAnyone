@@ -17,6 +17,7 @@ using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Localization;
+using static TaleWorlds.CampaignSystem.Romance;
 
 namespace MarryAnyone.Behaviors
 {
@@ -28,8 +29,10 @@ namespace MarryAnyone.Behaviors
 
         public List<Hero>? NoMoreSpouse;
 
-        private Version? SaveVersion;
+        private Version? SaveVersion = null;
+#if TRACELOAD
         private bool _hasLoading = false;
+#endif
 
         private List<PersuasionAttempt>? _previousCheatPersuasionAttempts;
 
@@ -50,7 +53,7 @@ namespace MarryAnyone.Behaviors
 
         private bool _MAWedding = false;
 
-        #endregion
+#endregion
 
         public static MARomanceCampaignBehavior? Instance;
 
@@ -69,7 +72,7 @@ namespace MarryAnyone.Behaviors
             }
         } 
 
-        #region vie de l'objet
+#region vie de l'objet
         public MARomanceCampaignBehavior()
         {
             Instance = this;
@@ -92,9 +95,9 @@ namespace MarryAnyone.Behaviors
             Instance = null;
         }
 
-        #endregion
+#endregion
 
-        #region Spouses
+#region Spouses
 
         public bool PartnerOfPlayer(Hero partner)
         {
@@ -175,7 +178,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #endregion
+#endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -193,7 +196,7 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-        #region dialogues
+#region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
             
@@ -202,6 +205,7 @@ namespace MarryAnyone.Behaviors
                                                 , new ConversationSentence.OnConditionDelegate(conversation_begin_courtship_for_hero_on_condition)
                                                 , null
                                                 , 120, null, null);
+
             starter.AddDialogLine("character_agrees_to_discussion_MA", "lord_talk_speak_diplomacy_MA", "lord_talk_speak_diplomacy_2", "{=OD1m1NYx}{STR_INTRIGUE_AGREEMENT}"
                                                 , new ConversationSentence.OnConditionDelegate(conversation_character_agrees_to_discussion_on_condition)
                                                 , null, 100, null);
@@ -328,15 +332,24 @@ namespace MarryAnyone.Behaviors
 
             // From previous iteration
             //starter.AddDialogLine("persuasion_leave_faction_npc_result_success_2", "lord_conclude_courtship_stage_2", "close_window", "{=k7nGxksk}Splendid! Let us conduct the ceremony, then.", new ConversationSentence.OnConditionDelegate(conversation_finalize_courtship_for_hero_on_condition), new ConversationSentence.OnConsequenceDelegate(conversation_courtship_success_on_consequence), 140, null);
-            starter.AddDialogLine("hero_courtship_persuasion_2_success", "lord_start_courtship_response_3", "lord_conclude_courtship_stage_2", "{=xwS10c1b}Yes... I think I would be honored to accept your proposal."
-                            , new ConversationSentence.OnConditionDelegate(conversation_finalize_courtship_for_hero_on_condition)
+            starter.AddDialogLine("hero_courtship_persuasion_2_success", "lord_start_courtship_response_3", "lord_conclude_courtship_stage_2"
+                            , "{=xwS10c1b}Yes... I think I would be honored to accept your proposal."
+                            , new ConversationSentence.OnConditionDelegate(MAconversation_finalize_courtship_for_hero_on_condition)
                             , null
                             , 120, null);
 
+            starter.AddDialogLine("hero_courtship_goto_finalize", "lord_start_courtship_response_3", "lord_conclude_courtship_stage_2"
+                            , "{=xwS10c1b}Yes... I think I would be honored to accept your proposal."
+                            , new ConversationSentence.OnConditionDelegate(MAconversation_goto_barter)
+                            , null
+                            , 140, null);
+
+
             //starter.AddPlayerLine("hero_romance_task", "hero_main_options", "lord_start_courtship_response_3", "{=cKtJBdPD}I wish to offer my hand in marriage.", new ConversationSentence.OnConditionDelegate(conversation_finalize_courtship_for_hero_on_condition), null, 140, null, null);
             //starter.AddPlayerLine("hero_romance_conclusion_direct", "hero_main_options", "hero_courtship_final_barter_conclusion", "{=2aW6NC3Q}Let us discuss the final terms of our marriage.", new ConversationSentence.OnConditionDelegate(this.conversation_finalize_courtship_for_hero_on_condition), new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 90, null, null);
-            starter.AddPlayerLine("hero_romance_conclusion_direct", "hero_main_options", "close_window", "{=2aW6NC3Q}Let us discuss the final terms of our marriage."
-                                                , new ConversationSentence.OnConditionDelegate(this.conversation_finalize_courtship_for_hero_on_condition)
+            starter.AddPlayerLine("hero_romance_conclusion_direct", "hero_main_options", "close_window"
+                                                , "{=2aW6NC3Q}Let us discuss the final terms of our marriage."
+                                                , new ConversationSentence.OnConditionDelegate(MAconversation_finalize_courtship_for_hero_on_condition)
                                                 , new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 90, null, null);
 
             //starter.AddPlayerLine("hero_romance_task_pt3a", "hero_main_options", "hero_courtship_final_barter", "{=2aW6NC3Q}Let us discuss the final terms of our marriage.", new ConversationSentence.OnConditionDelegate(this.conversation_finalize_courtship_for_hero_on_condition), null, 100, null, null);
@@ -346,7 +359,7 @@ namespace MarryAnyone.Behaviors
                                                 , 100, null, null);
          
             starter.AddDialogLine("persuasion_leave_faction_npc_result_success_2", "lord_conclude_courtship_stage_2", "close_window", "{=k7nGxksk}Splendid! Let us conduct the ceremony, then."
-                                                , new ConversationSentence.OnConditionDelegate(conversation_finalize_courtship_for_hero_on_condition)
+                                                , new ConversationSentence.OnConditionDelegate(MAconversation_finalize_courtship_for_hero_on_condition)
                                                 , new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 140, null);
 
             starter.AddPlayerLine("hero_want_to_marry", "hero_main_options", "lord_pretalk", "{=endcourthip}Sorry {INTERLOCUTOR.NAME}, I don't want to marry you anymore."
@@ -978,11 +991,29 @@ namespace MarryAnyone.Behaviors
             return true;
         }
 
+        private bool MAconversation_goto_barter()
+        {
+            // In Very Easy Mode goto finalize
+            Romance.RomanceLevelEnum romanticLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
+            Romance.RomanticState romanticState = Romance.GetRomanticState(Hero.MainHero, Hero.OneToOneConversationHero);
+
+            if (romanticState.Level == RomanceLevelEnum.CoupleAgreedOnMarriage
+                && Hero.OneToOneConversationHero.Clan != Hero.MainHero.Clan
+                && Hero.OneToOneConversationHero.Clan.Leader != null
+                && !Hero.OneToOneConversationHero.Clan.IsBanditFaction
+                && !Hero.OneToOneConversationHero.Clan.IsOutlaw
+                && Hero.OneToOneConversationHero.Clan.Leader != Hero.OneToOneConversationHero)
+            {
+                return true;
+            }
+            return false;
+        }
+
         // This will either skip or continue romance
         // CoupleAgreedOnMarriage = triggers marriage before bartering
         // CourtshipStarted = skip everything
         // return false = carry out entire romance
-        private bool conversation_finalize_courtship_for_hero_on_condition()
+        private bool MAconversation_finalize_courtship_for_hero_on_condition()
         {
 
             Romance.RomanceLevelEnum romanticLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
@@ -993,7 +1024,9 @@ namespace MarryAnyone.Behaviors
                 return false;
 
             bool ret = Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, Hero.OneToOneConversationHero)
-                        && (Hero.OneToOneConversationHero.Clan == null 
+                        && (Hero.OneToOneConversationHero.Clan == null
+                            || Hero.OneToOneConversationHero.Clan.IsBanditFaction
+                            || Hero.OneToOneConversationHero.Clan.IsOutlaw
                             || Hero.OneToOneConversationHero.Clan.Leader == Hero.OneToOneConversationHero
                             || Hero.OneToOneConversationHero.Clan == Hero.MainHero.Clan);
             if (ret)
@@ -1020,7 +1053,8 @@ namespace MarryAnyone.Behaviors
                 romanticState.ScoreFromPersuasion = 60;
 
 #if TRACEROMANCE
-            Helper.Print(string.Format("MARomanceCampaignBehavior:: conversation_finalize_courtship_for_hero_on_condition with {0} \r\n\tDifficulty ?= {1} RommanticLevel ?= {2}\r\n\trépond {3} \r\n\tromanticState Score ?= {4}"
+            Helper.Print(string.Format("MARomanceCampaignBehavior:: conversation_finalize_courtship_for_hero_on_condition with {0} \r\n\tDifficulty ?= {1} RommanticLevel ?= {2}" +
+                        "\r\n\trépond {3}\r\n\tromanticState Score ?= {4}"
                     , Hero.OneToOneConversationHero.Name.ToString()
                     , Helper.MASettings.Difficulty
                     , romanticLevel.ToString()

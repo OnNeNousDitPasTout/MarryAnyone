@@ -148,7 +148,7 @@ namespace MarryAnyone.Patches.Behaviors
             Romance.RomanceLevelEnum romanceLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
 
 #if TRACEROMANCE
-            Helper.Print(String.Format("conversation_player_can_open_courtship_on_condition(forBeginDiscussion ?= {4})::\r\n\tCouple suitable for mariage: {0}\r\n\tbetween{1} and {2} areMarried {3}"
+            Helper.Print(String.Format("conversation_player_can_open_courtship_on_condition(forBeginDiscussion ?= {4})::\r\n\tCouple suitable for mariage: {0}\r\n\tbetween {1} and {2} areMarried {3}"
                         , MADefaultMarriageModel.IsCoupleSuitableForMarriageStatic(Hero.MainHero, Hero.OneToOneConversationHero, forBeginDiscussion).ToString()
                         , Hero.MainHero.Name
                         , Hero.OneToOneConversationHero.Name
@@ -279,12 +279,28 @@ namespace MarryAnyone.Patches.Behaviors
         [HarmonyPostfix]
         private static void conversation_courtship_reaction_to_player_on_conditionPostfix(ref bool __result)
         {
+            // => lord_start_courtship_response_3
             if (__result)
             {
 #if TRACEROMANCE
                 Helper.Print("conversation_courtship_reaction_to_player_on_condition:: call TryToRetryCourtship", Helper.PRINT_TRACE_ROMANCE);
 #endif
                 TryToRetryCourtship();
+
+#if TRACEROMANCE
+                Romance.RomanceLevelEnum romanticLevel = Romance.GetRomanticLevel(Hero.MainHero, Hero.OneToOneConversationHero);
+
+                Helper.Print(string.Format("RomanceCampaignBehaviorPatch::conversation_courtship_reaction_to_player_on_condition with {0}\r\nDifficulty ?= {1} RomanticLevel ?= {2}"
+                                , Hero.OneToOneConversationHero.Name.ToString()
+                                , Helper.MASettings.Difficulty
+                                , romanticLevel.ToString()), Helper.PRINT_TRACE_ROMANCE);
+#endif
+
+                if (Helper.MASettings.Difficulty == MASettings.DIFFICULTY_EASY)
+                    ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible);
+
+                if (Helper.MASettings.Difficulty == MASettings.DIFFICULTY_VERY_EASY)
+                    ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.CoupleAgreedOnMarriage);
             }
             return;
         }
@@ -307,7 +323,9 @@ namespace MarryAnyone.Patches.Behaviors
                             , romanticLevel.ToString()), Helper.PRINT_TRACE_ROMANCE);
 #endif
             if (Helper.MASettings.Difficulty == MASettings.DIFFICULTY_VERY_EASY
-               || (Helper.MASettings.Difficulty == MASettings.DIFFICULTY_EASY && !Hero.OneToOneConversationHero.IsNoble && !Hero.OneToOneConversationHero.IsMinorFactionHero))
+               || (Helper.MASettings.Difficulty == MASettings.DIFFICULTY_EASY 
+                    && !Hero.OneToOneConversationHero.IsNoble 
+                    && !Hero.OneToOneConversationHero.IsMinorFactionHero))
             {
                 if (romanticLevel == Romance.RomanceLevelEnum.CourtshipStarted)
                     ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible);

@@ -18,10 +18,11 @@ namespace MarryAnyone
 
         public const String MODULE_NAME = "MarryAnyone";
 
+#if !NOLOG
         private static FileStream? _fichier = null;
         private static StreamWriter? _sw = null;
         private static bool _needToSupprimeFichier = false;
-
+#endif
         public static MASettings MASettings
         {
             get
