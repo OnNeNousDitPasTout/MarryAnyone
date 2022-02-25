@@ -23,8 +23,7 @@ namespace MarryAnyone.Helpers
         public bool Swap(Object pO)
         {
             DateTime now = DateTime.Now;
-            if (_o == null 
-                || _o != pO 
+            if ( _o != pO 
                 || (_o == pO && now.Subtract(_born).TotalMilliseconds > _delayInMicroseconde)) // _born.Subtract(now).TotalMilliseconds > 100))
             {
                 _o = pO;

@@ -33,7 +33,7 @@ namespace MarryAnyone.Helpers
         }
 
 
-        public static bool OkToDoIt(Hero hero, Hero? otherHero = null)
+        public static bool OkToDoIt(Hero hero, Hero? otherHero = null, bool withRelationTest = true)
         {
             if (hero.IsAlive && hero.Age >= Campaign.Current.Models.AgeModel.HeroComesOfAge)
             {
@@ -44,7 +44,7 @@ namespace MarryAnyone.Helpers
                         || !HeroCanMeet(hero, otherHero))
                         return false;
 
-                    if (Helper.MASettings.RelationLevelMinForSex >= 0)
+                    if (withRelationTest && Helper.MASettings.RelationLevelMinForSex >= 0)
                     {
                         int relation = hero.GetRelation(otherHero);
 

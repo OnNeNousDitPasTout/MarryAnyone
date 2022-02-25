@@ -40,7 +40,7 @@ namespace MarryAnyone.Settings
             "Bisexual"
         }, 0);
 
-        [SettingPropertyBool("{=cheating}Cheating", RequireRestart = false, HintText = "{=cheating_desc}Player character can marry characters that are already married")]
+        [SettingPropertyBool("{=cheating}Cheating", RequireRestart = false, HintText = "{=cheating_desc}Player character can enrol any character in his party and have sexual relation with")]
         [SettingPropertyGroup("{=relationship}Relationship Options")]
         public bool Cheating { get; set; } = false;
 

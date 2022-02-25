@@ -16,7 +16,8 @@
 		<string id="DivorceBug_engage_dialog" text="There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!" />
 		<string id="LeaveSpouseParty" text="Hope we meet again, maybe in the arena{newline}, so long ..." />
 		<string id="endcourthip" text="Sorry {INTERLOCUTOR.NAME}, I don't want to marry you anymore." />
-
+		<string id="marryAgain_engage_dialog" text="We are not well married {INTERLOCUTOR.NAME} (regarding the log events).{newline} Do you want we married again my {RELATION_TEXT} ?" />
+				
 		<!-- Adoption -->
 		<string id="adoption_offer_child" text="I can tell you have no parents to go back to, my child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if you wish." />
 		<string id="adoption_response_child" text="You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? very well then![rf:happy][rb:very_positive]" />

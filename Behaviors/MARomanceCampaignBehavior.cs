@@ -4,10 +4,12 @@ using MarryAnyone.Helpers;
 using MarryAnyone.Models;
 using MarryAnyone.Patches;
 using MarryAnyone.Patches.Behaviors;
+using MarryAnyone.Patches.CampaignSystem;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Conversation.Persuasion;
@@ -16,6 +18,7 @@ using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
+using TaleWorlds.Library;
 using TaleWorlds.Localization;
 using static TaleWorlds.CampaignSystem.Romance;
 
@@ -28,6 +31,8 @@ namespace MarryAnyone.Behaviors
         public List<Hero>? Partners;
 
         public List<Hero>? NoMoreSpouse;
+
+        private List<Hero>? _buggedSpouses;
 
         private Version? SaveVersion = null;
 #if TRACELOAD
@@ -53,7 +58,7 @@ namespace MarryAnyone.Behaviors
 
         private bool _MAWedding = false;
 
-#endregion
+        #endregion
 
         public static MARomanceCampaignBehavior? Instance;
 
@@ -62,17 +67,14 @@ namespace MarryAnyone.Behaviors
 
             if (Partners != null)
             {
-                while (true)
-                {
-                    if (!Partners.Remove(hero))
-                        break;
-                }
+                while (Partners.Remove(hero))
+                    ;
                 if (Partners.Count == 0)
                     Partners = null;
             }
-        } 
+        }
 
-#region vie de l'objet
+        #region vie de l'objet
         public MARomanceCampaignBehavior()
         {
             Instance = this;
@@ -91,13 +93,46 @@ namespace MarryAnyone.Behaviors
             NoMoreSpouse = null;
             _previousCheatPersuasionAttempts = null;
             _allReservations = null;
+            _buggedSpouses = null;
             PregnancyCampaignBehaviorPatch.Done();
+
+#if TRACEEXSPOUSE
+            HeroPatch.heroJustifie = null;
+            HeroPatch.spouseOn.Done();
+#endif
+
             Instance = null;
         }
 
-#endregion
+        #endregion
 
-#region Spouses
+        #region Spouses
+
+        private Hero? ResolveOriginalSpouseForPartner(Hero partner)
+        {
+            List<Hero> partnerSpouses = partner.ExSpouses.ToList();
+            if (partner.Spouse != null)
+                partnerSpouses.Add(partner.Spouse);
+
+            partnerSpouses.RemoveAll(x => x == Hero.MainHero || Hero.MainHero.ExSpouses.Contains(x));
+
+            Hero? spouseOriginal = null;
+            if (partnerSpouses.Count > 0)
+            {
+                spouseOriginal = partnerSpouses.FirstOrDefault(x => x.IsAlive && x.Clan == partner.Clan && x.Spouse == partner);
+
+                if (spouseOriginal == null)
+                    spouseOriginal = partnerSpouses.FirstOrDefault(x => x.IsAlive && x.Clan == partner.Clan && x.Spouse == null);
+
+                if (spouseOriginal == null)
+                    spouseOriginal = partnerSpouses.FirstOrDefault(x => x.IsAlive && x.Spouse == partner);
+
+                if (spouseOriginal == null)
+                    spouseOriginal = partnerSpouses.FirstOrDefault(x => x.IsAlive && x.Spouse == null);
+            }
+
+            return spouseOriginal;
+        }
 
         public bool PartnerOfPlayer(Hero partner)
         {
@@ -108,28 +143,38 @@ namespace MarryAnyone.Behaviors
 
         public bool SpouseOfPlayer(Hero spouse)
         {
-            return ((Hero.MainHero.Spouse == spouse 
+            return ((Hero.MainHero.Spouse == spouse
                     || Hero.MainHero.ExSpouses.IndexOf(spouse) >= 0)
                     && (NoMoreSpouse == null || NoMoreSpouse.IndexOf(spouse) < 0));
         }
 
         public bool SpouseOrNot(Hero spouseA, Hero spouseB)
         {
-            if (spouseA == Hero.MainHero) {
+            if (spouseA == Hero.MainHero)
+            {
                 if (NoMoreSpouse != null && NoMoreSpouse.IndexOf(spouseB) >= 0)
                     return false;
-                if (Hero.MainHero.ExSpouses.IndexOf(spouseB) >= 0)
-                    return true;
                 if (Partners != null && Partners.IndexOf(spouseB) >= 0)
                     return false;
+                if (Hero.MainHero.Spouse == spouseB)
+                    return true;
+                if (Hero.MainHero.ExSpouses.IndexOf(spouseB) >= 0)
+                    return true;
+
+                return false;
             }
-            if (spouseB == Hero.MainHero) {
+            if (spouseB == Hero.MainHero)
+            {
                 if (NoMoreSpouse != null && NoMoreSpouse.IndexOf(spouseA) >= 0)
                     return false;
-                if (Hero.MainHero.ExSpouses.IndexOf(spouseA) >= 0)
-                    return true;
                 if (Partners != null && Partners.IndexOf(spouseA) >= 0)
                     return false;
+                if (Hero.MainHero.Spouse == spouseA)
+                    return true;
+                if (Hero.MainHero.ExSpouses.IndexOf(spouseA) >= 0)
+                    return true;
+
+                return false;
             }
 
             return spouseA.Spouse == spouseB || spouseB.Spouse == spouseA;
@@ -162,7 +207,7 @@ namespace MarryAnyone.Behaviors
                 List<Hero> spouses = Hero.MainHero.ExSpouses.ToList();
                 if (Hero.MainHero.Spouse != null)
                 {
-                    if (spouses.Count > 0 )
+                    if (spouses.Count > 0)
                         spouses.Insert(0, Hero.MainHero.Spouse);
                     else
                         spouses.Add(Hero.MainHero.Spouse);
@@ -178,7 +223,365 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#endregion
+        public void RemoveMainHeroSpouse(Hero oldSpouse, Hero withHero)
+        {
+            // Patch
+            if (Romance.GetRomanticLevel(oldSpouse, withHero) == RomanceLevelEnum.Marriage)
+                Util.CleanRomance(oldSpouse, withHero, RomanceLevelEnum.Untested);
+
+            Helper.RemoveExSpouses(withHero, Helper.RemoveExSpousesHow.RemoveOtherHero, null, oldSpouse);
+        }
+
+        public void RemoveMainHeroSpouse(Hero oldSpouse, bool removeHeroFromParty = true)
+        {
+            Hero? spouseOriginal = ResolveOriginalSpouseForPartner(oldSpouse);
+            Clan? clanToJoin = (spouseOriginal != null ? spouseOriginal.Clan : null);
+
+            if (clanToJoin == null
+                && oldSpouse.Mother != null
+                && oldSpouse.Mother.Clan != null
+                && !oldSpouse.Mother.Clan.IsEliminated)
+                clanToJoin = oldSpouse.Mother.Clan;
+
+            if (clanToJoin == null
+                && oldSpouse.Father != null
+                && oldSpouse.Father.Clan != null
+                && !oldSpouse.Father.Clan.IsEliminated)
+                clanToJoin = oldSpouse.Father.Clan;
+
+            RemoveMainHeroSpouse(oldSpouse, Hero.MainHero);
+
+            foreach (Hero mainHeroSpouse in Hero.MainHero.ExSpouses)
+            {
+                if (mainHeroSpouse != oldSpouse)
+                    RemoveMainHeroSpouse(oldSpouse, mainHeroSpouse);
+            }
+
+#if TRACEPATCH
+            Helper.Print(String.Format("RemoveMainHeroSpouse:: Patch spouse of hero {0} with new spouse {1}"
+                                            , oldSpouse.Name
+                                            , (spouseOriginal != null ? spouseOriginal.Name : "NULL")
+                                            ), Helper.PRINT_PATCH);
+#endif
+
+            Helper.RemoveExSpouses(oldSpouse
+                                    , (Helper.RemoveExSpousesHow.CompletelyRemove
+                                        | Helper.RemoveExSpousesHow.RemoveOnSpouseToo
+                                        | Helper.RemoveExSpousesHow.AddOtherHero)
+                                    , null, spouseOriginal);
+
+            if (clanToJoin != null && clanToJoin != oldSpouse.Clan)
+            {
+#if TRACEPATCH
+                Helper.Print(String.Format("RemoveMainHeroSpouse::for hero {0} Swap clan from {1} to {2}"
+                                            , oldSpouse.Name
+                                            , (oldSpouse.Clan != null ? oldSpouse.Clan.Name : "NULL")
+                                            , (clanToJoin != null ? clanToJoin.Name : "NULL"))
+                                        , Helper.PRINT_PATCH);
+#endif
+                Helper.SwapClan(oldSpouse, oldSpouse.Clan, clanToJoin);
+            }
+            else
+            {
+                Helper.RemoveFromClan(oldSpouse, Clan.PlayerClan, false);
+                Helper.OccupationToCompanion(oldSpouse.CharacterObject);
+            }
+
+            if (removeHeroFromParty)
+            {
+                PartyHelper.SwapPartyBelongedTo(hero: oldSpouse, null);
+                MobileParty.MainParty.Party.MemberRoster.RemoveTroop(oldSpouse.CharacterObject, 1);
+            }
+
+            VerifySpouse(0, "RemoveMainHeroSpouse");
+
+        }
+
+        private void MAWeddingDo(Hero hero, Hero spouse)
+        {
+
+            PropertyInfo partyBelongedToInfo = AccessTools.Property(typeof(Hero), "PartyBelongedTo");
+            if (partyBelongedToInfo == null)
+                throw new Exception("property PartyBelongedTo not resolved on Hero class");
+
+            // Dodge the party crash for characters part 1
+            bool dodge = false;
+            if (spouse.PartyBelongedTo == hero.PartyBelongedTo)
+            {
+                partyBelongedToInfo.SetValue(spouse, null, null);
+#if TRACEWEDDING
+                Helper.Print("Spouse Already in Hero Party", Helper.PRINT_TRACE_WEDDING);
+#endif
+                dodge = true;
+            }
+            // Apply marriage
+            ChangeRomanticStateAction.Apply(hero, spouse, Romance.RomanceLevelEnum.Marriage);
+#if TRACEWEDDING
+            Helper.Print("Marriage Action Applied", Helper.PRINT_TRACE_WEDDING);
+#endif
+
+            // Dodge the party crash for characters part 2
+            if (dodge)
+            {
+                partyBelongedToInfo.SetValue(spouse, MobileParty.MainParty, null);
+            }
+            // Activate character if not already activated
+            if (!spouse.HasMet)
+            {
+                spouse.HasMet = true;
+            }
+            if (!spouse.IsActive)
+            {
+                spouse.ChangeState(Hero.CharacterStates.Active);
+#if TRACEWEDDING
+
+                Helper.Print("Activated Spouse", Helper.PRINT_TRACE_WEDDING);
+#endif
+            }
+            if (spouse.IsPlayerCompanion)
+            {
+                spouse.CompanionOf = null;
+#if TRACEWEDDING
+
+                Helper.Print("Spouse No Longer Companion", Helper.PRINT_TRACE_WEDDING);
+#endif
+            }
+        }
+
+        public void MAWedding(Hero hero, Hero spouse)
+        {
+            Hero oldSpouse = hero.Spouse;
+            Hero cheatedSpouse = spouse.Spouse;
+            Clan? spouseLeaveClan = null;
+            Clan? heroLeaveClan = null;
+            bool heroIsMainHero = hero == Hero.MainHero;
+
+            try
+            {
+                _MAWedding = true;
+
+                if (heroIsMainHero)
+                    PartnerRemove(spouse);
+
+#if TRACEWEDDING
+                Helper.Print("MAWedding:: conversation_courtship_success_on_consequence", Helper.PRINT_TRACE_WEDDING);
+#endif
+                // If you are marrying a kingdom ruler as a kingdom ruler yourself,
+                // the kingdom ruler will have to give up being clan head.
+                // Apparently causes issues if this is not done.
+                if (spouse.IsFactionLeader && !spouse.IsMinorFactionHero)
+                {
+                    if (hero.Clan.Kingdom != spouse.Clan.Kingdom)
+                    {
+                        if (hero.Clan.Kingdom?.Leader != hero)
+                        {
+                            if (!Helper.MASettings.CanJoinUpperClanThroughMAPath)
+                                throw new Exception("conversation_courtship_success_on_consequence TU spouse IS MAIN FAIL");
+
+                            bool canDestroyClan = false;
+                            heroLeaveClan = hero.Clan;
+
+                            MobileParty? mobilePartyDest = null;
+                            if (spouse.CurrentSettlement == hero.CurrentSettlement
+                                || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
+
+                                mobilePartyDest = spouse.PartyBelongedTo;
+
+                            // Join kingdom due to lowborn status
+                            if (hero.Clan.Leader == hero)
+                                canDestroyClan = true;
+
+                            Action<Hero> swapPartie = (Hero h) =>
+                            {
+                                bool inParty = false;
+                                if (h.PartyBelongedTo == hero.PartyBelongedTo)
+                                {
+                                    inParty = true;
+                                }
+                                RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
+                                AddCompanionAction.Apply(spouse.Clan, h);
+                                if (inParty)
+                                {
+                                    if (mobilePartyDest != null)
+                                    {
+                                        AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
+                                    }
+                                    else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
+                                        AddHeroToPartyAction.Apply(h, hero.PartyBelongedTo, false);
+                                }
+                            };
+
+                            foreach (Hero companion in hero.Clan.Companions.ToList())
+                            {
+                                swapPartie(companion);
+                            }
+                            if (heroIsMainHero && Helper.MASettings.Polygamy)
+                            {
+                                foreach (Hero exSpouse in hero.ExSpouses)
+                                {
+                                    if (SpouseOfPlayer(exSpouse))
+                                    {
+                                        swapPartie(exSpouse);
+                                    }
+                                }
+                            }
+
+                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
+
+                            if (mobilePartyDest != null)
+                            {
+                                MobileParty oldParty = MobileParty.MainParty;
+
+                                if (oldParty != null)
+                                {
+                                    if (oldParty.PrisonRoster?.Count > 0)
+                                    {
+                                        mobilePartyDest.Party.AddPrisoners(oldParty.PrisonRoster);
+                                        oldParty.PrisonRoster.Clear();
+                                    }
+
+                                    if (oldParty.ItemRoster?.Count > 0)
+                                    {
+                                        mobilePartyDest.ItemRoster.Add(oldParty.ItemRoster);
+                                        oldParty.ItemRoster.Clear();
+                                    }
+                                }
+                                AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
+                                PartyHelper.SwapMainParty(mobilePartyDest);
+
+                                PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
+                                mobilePartyDest.ChangePartyLeader(Hero.MainHero);
+                                mobilePartyDest.Party.SetCustomOwner(Hero.MainHero);
+
+                                PartyHelper.SetLeaderAtTop(mobilePartyDest.Party);
+
+                                if (oldParty != null)
+                                {
+                                    MergePartiesAction.Apply(mobilePartyDest.Party, oldParty.Party);
+                                }
+
+                                //DestroyPartyAction.Apply(null, oldParty);
+#if TRACEWEDDING
+                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
+#endif
+                            }
+
+                            Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
+                            Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
+
+                            if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan, spouse.Clan))
+                            {
+                                heroLeaveClan = null;
+                            }
+
+#if V1700LESS
+                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
+#endif
+                            Campaign current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
+                            Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
+#if TRACEWEDDING
+                            Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
+                            if (hero.Clan == null)
+                                Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+                            else if (hero.Clan.Lords == null)
+                                Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
+#endif
+                            ChangeClanLeaderAction.ApplyWithSelectedNewLeader(spouse.Clan, Hero.MainHero);
+                        }
+                        else
+                        {
+                            spouseLeaveClan = spouse.Clan;
+                            ChangeClanLeaderAction.ApplyWithoutSelectedNewLeader(spouse.Clan);
+#if TRACEWEDDING
+                            Helper.Print("Kingdom Ruler Stepped Down and Married to Player", Helper.PRINT_TRACE_WEDDING);
+#endif
+                        }
+                    }
+                }
+                else if (spouse.IsFactionLeader && spouse.IsMinorFactionHero)
+                {
+                    spouseLeaveClan = spouse.Clan;
+                    ChangeClanLeaderAction.ApplyWithoutSelectedNewLeader(spouse.Clan);
+#if TRACEWEDDING
+                    Helper.Print("MinorFaction Ruler Stepped Down and Married to Player", Helper.PRINT_TRACE_WEDDING);
+#endif
+                }
+
+                // Adoption
+                if (spouseLeaveClan != null)
+                {
+                    Helper.FamilyAdoptChild(spouse, hero, spouseLeaveClan);
+                }
+
+                if (spouse.Clan == null) // Patch V2
+                {
+                    if (spouseLeaveClan != null)
+                        Helper.FamilyJoinClan(spouse, spouseLeaveClan, hero.Clan);
+                    else
+                        Helper.SwapClan(spouse, spouse.Clan, hero.Clan);
+#if TRACEWEDDING
+                    Helper.Print("Spouse Swap clan", Helper.PRINT_TRACE_WEDDING);
+#endif
+                }
+
+                // New nobility
+                Helper.OccupationToLord(spouse.CharacterObject);
+                if (!spouse.IsNoble)
+                {
+                    spouse.IsNoble = true;
+#if TRACEWEDDING
+                    Helper.Print("Spouse to Noble", Helper.PRINT_TRACE_WEDDING);
+#endif
+                }
+
+#if V1640MORE
+                if (hero.Clan?.Lords.FirstOrDefault(x => x == spouse) == null)
+                {
+                    hero.Clan.Lords.AddItem(spouse);
+                    Helper.Print("Add Spouse to Noble", Helper.PRINT_TRACE_WEDDING);
+                }
+#endif
+
+                MAWeddingDo(hero, spouse);
+                if (oldSpouse is not null)
+                {
+                    Helper.RemoveExSpouses(oldSpouse);
+                }
+                if (/*MAHelper.MASettings.Cheating &&*/ cheatedSpouse is not null)
+                {
+                    Helper.RemoveExSpouses(cheatedSpouse, Helper.RemoveExSpousesHow.CompletelyRemove);
+#if TRACEWEDDING
+                    Helper.Print(String.Format("Cheatedspouse {0} Broke Off Past Marriage", cheatedSpouse.Name), Helper.PRINT_TRACE_WEDDING);
+#endif
+                }
+
+                Helper.RemoveExSpouses(spouse, Helper.RemoveExSpousesHow.CompletelyRemove);
+
+#if TRACEWEDDING
+                Helper.Print(String.Format("Spouse => {0}", Helper.TraceHero(spouse)), Helper.PRINT_TRACE_WEDDING);
+#endif
+                Helper.RemoveExSpouses(hero);
+                Helper.RemoveExSpouses(spouse);
+
+                if (PlayerEncounter.Current != null)
+                    PlayerEncounter.LeaveEncounter = true;
+
+                // New fix to stop some kingdom rulers from disappearing
+                if ((spouse.CurrentSettlement != null && spouse.CurrentSettlement == hero.CurrentSettlement)
+                    || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
+                {
+#if TRACEWEDDING
+                    Helper.Print("Add Spouse do main party", Helper.PRINT_TRACE_WEDDING);
+#endif
+                    AddHeroToPartyAction.Apply(spouse, MobileParty.MainParty, true);
+                }
+            }
+            finally
+            {
+                _MAWedding = false;
+            }
+        }
+        #endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -196,10 +599,10 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-#region dialogues
+        #region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
-            
+
             // To begin the dialog for companions
             starter.AddPlayerLine("main_option_discussions_MA", "hero_main_options", "lord_talk_speak_diplomacy_MA", "{=lord_conversations_343}There is something I'd like to discuss."
                                                 , new ConversationSentence.OnConditionDelegate(conversation_begin_courtship_for_hero_on_condition)
@@ -233,12 +636,14 @@ namespace MarryAnyone.Behaviors
                                                 , null //conversation_characacter_test_to_cheat
                                                 , 100, null);
 
-            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse", "{=Divorce_engage_dialog}We have been together for too long my {RELATION_TEXT}{newline}, I think it is time to explore new horizons. I want a divorce {INTERLOCUTOR.NAME}."
+            starter.AddPlayerLine("player_Divorce_start", "lord_talk_speak_diplomacy_2", "goodbySpouse"
+                                                , "{=Divorce_engage_dialog}We have been together for too long my {RELATION_TEXT}{newline}, I think it is time to explore new horizons. I want a divorce {INTERLOCUTOR.NAME}."
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(false); }
                                                 , 80, null);
 
-            starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window", "{=DivorceBug_engage_dialog}There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
+            starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window"
+                                                , "{=DivorceBug_engage_dialog}There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(true); }
                                                 , 60, null);
@@ -246,8 +651,26 @@ namespace MarryAnyone.Behaviors
             starter.AddPlayerLine("player_LeaveCheat_start", "lord_talk_speak_diplomacy_2", "close_window"
                                                 , "{=LeaveCheat_engage_dialog}I think you need to go away {INTERLOCUTOR.NAME}, I have other things to do."
                                                 , conversation_can_LeaveCheat
-                                                , conversaion_do_LeaveCheat 
-                                                , 60, null);
+                                                , conversaion_do_LeaveCheat
+                                                , 40, null);
+
+            starter.AddPlayerLine("player_RemarryBug_start", "lord_talk_speak_diplomacy_2", "player_RemarryBug_try"
+                                                , "{=marryAgain_engage_dialog}We are not well married {INTERLOCUTOR.NAME} (regarding the log events).{newline} Do you want we married again my {RELATION_TEXT} ?"
+                                                , conversation_can_marryAgain
+                                                , null
+                                                , 40, null);
+
+            starter.AddDialogLine("hero_remarry_player", "player_RemarryBug_try", "close_window"
+                                                , "{=marryAgain_OK}I'm happy to hear that, we can formalize our bugged wedding !"
+                                                , conversation_can_marryAgainOK
+                                                , conversation_do_marryAgain
+                                                , 100, null);
+
+            starter.AddDialogLine("hero_remarry_player", "player_RemarryBug_try", "close_window"
+                                                , "{=marryAgain_Cancel}I'm borried with this wobbly situation, i give up !"
+                                                , null
+                                                , conversation_cancel_marryAgain
+                                                , 80, null);
 
             starter.AddDialogLine("hero_leave_party", "goodbySpouse", "close_window", "{=LeaveSpouseParty}Hope we meet again, maybe in the arena{newline}, so long ..."
                                                 , null
@@ -264,7 +687,8 @@ namespace MarryAnyone.Behaviors
                                                 , null
                                                 , 100, null);
 
-            starter.AddDialogLine("hero_cheat_persuasion_start", "acceptcheatingornot", "heroPersuasionNextQuestion", "{=bW3ygxro}Yes, it's good to have a chance to get to know each other."
+            starter.AddDialogLine("hero_cheat_persuasion_start", "acceptcheatingornot", "heroPersuasionNextQuestion"
+                                                , "{=bW3ygxro}Yes, it's good to have a chance to get to know each other."
                                                 , delegate { return !conversation_characacter_notagreed_to_cheat_VariantTest() && !conversation_cheat_allready_done(); }
                                                 , conversation_characacter_test_to_cheat
                                                 , 80, null);
@@ -282,7 +706,7 @@ namespace MarryAnyone.Behaviors
 
             starter.AddDialogLine("hero_cheat_persuasion_success", "heroPersuasionNextQuestion", "close_window", "{=Cheat_success}Yes, let's have some fun ! I will join your party."
                                                 , null
-                                                , this.conversation_characacter_success_to_cheat_go
+                                                , conversation_characacter_success_to_cheat_go
                                                 , 100, null);
 
 
@@ -296,7 +720,7 @@ namespace MarryAnyone.Behaviors
                             , delegate { persuasion_conversation_player_line_clique(0); }
                             , 100
                             , /*ConversationSentence.OnClickableConditionDelegate*/ delegate (out TextObject explanation) { return persuasion_conversation_player_clickable(0, out explanation); }
-                            , /* ConversationSentence.OnPersuasionOptionDelegate */ delegate { return persuasion_conversation_player_get_optionArgs(0); } );
+                            , /* ConversationSentence.OnPersuasionOptionDelegate */ delegate { return persuasion_conversation_player_get_optionArgs(0); });
 
             starter.AddPlayerLine("player_courtship_argument_1", "player_courtship_argument", "hero_courtship_reaction_forcheat", "{=!}{ROMANCE_PERSUADE_ATTEMPT_1}"
                             , delegate { return persuasion_conversation_player_line(1); }
@@ -357,7 +781,7 @@ namespace MarryAnyone.Behaviors
                                                 , new ConversationSentence.OnConditionDelegate(this.conversation_finalize_courtship_for_other_on_condition)
                                                 , null
                                                 , 100, null, null);
-         
+
             starter.AddDialogLine("persuasion_leave_faction_npc_result_success_2", "lord_conclude_courtship_stage_2", "close_window", "{=k7nGxksk}Splendid! Let us conduct the ceremony, then."
                                                 , new ConversationSentence.OnConditionDelegate(MAconversation_finalize_courtship_for_hero_on_condition)
                                                 , new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 140, null);
@@ -369,6 +793,37 @@ namespace MarryAnyone.Behaviors
 
             //starter.AddDialogLine("hero_courtship_final_barter_setup", "hero_courtship_final_barter_conclusion", "close_window", "{=k7nGxksk}Splendid! Let us conduct the ceremony, then.", new ConversationSentence.OnConditionDelegate(this.conversation_marriage_barter_successful_on_condition), new ConversationSentence.OnConsequenceDelegate(this.conversation_courtship_success_on_consequence), 100, null);
             //starter.AddDialogLine("hero_courtship_final_barter_setup", "hero_courtship_final_barter_conclusion", "close_window", "{=iunPaMFv}I guess we should put this aside, for now. But perhaps we can speak again at a later date.", () => !this.conversation_marriage_barter_successful_on_condition(), null, 100, null);
+        }
+
+        private bool conversation_can_marryAgainOK()
+        {
+            if (conversation_can_marryAgain())
+            {
+                if (Helper.MASettings.RelationLevelMinForRomance < 0
+                    || Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) >= Helper.MASettings.RelationLevelMinForRomance)
+                    return true;
+            }
+            return false;
+        }
+        private bool conversation_can_marryAgain()
+        {
+            if (_buggedSpouses != null && _buggedSpouses.Contains(Hero.OneToOneConversationHero))
+            {
+                StringHelpers.SetCharacterProperties("INTERLOCUTOR", Hero.OneToOneConversationHero.CharacterObject);
+                return true;
+            }
+            return false;
+        }
+
+
+        private void conversation_cancel_marryAgain()
+        {
+            RemoveMainHeroSpouse(Hero.OneToOneConversationHero, true);
+        }
+
+        private void conversation_do_marryAgain()
+        {
+            MAWeddingDo(Hero.MainHero, Hero.OneToOneConversationHero);
         }
 
         private bool conversation_courtship_initial_reaction_on_condition()
@@ -386,6 +841,8 @@ namespace MarryAnyone.Behaviors
             ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int)-(mulitpe), false, true);
             MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
             PartnerRemove(Hero.OneToOneConversationHero);
+
+            RemoveMainHeroSpouse(Hero.OneToOneConversationHero);
         }
 
         private bool conversation_can_LeaveCheat()
@@ -418,13 +875,13 @@ namespace MarryAnyone.Behaviors
 
             if (forBug)
             {
-                Helper.RemoveExSpouses(Hero.MainHero, false, null, false, Hero.OneToOneConversationHero);
-                Helper.RemoveExSpouses(Hero.OneToOneConversationHero, false, null, false, Hero.MainHero);
+                Helper.RemoveExSpouses(Hero.MainHero, Helper.RemoveExSpousesHow.RAS, null, Hero.OneToOneConversationHero);
+                Helper.RemoveExSpouses(Hero.OneToOneConversationHero, Helper.RemoveExSpousesHow.RAS, null, Hero.MainHero);
             }
             else
             {
                 Hero.OneToOneConversationHero.Spouse = null;
-                Helper.RemoveExSpouses(Hero.MainHero, false);
+                Helper.RemoveExSpouses(Hero.MainHero, Helper.RemoveExSpousesHow.RAS);
                 NoMoreSpouse.Add(Hero.OneToOneConversationHero);
             }
 
@@ -440,10 +897,10 @@ namespace MarryAnyone.Behaviors
             PartyHelper.SwapPartyBelongedTo(hero: Hero.OneToOneConversationHero, null);
             MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
 
+            ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int)-(relationBetweenPlayer / 5), false, true);
 
-            ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int) -(relationBetweenPlayer / 5), false, true);
-
-            if (multiple > 0) {
+            if (multiple > 0)
+            {
                 foreach (Hero spouse in Spouses)
                 {
                     float rela1 = spouse.GetRelation(Hero.OneToOneConversationHero);
@@ -452,11 +909,11 @@ namespace MarryAnyone.Behaviors
                     Helper.Print(String.Format("Hero Relations between {0} and {1} ?= {2} ", spouse.Name, Hero.OneToOneConversationHero.Name, rela1), Helper.PRINT_TRACE_ROMANCE);
                     Helper.Print(String.Format("Hero Relations between {0} and {1} ?= {2} ", spouse.Name, Hero.MainHero.Name, rela2), Helper.PRINT_TRACE_ROMANCE);
 #endif
-                    int multiple1 = (int) (rela1 / 20);
+                    int multiple1 = (int)(rela1 / 20);
                     if (multiple1 < 1) multiple1 = 1;
-                    int multiple2 = (int) (rela2 / 30);
+                    int multiple2 = (int)(rela2 / 30);
                     if (multiple2 < 1) multiple2 = 1;
-                    ChangeRelationAction.ApplyPlayerRelation(spouse, (int) -(multiple * multiple1 * multiple2), false, true);
+                    ChangeRelationAction.ApplyPlayerRelation(spouse, (int)-(multiple * multiple1 * multiple2), false, true);
                 }
             }
 
@@ -508,9 +965,10 @@ namespace MarryAnyone.Behaviors
                                 , ret.ToString()), Helper.PRINT_TRACE_ROMANCE);
 #endif
 
-                if (ret) {
+                if (ret)
+                {
                     ret = Helper.MarryEnabledPathMA(Hero.OneToOneConversationHero, Hero.MainHero, false);
-                        // || MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
+                    // || MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
                 }
 
                 // OnNeNousDitPasTout/GrandesMaree Patch
@@ -601,7 +1059,8 @@ namespace MarryAnyone.Behaviors
             bool ret = false;
             if (Hero.OneToOneConversationHero.Occupation == Occupation.Lord)
             {
-                if (Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero)) {
+                if (Helper.FactionAtWar(Hero.MainHero, Hero.OneToOneConversationHero))
+                {
 #if TRACECHEAT
                     Helper.Print("conversation_characacter_notagreed_to_cheat_VariantTest:: Condition OK because at war", Helper.PRINT_TRACE_CHEAT);
 #endif
@@ -609,7 +1068,7 @@ namespace MarryAnyone.Behaviors
                     MBTextManager.SetTextVariable("CHEAT_DECLINE_REACTION", "{=maCheatNotPossibleKingdomAtWar}I am terribly sorry. Our kingdom are actualy at war.", false);
                     ret = true;
                 }
-                else if ((Hero.OneToOneConversationHero.PartyBelongedTo != null && Hero.OneToOneConversationHero.PartyBelongedTo.LeaderHero == Hero.OneToOneConversationHero) 
+                else if ((Hero.OneToOneConversationHero.PartyBelongedTo != null && Hero.OneToOneConversationHero.PartyBelongedTo.LeaderHero == Hero.OneToOneConversationHero)
                         && (Hero.MainHero.CurrentSettlement == null || !(Hero.MainHero.CurrentSettlement.IsTown || Hero.MainHero.CurrentSettlement.IsCastle)))
                 {
 #if TRACECHEAT
@@ -630,13 +1089,13 @@ namespace MarryAnyone.Behaviors
             {
                 if (!PartnerOfPlayer(Hero.OneToOneConversationHero))
                     ret = MarryAnyone.Patches.Behaviors.RomanceCampaignBehaviorPatch.conversation_player_can_open_courtship_on_condition(true);
-                        // && (conversation_characacter_agreed_to_cheat_VariantTest()));
-                        ////|| MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
+                // && (conversation_characacter_agreed_to_cheat_VariantTest()));
+                ////|| MAHelper.CheatEnabled(Hero.OneToOneConversationHero, Hero.MainHero);
             }
             return ret;
         }
 
-#region persuasion Cheat
+        #region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -768,10 +1227,10 @@ namespace MarryAnyone.Behaviors
             {
                 PersuasionAttempt persuasionAttempt = _previousCheatPersuasionAttempts
                         .FirstOrDefault(x => x.PersuadedHero == forHero
-                                                && ((x.Result != PersuasionOptionResult.CriticalFailure 
+                                                && ((x.Result != PersuasionOptionResult.CriticalFailure
                                                         && x.GameTime.ElapsedDaysUntilNow < 1f)
                                                     || (x.Result == PersuasionOptionResult.CriticalFailure
-                                                        && x.GameTime.ElapsedWeeksUntilNow < 2f )));
+                                                        && x.GameTime.ElapsedWeeksUntilNow < 2f)));
 
                 bool ret = persuasionAttempt != null;
                 if (!ret)
@@ -787,9 +1246,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-#endregion
+        #endregion
 
-#region persuasion system
+        #region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -983,7 +1442,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-#endregion
+        #endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1032,7 +1491,7 @@ namespace MarryAnyone.Behaviors
             if (ret)
             {
                 if ((romanticLevel == Romance.RomanceLevelEnum.CourtshipStarted
-                       || romanticLevel == Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible) 
+                       || romanticLevel == Romance.RomanceLevelEnum.CoupleDecidedThatTheyAreCompatible)
                         && Helper.MASettings.Difficulty == MASettings.DIFFICULTY_VERY_EASY)
                 {
                     ChangeRomanticStateAction.Apply(Hero.MainHero, Hero.OneToOneConversationHero, Romance.RomanceLevelEnum.CoupleAgreedOnMarriage);
@@ -1041,13 +1500,13 @@ namespace MarryAnyone.Behaviors
                 ret = (romanticLevel == Romance.RomanceLevelEnum.CoupleAgreedOnMarriage);
             }
 
-//            if (ret && Hero.OneToOneConversationHero.Clan != null && Hero.OneToOneConversationHero.Clan.Leader != Hero.OneToOneConversationHero)
-//            {
-//#if TRACEROMANCE
-//                MAHelper.Print(string.Format("MARomanceCampaignBehavior:: conversation_finalize_courtship_for_hero_on_condition with {0} goto defaut Programme", Hero.OneToOneConversationHero.Name), MAHelper.PRINT_TRACE_ROMANCE);
-//#endif
-//                ret = false;
-//            }
+            //            if (ret && Hero.OneToOneConversationHero.Clan != null && Hero.OneToOneConversationHero.Clan.Leader != Hero.OneToOneConversationHero)
+            //            {
+            //#if TRACEROMANCE
+            //                MAHelper.Print(string.Format("MARomanceCampaignBehavior:: conversation_finalize_courtship_for_hero_on_condition with {0} goto defaut Programme", Hero.OneToOneConversationHero.Name), MAHelper.PRINT_TRACE_ROMANCE);
+            //#endif
+            //                ret = false;
+            //            }
 
             if (ret && romanticState != null && romanticState.ScoreFromPersuasion == 0)
                 romanticState.ScoreFromPersuasion = 60;
@@ -1074,8 +1533,8 @@ namespace MarryAnyone.Behaviors
                 {
                     foreach (Hero hero in clan.Lords)
                     {
-                        if (hero != Hero.OneToOneConversationHero 
-                            && Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, hero) 
+                        if (hero != Hero.OneToOneConversationHero
+                            && Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, hero)
                             && Romance.GetRomanticLevel(Hero.MainHero, hero) == Romance.RomanceLevelEnum.CoupleAgreedOnMarriage)
                         {
                             MBTextManager.SetTextVariable("COURTSHIP_PARTNER", hero.Name, false);
@@ -1102,275 +1561,8 @@ namespace MarryAnyone.Behaviors
         {
             Hero hero = Hero.MainHero;
             Hero spouse = Hero.OneToOneConversationHero;
-            Hero oldSpouse = hero.Spouse;
-            Hero cheatedSpouse = spouse.Spouse;
-            Clan? spouseLeaveClan = null;
-            Clan? heroLeaveClan = null;
 
-            try
-            {
-                _MAWedding = true;
-
-                PartnerRemove(Hero.OneToOneConversationHero);
-
-#if TRACEWEDDING
-                Helper.Print("MARomanceCampaignBehavior:: conversation_courtship_success_on_consequence", Helper.PRINT_TRACE_WEDDING);
-#endif
-                // If you are marrying a kingdom ruler as a kingdom ruler yourself,
-                // the kingdom ruler will have to give up being clan head.
-                // Apparently causes issues if this is not done.
-                if (spouse.IsFactionLeader && !spouse.IsMinorFactionHero)
-                {
-                    if (hero.Clan.Kingdom != spouse.Clan.Kingdom)
-                    {
-                        if (hero.Clan.Kingdom?.Leader != hero)
-                        {
-                            if (!Helper.MASettings.CanJoinUpperClanThroughMAPath)
-                                throw new Exception("conversation_courtship_success_on_consequence TU spouse IS MAIN FAIL");
-
-                            bool canDestroyClan = false;
-                            heroLeaveClan = hero.Clan;
-
-                            MobileParty? mobilePartyDest = null;
-                            if (spouse.CurrentSettlement == hero.CurrentSettlement
-                                || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
-
-                                mobilePartyDest = spouse.PartyBelongedTo;
-
-                            // Join kingdom due to lowborn status
-                            if (hero.Clan.Leader == hero)
-                                canDestroyClan = true;
-
-                            Action<Hero> swapPartie = (Hero h) =>
-                            {
-                                bool inParty = false;
-                                if (h.PartyBelongedTo == MobileParty.MainParty)
-                                {
-                                    inParty = true;
-                                }
-                                RemoveCompanionAction.ApplyByFire(heroLeaveClan, h);
-                                AddCompanionAction.Apply(spouse.Clan, h);
-                                if (inParty)
-                                {
-                                    if (mobilePartyDest != null)
-                                    {
-                                        AddHeroToPartyAction.Apply(h, mobilePartyDest, true);
-                                    }
-                                    else if (MobileParty.MainParty.MemberRoster.FindIndexOfTroop(h.CharacterObject) < 0)
-                                        AddHeroToPartyAction.Apply(h, MobileParty.MainParty, false);
-                                }
-                            };
-
-                            foreach (Hero companion in hero.Clan.Companions.ToList())
-                            {
-                                swapPartie(companion);
-                            }
-                            if (hero == Hero.MainHero && Helper.MASettings.Polygamy)
-                            {
-                                foreach (Hero exSpouse in hero.ExSpouses)
-                                {
-                                    if (SpouseOfPlayer(exSpouse))
-                                    {
-                                        swapPartie(exSpouse);
-                                    }
-                                }
-                            }
-
-                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan);
-
-                            if (mobilePartyDest != null)
-                            {
-                                MobileParty oldParty = MobileParty.MainParty;
-
-                                if (oldParty != null)
-                                {
-                                    if (oldParty.PrisonRoster?.Count > 0)
-                                    {
-                                        mobilePartyDest.Party.AddPrisoners(oldParty.PrisonRoster);
-                                        oldParty.PrisonRoster.Clear();
-                                    }
-
-                                    if (oldParty.ItemRoster?.Count > 0)
-                                    {
-                                        mobilePartyDest.ItemRoster.Add(oldParty.ItemRoster);
-                                        oldParty.ItemRoster.Clear();
-                                    }
-                                }
-                                AddHeroToPartyAction.Apply(hero, mobilePartyDest, true);
-                                PartyHelper.SwapMainParty(mobilePartyDest);
-
-                                PartyHelper.SwapPartyBelongedTo(hero, mobilePartyDest);
-                                mobilePartyDest.ChangePartyLeader(Hero.MainHero);
-                                mobilePartyDest.Party.SetCustomOwner(Hero.MainHero);
-
-                                PartyHelper.SetLeaderAtTop(mobilePartyDest.Party);
-
-                                if (oldParty != null)
-                                {
-                                    MergePartiesAction.Apply(mobilePartyDest.Party, oldParty.Party);
-                                }
-
-                                //DestroyPartyAction.Apply(null, oldParty);
-#if TRACEWEDDING
-                                Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of party", Helper.PRINT_TRACE_WEDDING);
-#endif
-                            }
-
-                            Helper.FamilyAdoptChild(spouse, hero, heroLeaveClan);
-                            Helper.FamilyJoinClan(hero, heroLeaveClan, spouse.Clan);
-
-                            if (canDestroyClan && HeroLeaveClanLeaderAndDestroyClan(heroLeaveClan, spouse.Clan))
-                            {
-                                heroLeaveClan = null;
-                            }
-
-#if V1700LESS
-                            Helper.SwapClan(hero, heroLeaveClan, spouse.Clan); // one again
-#endif
-                            Campaign current = Traverse.Create<Campaign>().Property("Current").GetValue<Campaign>();
-                            Traverse.Create(current).Property("PlayerDefaultFaction").SetValue(spouse.Clan);
-#if TRACEWEDDING
-                            Helper.Print("Lowborn Player Married to Kingdom Ruler and swap of faction", Helper.PRINT_TRACE_WEDDING);
-                            if (hero.Clan == null)
-                                Helper.Print("Hero.Clan == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-                            else if (hero.Clan.Lords == null)
-                                Helper.Print("Hero.Clan.Lords == NULL => FAIL", Helper.PRINT_TRACE_WEDDING);
-#endif
-                            ChangeClanLeaderAction.ApplyWithSelectedNewLeader(spouse.Clan, Hero.MainHero);
-                        }
-                        else
-                        {
-                            spouseLeaveClan = spouse.Clan;
-                            ChangeClanLeaderAction.ApplyWithoutSelectedNewLeader(spouse.Clan);
-#if TRACEWEDDING
-                            Helper.Print("Kingdom Ruler Stepped Down and Married to Player", Helper.PRINT_TRACE_WEDDING);
-#endif
-                        }
-                    }
-                }
-                else if (spouse.IsFactionLeader && spouse.IsMinorFactionHero)
-                {
-                    spouseLeaveClan = spouse.Clan;
-                    ChangeClanLeaderAction.ApplyWithoutSelectedNewLeader(spouse.Clan);
-#if TRACEWEDDING
-                    Helper.Print("MinorFaction Ruler Stepped Down and Married to Player", Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-
-                // Adoption
-                if (spouseLeaveClan != null)
-                {
-                    Helper.FamilyAdoptChild(spouse, hero, spouseLeaveClan);
-                }
-
-                if (spouse.Clan == null) // Patch V2
-                {
-                    if (spouseLeaveClan != null)
-                        Helper.FamilyJoinClan(spouse, spouseLeaveClan, hero.Clan);
-                    else
-                        Helper.SwapClan(spouse, spouse.Clan, hero.Clan);
-#if TRACEWEDDING
-                    Helper.Print("Spouse Swap clan", Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-
-                // New nobility
-                Helper.OccupationToLord(spouse.CharacterObject);
-                if (!spouse.IsNoble)
-                {
-                    spouse.IsNoble = true;
-#if TRACEWEDDING
-                    Helper.Print("Spouse to Noble", Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-
-#if V1640MORE
-                if (hero.Clan?.Lords.FirstOrDefault(x => x == spouse) == null)
-                {
-                    hero.Clan.Lords.AddItem(spouse);
-                    Helper.Print("Add Spouse to Noble", Helper.PRINT_TRACE_WEDDING);
-                }
-#endif
-
-                // Dodge the party crash for characters part 1
-                bool dodge = false;
-                if (spouse.PartyBelongedTo == MobileParty.MainParty)
-                {
-                    AccessTools.Property(typeof(Hero), "PartyBelongedTo").SetValue(spouse, null, null);
-#if TRACEWEDDING
-                    Helper.Print("Spouse Already in Player's Party", Helper.PRINT_TRACE_WEDDING);
-#endif
-                    dodge = true;
-                }
-                // Apply marriage
-                ChangeRomanticStateAction.Apply(hero, spouse, Romance.RomanceLevelEnum.Marriage);
-#if TRACEWEDDING
-                Helper.Print("Marriage Action Applied", Helper.PRINT_TRACE_WEDDING);
-#endif
-
-                if (oldSpouse is not null)
-                {
-                    Helper.RemoveExSpouses(oldSpouse);
-                }
-                // Dodge the party crash for characters part 2
-                if (dodge)
-                {
-                    AccessTools.Property(typeof(Hero), "PartyBelongedTo").SetValue(spouse, MobileParty.MainParty, null);
-                }
-                // Activate character if not already activated
-                if (!spouse.HasMet)
-                {
-                    spouse.HasMet = true;
-                }
-                if (!spouse.IsActive)
-                {
-                    spouse.ChangeState(Hero.CharacterStates.Active);
-#if TRACEWEDDING
-
-                    Helper.Print("Activated Spouse", Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-                if (spouse.IsPlayerCompanion)
-                {
-                    spouse.CompanionOf = null;
-#if TRACEWEDDING
-
-                    Helper.Print("Spouse No Longer Companion", Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-                if (/*MAHelper.MASettings.Cheating &&*/ cheatedSpouse is not null)
-                {
-                    Helper.RemoveExSpouses(cheatedSpouse, true);
-#if TRACEWEDDING
-                    Helper.Print(String.Format("Cheatedspouse {0} Broke Off Past Marriage", cheatedSpouse.Name), Helper.PRINT_TRACE_WEDDING);
-#endif
-                }
-
-                Helper.RemoveExSpouses(spouse, true);
-
-#if TRACEWEDDING
-                Helper.Print(String.Format("Spouse => {0}", Helper.TraceHero(spouse)), Helper.PRINT_TRACE_WEDDING);
-#endif
-                Helper.RemoveExSpouses(hero);
-                Helper.RemoveExSpouses(spouse);
-
-                if (PlayerEncounter.Current != null)
-                    PlayerEncounter.LeaveEncounter = true;
-
-                // New fix to stop some kingdom rulers from disappearing
-                if ((spouse.CurrentSettlement != null && spouse.CurrentSettlement == hero.CurrentSettlement) 
-                    || (hero.PartyBelongedTo == MobileParty.MainParty && spouse.PartyBelongedTo != null && spouse.PartyBelongedTo == MobileParty.ConversationParty))
-                {
-#if TRACEWEDDING
-                    Helper.Print("Add Spouse do main party", Helper.PRINT_TRACE_WEDDING);
-#endif
-                    AddHeroToPartyAction.Apply(spouse, MobileParty.MainParty, true);
-                }
-            }
-            finally
-            {
-                _MAWedding = false;
-            }
+            MAWedding(hero, spouse);
             //if (PlayerEncounter.Current != null)
             //{
             //    PlayerEncounter.LeaveEncounter = true;
@@ -1427,7 +1619,7 @@ namespace MarryAnyone.Behaviors
             return supprimeClan;
         }
 
-#endregion
+        #endregion
 
         private void OnHourTickEvent()
         {
@@ -1448,6 +1640,9 @@ namespace MarryAnyone.Behaviors
         {
             if (!_MAWedding && (arg1 == Hero.MainHero || arg2 == Hero.MainHero))
             {
+#if TRACEWEDDING
+                Helper.Print(String.Format("OnHeroesMarried:: {0} join your party", (arg1 == Hero.MainHero ? arg2.Name : arg1.Name)), Helper.PRINT_TRACE_WEDDING);
+#endif
                 if (arg1.CurrentSettlement != null && arg1.CurrentSettlement == arg2.CurrentSettlement)
                 {
                     if (arg1 == Hero.MainHero && arg2.PartyBelongedTo != MobileParty.MainParty)
@@ -1471,7 +1666,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#region chargements et patch
+        #region Loading and patches
 
         private bool SaveVersionOlderThen(String versionChaine)
         {
@@ -1553,7 +1748,7 @@ namespace MarryAnyone.Behaviors
         }
 
         // Return true if patch
-        private bool patchParent(Hero children, Hero ?mainFemaleSpouseHero, Hero? mainMaleSpouseHero)
+        private bool patchParent(Hero children, Hero? mainFemaleSpouseHero, Hero? mainMaleSpouseHero)
         {
             bool hadSpouse = mainFemaleSpouseHero != null || mainMaleSpouseHero != null;
             bool mainHeroIsFemale = Hero.MainHero.IsFemale;
@@ -1582,25 +1777,71 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
+        #region little hands
+        private void LogLectureAdd(List<CharacterMarriedLogEntry> lecture, Hero otherHero, CharacterMarriedLogEntry characterMarriedLogEntry)
+        {
+            CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
+            if (existe != null && existe.GameTime < characterMarriedLogEntry.GameTime)
+            { // if we don't fint more rescent marriage
+                lecture.Remove(existe);
+                existe = null;
+            }
+            if (existe == null)
+                lecture.Add(characterMarriedLogEntry);
+        }
+
+        public void LogLectureVerify(List<CharacterMarriedLogEntry> lecture, List<Hero> spouses, List<Hero> logSpouses)
+        {
+            foreach (CharacterMarriedLogEntry characterMarriedLogEntry in lecture)
+            {
+                Hero otherHero = characterMarriedLogEntry.MarriedHero == Hero.MainHero
+                                        ? characterMarriedLogEntry.MarriedTo
+                                        : characterMarriedLogEntry.MarriedHero;
+
+                if (!Campaign.Current.LogEntryHistory.GetGameActionLogs<CharacterMarriedLogEntry>
+                        (x => x.GameTime > characterMarriedLogEntry.GameTime
+                           && ((x.MarriedHero == otherHero && x.MarriedTo != Hero.MainHero)
+                               || (x.MarriedTo == otherHero && x.MarriedHero != Hero.MainHero))).Any())
+                {
+                    // it's good, we have to merge
+                    if (spouses.IndexOf(otherHero) < 0)
+                        spouses.Add(otherHero);
+
+                    if (logSpouses.IndexOf(otherHero) < 0)
+                        logSpouses.Add(otherHero);
+#if TRACELOAD
+                    Helper.Print("Log spouse add " + Helper.TraceHero(otherHero), Helper.PRINT_TRACE_LOAD);
+#endif
+                }
+            }
+        }
+
+        #endregion
+
         private void patchSpouses(CampaignGameStarter campaignGameStarter)
         {
 
             bool needPatch = Helper.MASettings.Patch;
+            bool needPatchPartner = false;
             bool bPatchExecute = false;
             int nbMainHero = 0;
+            int i = 0;
 
             if (Hero.MainHero.Spouse != null && Hero.MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled)
             {
                 Hero.MainHero.Spouse.ChangeState(Hero.CharacterStates.Active);
-                Helper.Print(string.Format("Active {0}", Hero.MainHero.Spouse.Name), Helper.PRINT_PATCH);
+#if TRACELOAD
+                Helper.Print(string.Format("patchSpouses:: Active {0}", Hero.MainHero.Spouse.Name), Helper.PRINT_PATCH);
+#endif
             }
             foreach (Hero hero in Hero.MainHero.ExSpouses)
             {
                 if (hero.HeroState == Hero.CharacterStates.Disabled && hero.IsAlive)
                 {
                     hero.ChangeState(Hero.CharacterStates.Active);
-                    Helper.Print(string.Format("Active {0}", hero.Name), Helper.PRINT_PATCH);
-
+#if TRACELOAD
+                    Helper.Print(string.Format("patchSpouses:: Active {0}", hero.Name), Helper.PRINT_PATCH);
+#endif
                 }
             }
 
@@ -1625,7 +1866,7 @@ namespace MarryAnyone.Behaviors
 
                 Helper.RemoveExSpouses(Hero.MainHero);
                 if (Hero.MainHero.Spouse != null)
-                    Helper.RemoveExSpouses(Hero.MainHero.Spouse, false, spouses, false); // For Encycolpedie
+                    Helper.RemoveExSpouses(Hero.MainHero.Spouse, Helper.RemoveExSpousesHow.RAS, spouses); // For Encycolpedie
 
 #if TRACELOAD
                 if (nb != Hero.MainHero.ExSpouses.Count)
@@ -1636,63 +1877,103 @@ namespace MarryAnyone.Behaviors
 
                 foreach (Hero hero in Hero.MainHero.ExSpouses)
                 {
-                    if (hero.IsAlive && NoMoreSpouse.IndexOf(hero) < 0 && hero != Hero.MainHero)
+                    if (Partners != null && Partners.IndexOf(hero) >= 0)
+                    {
+                        needPatchPartner = true; // will be verify via logSpouse
+                        if (hero.Spouse == Hero.MainHero
+                            || (hero.ExSpouses != null && hero.ExSpouses.Contains(Hero.MainHero)))
+                            needPatch = true;
+                    }
+                    else if (hero.IsAlive && NoMoreSpouse.IndexOf(hero) < 0 && hero != Hero.MainHero)
+                    {
                         spouses.Add(hero);
+
 #if TRACELOAD
-                    Helper.Print("Other spouse " + Helper.TraceHero(hero), Helper.PRINT_TRACE_LOAD);
+                        Helper.Print("Other spouse " + Helper.TraceHero(hero), Helper.PRINT_TRACE_LOAD);
 #endif
+                    }
                 }
             }
 
-#if PATCHWITHLOGENTRY
-            //DefaultLogsCampaignBehavior defaultLogsCampaignBehavior = campaignGameStarter.CampaignBehaviors.OfType<DefaultLogsCampaignBehavior>().FirstOrDefault();
-            //if (defaultLogsCampaignBehavior != null)
-            //{
+#if TRACELOAD
+            if (Partners != null)
+            {
+                foreach (Hero hero in Partners)
+                    Helper.Print("Partner " + Helper.TraceHero(hero), Helper.PRINT_TRACE_LOAD);
+            }
 
-            //}
+            Helper.Print(String.Format("patchSpouses:: needPatch ?= {0}, needPatchPartner ?= {1} ", needPatch, needPatchPartner), Helper.PRINT_TRACE_LOAD);
+#endif
+
+
+
+#if PATCHWITHLOGENTRY
             List<Hero> logSpouses = new List<Hero>();
-            if (needPatch || SaveVersionOlderThen("2.6.11"))
+            List<Hero> logFullSpouses = new List<Hero>();
+            bool needSaveSpouses = false;
+
+            if (needPatchPartner || needPatch || SaveVersionOlderThen("2.6.11"))
             {
 
+#if TRACEPATCH
+                Helper.Print(string.Format("patchSpouses:: Patch with LogEntry"), Helper.PRINT_PATCH);
+#endif
+
                 List<CharacterMarriedLogEntry> lecture = new List<CharacterMarriedLogEntry>();
+                List<CharacterMarriedLogEntry> lectureFull = new List<CharacterMarriedLogEntry>();
                 foreach (CharacterMarriedLogEntry characterMarriedLogEntry
                         in Campaign.Current.LogEntryHistory.GetGameActionLogs<CharacterMarriedLogEntry>(
-                                new Func<CharacterMarriedLogEntry, bool>((logEntry) => { return (logEntry.MarriedHero == Hero.MainHero || logEntry.MarriedTo == Hero.MainHero); })))
+                                new Func<CharacterMarriedLogEntry, bool>((logEntry)
+                                        =>
+                                { return (logEntry.MarriedHero == Hero.MainHero || logEntry.MarriedTo == Hero.MainHero); })))
                 {
-                    Hero otherHero = characterMarriedLogEntry.MarriedHero == Hero.MainHero ? characterMarriedLogEntry.MarriedTo : characterMarriedLogEntry.MarriedHero;
-                    if (otherHero.IsAlive && !SpouseOfPlayer(otherHero))
+                    Hero otherHero = (characterMarriedLogEntry.MarriedHero == Hero.MainHero
+                                        ? characterMarriedLogEntry.MarriedTo
+                                        : characterMarriedLogEntry.MarriedHero);
+
+                    if (otherHero.IsAlive)
                     {
-                        CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
-                        if (existe != null && existe.GameTime < characterMarriedLogEntry.GameTime)
-                        { // if we don't fint more rescent marriage
-                            lecture.Remove(existe);
-                            existe = null;
-                        }
-                        if (existe == null)
-                            lecture.Add(characterMarriedLogEntry);
+                        if (!SpouseOfPlayer(otherHero))
+                            LogLectureAdd(lecture, otherHero, characterMarriedLogEntry);
+
+                        LogLectureAdd(lectureFull, otherHero, characterMarriedLogEntry);
                     }
                 }
 
-                foreach (CharacterMarriedLogEntry characterMarriedLogEntry in lecture)
-                {
-                    Hero otherHero = characterMarriedLogEntry.MarriedHero == Hero.MainHero ? characterMarriedLogEntry.MarriedTo : characterMarriedLogEntry.MarriedHero;
-                    if (!Campaign.Current.LogEntryHistory.GetGameActionLogs<CharacterMarriedLogEntry>
-                            (x => x.GameTime > characterMarriedLogEntry.GameTime
-                               && ((x.MarriedHero == otherHero && x.MarriedTo != Hero.MainHero)
-                                   || (x.MarriedTo == otherHero && x.MarriedHero != Hero.MainHero))).Any())
-                    {
-                        // it's good, we have to merge
-                        spouses.Add(otherHero);
-                        logSpouses.Add(otherHero);
-#if TRACELOAD
-                        Helper.Print("Log spouse add " + Helper.TraceHero(otherHero), Helper.PRINT_TRACE_LOAD);
+#if TRACEPATCH
+                Helper.Print(string.Format("patchSpouses:: Nb LogEntry solved ?= {0}\r\nFullLecture ?= {1}", lecture.Count, lectureFull.Count), Helper.PRINT_PATCH);
 #endif
-                    }
-                }
+                LogLectureVerify(lecture, spouses, logSpouses);
+                LogLectureVerify(lectureFull, spouses, logFullSpouses);
 
-                if (logSpouses.Count > 0)
+                if (needPatch || SaveVersionOlderThen("2.6.11"))
                 {
-                    Helper.RemoveExSpouses(Hero.MainHero, false, spouses, false, null);
+                    for (i = 0; i < spouses.Count; i++)
+                    {
+                        Hero spouse = spouses[i];
+                        if (logFullSpouses.IndexOf(spouse) < 0)
+                        {
+                            String aff = String.Format("Your spouse {0} is not in the log\r\nDo you want to remove her/him ?", spouse.Name);
+                            Helper.Print(aff, Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+
+                            InformationManager.ShowInquiry(new InquiryData(GameTexts.FindText("str_warning").ToString(), aff, true, true, "Remove", "Keep"
+                                                                , new Action(() => { RemoveMainHeroSpouse(spouse); })
+                                                                , new Action(() => {
+                                                                    if (_buggedSpouses == null)
+                                                                        _buggedSpouses = new List<Hero>();
+                                                                    _buggedSpouses.Add(spouse);
+                                                                })), false);
+                        }
+                    }
+
+                    if (logSpouses.Count > 0 || spouses.Count > 0 && needSaveSpouses)
+                    {
+#if TRACEPATCH
+                        Helper.Print(string.Format("patchSpouses:: Apply spouses filter"), Helper.PRINT_PATCH);
+#endif
+
+                        Helper.RemoveExSpouses(Hero.MainHero, Helper.RemoveExSpousesHow.CompletelyRemove, spouses);
+                    }
                 }
             }
 #endif
@@ -1703,7 +1984,7 @@ namespace MarryAnyone.Behaviors
             Hero mainMaleSpouse = this.Spouses.FirstOrDefault(x => !x.IsFemale);
             Hero mainFemaleSpouse = this.Spouses.FirstOrDefault(x => x.IsFemale);
 
-            int i = 0;
+            i = 0;
             while (i < Hero.MainHero.Children.Count)
             {
                 Hero children = Hero.MainHero.Children[i];
@@ -1760,9 +2041,10 @@ namespace MarryAnyone.Behaviors
 #if TRACEEXSPOUSE
                 if (HeroPatch.HeroExspouses(hero) != null)
                     nb = HeroPatch.HeroExspouses(hero).Count;
-#endif
+#else
                 if (hero.ExSpouses != null)
                     nb = hero.ExSpouses.Count;
+#endif
 
 #if PATCHROMANCE
                 Romance.RomanceLevelEnum romance = Romance.GetRomanticLevel(hero, Hero.MainHero);
@@ -1779,30 +2061,50 @@ namespace MarryAnyone.Behaviors
                                 , hero.Name
                                 , Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_LOAD);
 #endif
-                    Helper.RemoveExSpouses(Hero.MainHero, false);
+                    Helper.RemoveExSpouses(Hero.MainHero);
                     nbMainHero = Hero.MainHero.ExSpouses.Count;
                 }
 #endif
-                Helper.RemoveExSpouses(hero, false, spouses, true);
+                Helper.RemoveExSpouses(hero
+                                        , (Helper.RemoveExSpousesHow.AddMainHero
+                                            | ((needSaveSpouses || needPatchPartner) ? Helper.RemoveExSpousesHow.CompletelyRemove : Helper.RemoveExSpousesHow.RAS))
+                                        , spouses);
 #if TRACELOAD
 #if TRACEEXSPOUSE
                 if (nb != HeroPatch.HeroExspouses(hero).Count)
 #else
-                if (nb != hero.ExSpouses.Count)
+                if (nb != hero.ExSpouses.Count || needSaveSpouses || needPatchPartner)
 #endif
-                    Helper.Print(String.Format("Patch duplicate spouse for {2} from {0} to {1}"
+                    Helper.Print(String.Format("Patch duplicate spouse for {2} from {0} to {1}\r\n\t=> {3}"
                             , nb
 #if TRACEEXSPOUSE
                             , HeroPatch.HeroExspouses(hero).Count
 #else
                             , hero.ExSpouses.Count
 #endif
-                            , hero.Name), Helper.PRINT_TRACE_LOAD);
+                            , hero.Name
+                            , Helper.TraceHero(hero)
+                            ), Helper.PRINT_TRACE_LOAD);
 #endif
 
             }
 
-#if TRACELOAD
+            if (Partners != null && needPatchPartner)
+            {
+
+                foreach (Hero partner in Partners)
+                {
+                    if (!logFullSpouses.Contains(partner))
+                    {
+                        // Patch
+                        RemoveMainHeroSpouse(partner, false);
+                    }
+                    else
+                        while (Partners.Remove(partner)) ;
+                }
+            }
+
+#if TRACEPATCHCLAN
             // Voir HeroAgentSpawnCampaignBehavior.AddPartyHero
 
             foreach (Hero hero in Clan.PlayerClan.Lords)
@@ -1831,7 +2133,7 @@ namespace MarryAnyone.Behaviors
             Helper.Print(String.Format("MARomanceCampaignBehavior::OnSessionLaunched Assembly version ?= {0} Save ?= {1}, compare ?= {2}"
                             , version.ToString()
                             , (SaveVersion == null ? "NULL" : SaveVersion.ToString())
-                            , (SaveVersion != null ? version.CompareTo(SaveVersion).ToString() : "No Comparison")), Helper.PRINT_TRACE_LOAD) ;
+                            , (SaveVersion != null ? version.CompareTo(SaveVersion).ToString() : "No Comparison")), Helper.PRINT_TRACE_LOAD);
 
             if (Hero.MainHero.Siblings != null)
             {
@@ -1852,29 +2154,35 @@ namespace MarryAnyone.Behaviors
 
             foreach (Hero hero in Hero.AllAliveHeroes.ToList())
             {
-                // The old fix for occupations not sticking
-                //if (hero.Spouse == Hero.MainHero || Hero.MainHero.ExSpouses.Contains(hero))
-                //{
-                //    Helper.OccupationToLord(hero.CharacterObject);
-                //    Helper.PatchHeroPlayerClan(hero, false, true);
-                //}
+
 #if TRACKTOMUCHSPOUSE
                 String affAncien = null;
 #endif
                 bool move = false;
+                bool needTraceHero = false;
+#if PATCHHOMESETTLEMENT
+                if (hero.HomeSettlement == null)
+                    needTraceHero = true;
+#endif
 
 #if TRACKTOMUCHSPOUSE
-                if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
+                if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0) || needTraceHero)
                     affAncien = Helper.TraceHero(hero);
 #endif
-                if ((hero.Spouse == Hero.MainHero 
+
+#if PATCHHOMESETTLEMENT
+                if (hero.HomeSettlement == null)
+                    Helper.PatchHomeSettlement(hero);
+#endif
+
+                if ((hero.Spouse == Hero.MainHero
                     || (hero.ExSpouses != null && hero.ExSpouses.Contains(Hero.MainHero)))
                     && !SpouseOfPlayer(hero))
                 {
 #if TRACEPATCH
                     Helper.Print(String.Format("Remove MainHero from spouse for hero {0}", hero.Name.ToString()), Helper.PRINT_PATCH);
 #endif
-                    Helper.RemoveExSpouses(hero, false, null, false, Hero.MainHero);
+                    Helper.RemoveExSpouses(hero, Helper.RemoveExSpousesHow.RAS, null, Hero.MainHero);
                     move = true;
                 }
                 else if (SpouseOfPlayer(hero))
@@ -1891,11 +2199,8 @@ namespace MarryAnyone.Behaviors
                 }
 #endif
 #if TRACKTOMUCHSPOUSE
-#if TRACEEXSPOUSE
-                if (HeroPatch.HeroExspouses(hero) != null)
-#else
-                if (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0))
-#endif
+                if ((move || needTraceHero)
+                    && (hero.Spouse != null || (hero.ExSpouses != null && hero.ExSpouses.Count > 0)))
                 {
                     if (affAncien != null && move)
                         Helper.Print(String.Format("Hero alive {0}\r\n\tfrom {1}", Helper.TraceHero(hero), affAncien), Helper.PRINT_TRACE_LOAD);
@@ -1912,6 +2217,10 @@ namespace MarryAnyone.Behaviors
 #endif
 
             AddDialogs(campaignGameStarter);
+
+#if TRACELOAD
+            Helper.Print(String.Format("MARomanceCampaignBehavior::OnSessionLaunched Done"), Helper.PrintHow.PrintToLogAndWrite);
+#endif
         }
 
         private void AfterLoad()
@@ -1936,7 +2245,7 @@ namespace MarryAnyone.Behaviors
 
             dataStore.SyncData<List<Hero>?>("Partners", ref Partners);
             dataStore.SyncData<List<Hero>?>("NoMoreSpouse", ref NoMoreSpouse);
-            dataStore.SyncData<List<PersuasionAttempt>?> ("PreviousCheatPersuasionAttempts", ref _previousCheatPersuasionAttempts);
+            dataStore.SyncData<List<PersuasionAttempt>?>("PreviousCheatPersuasionAttempts", ref _previousCheatPersuasionAttempts);
             //dataStore.SyncData<Version?>("SaveVersion", ref saveVersion); 
             dataStore.SyncData<String>("SaveVersion", ref saveVersion);
 
@@ -1952,6 +2261,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-#endregion
+        #endregion
     }
 }

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using MarryAnyone.Patches;
+using MarryAnyone.Patches.CampaignSystem;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
@@ -145,6 +146,21 @@ namespace MarryAnyone
             }
         }
 #endif
+
+        public enum RemoveExSpousesHow
+        {
+            RAS = 0,
+            CompletelyRemove = 1,
+            RemoveMainHero = 2,
+            AddMainHero = 4,
+            OtherSpousesStrict = 8,
+            RemoveOtherHero = 16,
+            AddOtherHero = 32,
+            RemoveOnSpouseToo = 64,
+            AddOnSpouseToo = 128,
+            RemoveIfDeadToo = 256
+
+        }
 
         public static Version VersionGet
         {
@@ -292,8 +308,40 @@ namespace MarryAnyone
             return (hero.Spouse == spouse || (hero.ExSpouses != null && hero.ExSpouses.Contains(spouse)));
         }
 
+#if PATCHHOMESETTLEMENT
+        public static void PatchHomeSettlement(Hero hero)
+        {
+            if (hero.HomeSettlement == null)
+                hero.UpdateHomeSettlement();
+
+            if (hero.HomeSettlement == null && hero.BornSettlement == null)
+            {
+                Settlement? bornSettlement = null;
+                if (hero.Culture != null)
+                    bornSettlement = Settlement.FindAll(x => x.Culture == hero.Culture).GetRandomElementInefficiently();
+
+                if (bornSettlement == null)
+                    bornSettlement = Settlement.All.GetRandomElementInefficiently();
+
+                hero.BornSettlement = bornSettlement;
+                hero.UpdateHomeSettlement();
+            }
+
+            if (hero.HomeSettlement == null)
+            {
+                Print(String.Format("Settlement not resolved for {0} bornSettlement ?= {1}"
+                        , hero.Name
+                        , (hero.BornSettlement != null ? hero.BornSettlement.Name : "NULL"))
+                    , PrintHow.PrintToLogAndWriteAndForceDisplay);
+
+                throw new Exception(String.Format("Settlement not resolved for {0}", hero.Name));
+            }
+        }
+#endif
         // completelyRemove : remove all spouse alive
-        public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false, Hero removeHero = null)
+        //public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false, Hero removeHero = null)
+        //public static void RemoveExSpouses(Hero hero, bool completelyRemove = false, List<Hero>? otherSpouse = null, bool withMainHero = false, Hero removeHero = null)
+        public static void RemoveExSpouses(Hero hero, RemoveExSpousesHow comment = RemoveExSpousesHow.RAS, List<Hero>? otherSpouses = null, Hero? otherHero = null)
         {
 
             //#if TRACKTOMUCHSPOUSE
@@ -314,94 +362,114 @@ namespace MarryAnyone
             List<Hero> _exSpousesList = (List<Hero>)_exSpouses.GetValue(hero);
             FieldInfo ExSpouses = AccessTools.Field(typeof(Hero), "ExSpouses");
 
-            if (removeHero != null && hero.Spouse == removeHero)
+            if (otherHero != null && hero.Spouse == otherHero && (comment & RemoveExSpousesHow.AddOtherHero) == 0)
             {
-#if SPOUSEALLWAYSWITHYOU
+                if ((comment & RemoveExSpousesHow.RemoveOnSpouseToo) != 0)
+                {
+                    if (otherHero.Spouse == hero)
+                        SetSpouse(otherHero.Spouse, null, enuSetSpouse.JustSet);
+                }
+
                 SetSpouse(hero, null, enuSetSpouse.JustSet);
-#else
-                hero.Spouse = null;
-#endif
-                if (Romance.GetRomanticLevel(hero, removeHero) == Romance.RomanceLevelEnum.Marriage)
-                    Helpers.Util.CleanRomance(hero, removeHero, Romance.RomanceLevelEnum.Ended);
+
+                if (Romance.GetRomanticLevel(hero, otherHero) == Romance.RomanceLevelEnum.Marriage)
+                    Helpers.Util.CleanRomance(hero, otherHero, Romance.RomanceLevelEnum.Ended);
             }
 
-            if (completelyRemove)
-            {
-                if (_exSpousesList == null)
-                    return; // RAS
-
-                // Remove exspouse completely from list
-                _exSpousesList = _exSpousesList.Distinct().ToList();
-                List<Hero> exSpouses = _exSpousesList.Where(exSpouse => exSpouse.IsAlive).ToList();
-                foreach(Hero exSpouse in exSpouses)
-                {
-                    _exSpousesList.Remove(exSpouse);
-                }
-
-                if (removeHero != null)
-                    _exSpousesList.Remove(removeHero);
-            }
+            if (_exSpousesList == null)
+                _exSpousesList = new List<Hero>();
             else
-            {
-                if (_exSpousesList == null)
-                    _exSpousesList = new List<Hero>();
-
-                // Standard remove duplicates spouse
-                if (withMainHero)
-                {
-                    if (hero.Spouse != null)
-                        _exSpousesList.Add(hero.Spouse);
-#if SPOUSEALLWAYSWITHYOU
-                    SetSpouse(hero, Hero.MainHero, enuSetSpouse.JustSet);
-#else
-                    hero.Spouse = Hero.MainHero;
-#endif
-                }
-
-                if (removeHero != null && hero.Spouse == removeHero)
-#if SPOUSEALLWAYSWITHYOU
-                    SetSpouse(hero, null, enuSetSpouse.JustSet);
-#else
-                    hero.Spouse = null;
-#endif
-
                 _exSpousesList = _exSpousesList.Distinct().ToList(); // Get exspouse list without duplicates
 
-                // If exspouse is already a spouse, then remove it
-                if (otherSpouse != null) {
-                    foreach (Hero spouse in otherSpouse)
-                    {
-                        if (spouse != hero && _exSpousesList.IndexOf(spouse) < 0)
-                            _exSpousesList.Add(spouse);
-                    }
-                }
-
+            if ((comment & RemoveExSpousesHow.AddMainHero) != 0)
+            {
                 if (hero.Spouse != null)
-                    while (_exSpousesList.Contains(hero.Spouse))
-                        _exSpousesList.Remove(hero.Spouse);
+                    _exSpousesList.Add(hero.Spouse);
+                SetSpouse(hero, Hero.MainHero, enuSetSpouse.JustSet);
+            }
 
-                while (_exSpousesList.Contains(hero))
-                    _exSpousesList.Remove(hero);
-
-                if (removeHero != null)
-                    while (_exSpousesList.Contains(removeHero))
-                        _exSpousesList.Remove(removeHero);
-#if CANHAVESPOUSE
-                if (!withMainHero && otherSpouse == null)
+            // Nettoyage
+            if ((comment & RemoveExSpousesHow.CompletelyRemove) != 0 && _exSpousesList.Count > 0)
+            {
+                if (((comment & RemoveExSpousesHow.RemoveOnSpouseToo) != 0
+                     || ((comment & RemoveExSpousesHow.RemoveIfDeadToo) == 0)))
                 {
-#if SPOUSEALLWAYSWITHYOU
-                    if (hero.Spouse == null && _exSpousesList.Count > 0)
+                    // Remove exspouse completely from list
+                    _exSpousesList = _exSpousesList.Distinct().ToList();
+                    List<Hero>? exSpouses = null;
+                    if ((comment & RemoveExSpousesHow.RemoveIfDeadToo) != 0)
+                        exSpouses = _exSpousesList.ToList();
+                    else
+                        exSpouses = _exSpousesList.Where(exSpouse => exSpouse.IsAlive).ToList();
+
+                    foreach (Hero exSpouse in exSpouses)
                     {
-                        SetSpouse(hero, _exSpousesList[_exSpousesList.Count - 1], enuSetSpouse.SetReciproqueIFNullOnReciproque);
-                        _exSpousesList.RemoveAt(_exSpousesList.Count - 1);
+                        if ((comment & RemoveExSpousesHow.RemoveOnSpouseToo) != 0 && exSpouse.Spouse == hero)
+                            SetSpouse(exSpouse.Spouse, null, enuSetSpouse.JustSet);
+
+                        while (_exSpousesList.Remove(exSpouse))
+                            ;
                     }
-#else
-                    if (hero.Spouse == null && _exSpousesList.Count > 0 && _exSpousesList[_exSpousesList.Count - 1].Spouse == null)
-                        hero.Spouse = _exSpousesList[_exSpousesList.Count - 1];
-#endif
                 }
+                if ((comment & RemoveExSpousesHow.RemoveIfDeadToo) != 0)
+                    _exSpousesList.Clear();
+            }
+
+            if (otherHero != null && (comment & RemoveExSpousesHow.AddOtherHero) != 0)
+            {
+                if (hero.Spouse == null)
+                {
+                    SetSpouse(hero, otherHero, enuSetSpouse.JustSet);
+
+                    if ((comment & RemoveExSpousesHow.AddOnSpouseToo) != 0 && otherHero.Spouse == null)
+                        SetSpouse(otherHero, hero, enuSetSpouse.JustSet);
+                }
+                else
+                {
+                    if (_exSpousesList.IndexOf(otherHero) < 0)
+                        _exSpousesList.Add(otherHero);
+                }
+            }
+
+            if (otherSpouses != null)
+            {
+                foreach (Hero spouse in otherSpouses)
+                {
+                    if (spouse != hero && spouse != hero.Spouse && _exSpousesList.IndexOf(spouse) < 0)
+                    {
+                        if ((comment & RemoveExSpousesHow.AddOnSpouseToo) != 0 && spouse.Spouse == null)
+                            SetSpouse(spouse, hero, enuSetSpouse.JustSet);
+
+                        _exSpousesList.Add(spouse);
+                    }
+                }
+            }
+
+            if (hero.Spouse != null)
+                while (_exSpousesList.Remove(hero.Spouse))
+                    ;
+
+            while (_exSpousesList.Remove(hero))
+                    ;
+
+            while (otherHero != null && (comment & RemoveExSpousesHow.AddOtherHero) == 0 && _exSpousesList.Remove(otherHero))
+                ;
+
+#if CANHAVESPOUSE
+            if ((comment & RemoveExSpousesHow.AddMainHero) == 0 && otherSpouses == null)
+            {
+#if SPOUSEALLWAYSWITHYOU
+                if (hero.Spouse == null && _exSpousesList.Count > 0)
+                {
+                    SetSpouse(hero, _exSpousesList[_exSpousesList.Count - 1], enuSetSpouse.SetReciproqueIFNullOnReciproque);
+                    _exSpousesList.RemoveAt(_exSpousesList.Count - 1);
+                }
+#else
+                if (hero.Spouse == null && _exSpousesList.Count > 0 && _exSpousesList[_exSpousesList.Count - 1].Spouse == null)
+                    hero.Spouse = _exSpousesList[_exSpousesList.Count - 1];
 #endif
             }
+#endif
 
             _exSpouses.SetValue(hero, _exSpousesList);
 
@@ -589,22 +657,30 @@ namespace MarryAnyone
             }
             hero.Clan = toClan;
 #if V1640MORE
-            if (toClan.Lords.FirstOrDefault(x => x == hero) == null)
+            if (toClan != null)
             {
-                toClan.Lords.AddItem(hero);
+                if (toClan.Lords.FirstOrDefault(x => x == hero) == null)
+                {
+                    toClan.Lords.AddItem(hero);
 #if TRACEWEDDING
-                Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_WEDDING);
+                    Helper.Print(String.Format("SwapClan:: Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_WEDDING);
 #elif TRACECREATECLAN
-                Helper.Print(String.Format("Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_CREATE_CLAN);
+                    Helper.Print(String.Format("SwapClan:: Add {0} to Noble of clan {1}", hero.Name, toClan.Name), Helper.PRINT_TRACE_CREATE_CLAN);
 #endif
 
-
-                if (fromClan != null 
-                    && (fromClan.Lords.IndexOf(hero) >= 0 
+                }
+                if (fromClan != null
+                    && (fromClan.Lords.IndexOf(hero) >= 0
                         || fromClan.Heroes.IndexOf(hero) >= 0))
                     RemoveFromClan(hero, fromClan);
             }
 #endif
+            if (toClan != hero.Clan)
+                Helper.Print(String.Format("SwapClan:: FAIL for Hero {0} to Clan {1}"
+                                    , hero.Name
+                                    , (toClan != null ? toClan.Name : "NULL")), Helper.PRINT_PATCH);
+
+
         }
 
         //public static addChildrens(Hero fromHero, Hero toHero)
@@ -902,6 +978,9 @@ namespace MarryAnyone
             if (hero.CurrentSettlement != null)
                 aff += ", Settlement " + hero.CurrentSettlement.Name;
 
+            if (hero.HomeSettlement != null)
+                aff += ", HomeSettlement " + hero.HomeSettlement.Name;
+
             if (MAEtape >= Etape.EtapeLoadPas2)
             {
                 if (hero.PartyBelongedTo != null)
@@ -916,6 +995,8 @@ namespace MarryAnyone
                 if (hero.IsPreacher)
                     aff += ", IS Preacher";
             }
+
+            aff += ", StringID " + hero.StringId;
 
             return aff;
 

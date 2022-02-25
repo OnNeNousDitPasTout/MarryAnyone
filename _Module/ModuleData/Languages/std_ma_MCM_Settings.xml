@@ -20,7 +20,7 @@
 		<string id="debug_desc" text="Displays mod developer debug information in the game's message log" />
 		<string id="kingdom" text="Kingdom Ruler Marriage" />
 		<string id="cheating" text="Cheating" />
-		<string id="cheating_desc" text="Player character can marry characters that are already married" />
+		<string id="cheating_desc" text="Player character can enrol any character in his party and have sexual relation with" />
 		<string id="relationship" text="Relationship Options" />
 		<string id="adoption" text="Adoption" />
 		<string id="adoption_desc" text="Player can adopt children in towns and villages" />

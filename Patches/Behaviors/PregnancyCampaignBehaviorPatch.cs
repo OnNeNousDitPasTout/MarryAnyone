@@ -43,7 +43,6 @@ namespace MarryAnyone.Patches.Behaviors
             }
         }
 
-
         public void SwapSpouse(Hero spouse)
         {
             if (spouse != _hero.Spouse)
@@ -194,14 +193,14 @@ namespace MarryAnyone.Patches.Behaviors
             _sideFemaleHero = null;
             _playerRelation = false;
 #if TRACEPREGNANCY
-        _needTrace = false;
+            _needTrace = false;
 #endif
 
             if (hero.IsFemale && HeroInteractionHelper.OkToDoIt(hero))
             {
-                bool isPartner = MARomanceCampaignBehavior.Instance != null
-                                    && MARomanceCampaignBehavior.Instance.Partners != null
-                                    && MARomanceCampaignBehavior.Instance.Partners.Contains(hero);
+                bool maRomanceCampaignBehaviorIsOk = MARomanceCampaignBehavior.Instance != null;
+                bool isPartner = maRomanceCampaignBehaviorIsOk
+                                    && MARomanceCampaignBehavior.Instance.PartnerOfPlayer(hero);
 
                 if (hero.Spouse is null && !isPartner && (hero.ExSpouses is null || hero.ExSpouses.IsEmpty()))
                 {
@@ -209,24 +208,27 @@ namespace MarryAnyone.Patches.Behaviors
                     //                    Helper.Print(string.Format("DailyTickHero:: {0} has No Spouse", hero.Name), Helper.PRINT_TRACE_PREGNANCY);
                     //#endif
                 }
-                else if (hero == Hero.MainHero || isPartner || hero == Hero.MainHero.Spouse || Hero.MainHero.ExSpouses.Contains(hero)) // If you are the MainHero go through advanced process
-                {
+                else if (hero == Hero.MainHero 
+                            || isPartner 
+                            || (maRomanceCampaignBehaviorIsOk && MARomanceCampaignBehavior.Instance.SpouseOfPlayer(hero))) // If you are the MainHero go through advanced process
+                {   
+                    // MainHero or MainHero spouses
                     _playerRelation = true;
                     MASettings settings = Helper.MASettings;
 
                     if (_spouses == null)
                         _spouses = new List<Hero>();
 #if TRACEPREGNANCY
-                _needTrace = true;
-                Helper.Print(string.Format("DailyTickHero::{0} Pregnant {2}\r\nPolyamory ?= {1}", hero.Name, settings.Polyamory, hero.IsPregnant), Helper.PRINT_TRACE_PREGNANCY);
+                    _needTrace = true;
+                    Helper.Print(string.Format("DailyTickHero::{0} Pregnant {2}\r\nPolyamory ?= {1}", hero.Name, settings.Polyamory, hero.IsPregnant), Helper.PRINT_TRACE_PREGNANCY);
 #endif
 
                     if ((isPartner || Hero.MainHero.ExSpouses.Contains(hero)) && HeroInteractionHelper.OkToDoIt(hero, Hero.MainHero))
                     {
 #if TRACEPREGNANCY
-                    Helper.Print(string.Format("DailyTickHero::{0} ISPartener or exSpouse add mainHero\r\n=>{1}"
-                                                , hero.Name
-                                                , Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_PREGNANCY);
+                        Helper.Print(string.Format("DailyTickHero::{0} ISPartener or exSpouse add mainHero\r\n=>{1}"
+                                                    , hero.Name
+                                                    , Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                         _spouses.Add(Hero.MainHero);
 
@@ -235,7 +237,7 @@ namespace MarryAnyone.Patches.Behaviors
                     if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse) && _spouses.IndexOf(hero.Spouse) < 0)
                     {
 #if TRACEPREGNANCY
-                    Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
+                        Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                         _spouses.Add(hero.Spouse);
                     }
@@ -250,7 +252,7 @@ namespace MarryAnyone.Patches.Behaviors
                                 if (withHero != hero && HeroInteractionHelper.OkToDoIt(hero, withHero) && _spouses.IndexOf(withHero) < 0)
                                 {
 #if TRACEPREGNANCY
-                                Helper.Print(String.Format("DailyTickHero::{0} add partner {1}", hero.Name, withHero.Name), Helper.PRINT_TRACE_PREGNANCY);
+                                    Helper.Print(String.Format("DailyTickHero::{0} add partner {1}", hero.Name, withHero.Name), Helper.PRINT_TRACE_PREGNANCY);
 #endif
 
                                     _spouses.Add(withHero);
@@ -282,7 +284,7 @@ namespace MarryAnyone.Patches.Behaviors
                     if (_spouses == null)
                         _spouses = new List<Hero>();
 
-                    if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse) && _spouses.IndexOf(hero.Spouse) < 0)
+                    if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse, false) && _spouses.IndexOf(hero.Spouse) < 0)
                     {
 #if TRACEPREGNANCY
                     Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
@@ -297,7 +299,7 @@ namespace MarryAnyone.Patches.Behaviors
                             if (withHero.IsAlive && withHero != hero && HeroInteractionHelper.OkToDoIt(hero, withHero) && _spouses.IndexOf(withHero) < 0)
                             {
 #if TRACEPREGNANCY
-                            Helper.Print(String.Format("DailyTickHero::{0} add exSpouse {1}", hero.Name, withHero.Name), Helper.PRINT_TRACE_PREGNANCY);
+                                Helper.Print(String.Format("DailyTickHero::{0} add exSpouse {1}", hero.Name, withHero.Name), Helper.PRINT_TRACE_PREGNANCY);
 #endif
 
                                 _spouses.Add(withHero);
@@ -320,7 +322,7 @@ namespace MarryAnyone.Patches.Behaviors
                         attraction += addAttraction * (spouse.IsFemale ? 1 : 3); // To up the pregnancy chance
                         attractionGoal.Add(attraction);
 #if TRACEPREGNANCY
-                    Helper.Print(string.Format("Spouse {0} attraction {1}", spouse.Name, attraction), Helper.PRINT_TRACE_PREGNANCY);
+                        Helper.Print(string.Format("Spouse {0} attraction {1}", spouse.Name, attraction), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                     }
                     int attractionRandom = MBRandom.RandomInt(attraction);
@@ -331,7 +333,7 @@ namespace MarryAnyone.Patches.Behaviors
                         if (attractionRandom <= attractionGoal[i])
                         {
 #if TRACEPREGNANCY
-                        Helper.Print(string.Format("Résoud Index{0} => Spouse {1}", i, _spouses[i].Name), Helper.PRINT_TRACE_PREGNANCY);
+                            Helper.Print(string.Format("Résoud Index{0} => Spouse {1}", i, _spouses[i].Name), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                             break;
                         }
@@ -343,9 +345,10 @@ namespace MarryAnyone.Patches.Behaviors
 
                 if (i >= 0)
                 {
-                    if (i >= _spouses.Count) i = _spouses.Count - 1; // Sécurity
+                    if (i >= _spouses.Count) 
+                        i = _spouses.Count - 1; // Sécurity
 #if TRACKTOMUCHSPOUSE
-                Helper.Print(String.Format("Will swap between {0} \r\nand {1}", Helper.TraceHero(hero), Helper.TraceHero(_spouses[i])), Helper.PrintHow.PrintToLogAndWrite);
+                    Helper.Print(String.Format("Will swap between {0} \r\nand {1}", Helper.TraceHero(hero), Helper.TraceHero(_spouses[i])), Helper.PrintHow.PrintToLogAndWrite);
 #endif
                     _forHero.SwapSpouse(_spouses[i]);
                 }
@@ -483,14 +486,16 @@ namespace MarryAnyone.Patches.Behaviors
             }
 
 #if TRACEPREGNANCY
-            justPregnant = hero.IsPregnant && forHeroOk && !_forHero._wasPregnant;
-            if (_needTrace || justPregnant)
-                Helper.Print(String.Format("Post Pregnancy Hero {0} justPregnant ?= {1}\r\n{2}", hero.Name, justPregnant, traceAff), Helper.PRINT_TRACE_PREGNANCY);
+            if (forHeroOk)
+            {
+                justPregnant = hero.IsPregnant && forHeroOk && !_forHero._wasPregnant;
+                if (_needTrace || justPregnant)
+                    Helper.Print(String.Format("Post Pregnancy Hero {0} justPregnant ?= {1}\r\n{2}", hero.Name, justPregnant, traceAff), Helper.PRINT_TRACE_PREGNANCY);
 
-            justPregnant = hero.Spouse != null && hero.Spouse.IsPregnant && forHeroOk && !_forHero._wasSpousePregnant;
-            if (_needTrace || justPregnant)
-                Helper.Print(String.Format("Post Pregnancy Spouse {0} justPregnant ?= {1}", hero.Name, justPregnant), Helper.PRINT_TRACE_PREGNANCY);
-
+                justPregnant = hero.Spouse != null && hero.Spouse.IsPregnant && forHeroOk && !_forHero._wasSpousePregnant;
+                if (_needTrace || justPregnant)
+                    Helper.Print(String.Format("Post Pregnancy Spouse {0} justPregnant ?= {1}", hero.Name, justPregnant), Helper.PRINT_TRACE_PREGNANCY);
+            }
 #endif
 
             if (_forHero != null)
