@@ -290,10 +290,14 @@ namespace MarryAnyone.Behaviors
             if (removeHeroFromParty)
             {
                 PartyHelper.SwapPartyBelongedTo(hero: oldSpouse, null);
-                MobileParty.MainParty.Party.MemberRoster.RemoveTroop(oldSpouse.CharacterObject, 1);
+                if (MobileParty.MainParty.Party.MemberRoster.FindIndexOfTroop(oldSpouse.CharacterObject) >= 0)
+                    MobileParty.MainParty.Party.MemberRoster.RemoveTroop(oldSpouse.CharacterObject, 1);
             }
 
+#if TRACKTOMUCHSPOUSE
+
             VerifySpouse(0, "RemoveMainHeroSpouse");
+#endif
 
         }
 
@@ -581,7 +585,7 @@ namespace MarryAnyone.Behaviors
                 _MAWedding = false;
             }
         }
-        #endregion
+#endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -599,7 +603,7 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-        #region dialogues
+#region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
 
@@ -839,7 +843,8 @@ namespace MarryAnyone.Behaviors
             if (relationBetweenPlayer > 0 && mulitpe <= 0) mulitpe = 1;
 
             ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int)-(mulitpe), false, true);
-            MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
+            if (MobileParty.MainParty.Party.MemberRoster.FindIndexOfTroop(Hero.OneToOneConversationHero.CharacterObject) >= 0)
+                MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
             PartnerRemove(Hero.OneToOneConversationHero);
 
             RemoveMainHeroSpouse(Hero.OneToOneConversationHero);
@@ -895,7 +900,8 @@ namespace MarryAnyone.Behaviors
                 Helper.OccupationToCompanion(Hero.OneToOneConversationHero.CharacterObject);
             }
             PartyHelper.SwapPartyBelongedTo(hero: Hero.OneToOneConversationHero, null);
-            MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
+            if (MobileParty.MainParty.Party.MemberRoster.FindIndexOfTroop(Hero.OneToOneConversationHero.CharacterObject) >= 0)
+                MobileParty.MainParty.Party.MemberRoster.RemoveTroop(Hero.OneToOneConversationHero.CharacterObject, 1);
 
             ChangeRelationAction.ApplyPlayerRelation(Hero.OneToOneConversationHero, (int)-(relationBetweenPlayer / 5), false, true);
 
@@ -1095,7 +1101,7 @@ namespace MarryAnyone.Behaviors
             return ret;
         }
 
-        #region persuasion Cheat
+#region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -1246,9 +1252,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-        #endregion
+#endregion
 
-        #region persuasion system
+#region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -1442,7 +1448,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-        #endregion
+#endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1619,7 +1625,7 @@ namespace MarryAnyone.Behaviors
             return supprimeClan;
         }
 
-        #endregion
+#endregion
 
         private void OnHourTickEvent()
         {
@@ -1666,7 +1672,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #region Loading and patches
+#region Loading and patches
 
         private bool SaveVersionOlderThen(String versionChaine)
         {
@@ -1777,7 +1783,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-        #region little hands
+#region little hands
         private void LogLectureAdd(List<CharacterMarriedLogEntry> lecture, Hero otherHero, CharacterMarriedLogEntry characterMarriedLogEntry)
         {
             CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
@@ -1816,7 +1822,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #endregion
+#endregion
 
         private void patchSpouses(CampaignGameStarter campaignGameStarter)
         {
@@ -2261,6 +2267,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-        #endregion
+#endregion
     }
 }
