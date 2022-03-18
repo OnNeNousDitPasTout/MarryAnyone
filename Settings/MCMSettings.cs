@@ -91,6 +91,10 @@ namespace MarryAnyone.Settings
         [SettingPropertyGroup("{=Side}Side Options")]
         public bool SpouseJoinArena { get; set; } = false;
 
+        [SettingPropertyBool("{=improvebattlerelation}Improve (or not) relation during battle", Order = 2, RequireRestart = false, HintText = "{=imporvebattlerelation_desc}Spouse(s) and other heroes improve relation during battle")]
+        [SettingPropertyGroup("{=Side}Side Options")]
+        public bool ImproveBattleRelation { get; set; } = false;
+
         [SettingPropertyBool("{=adoption}Adoption", RequireRestart = false, HintText = "{=adoption_desc}Player can adopt children in towns and villages", IsToggle = true)]
         [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 2)]
         public bool Adoption { get; set; } = false;

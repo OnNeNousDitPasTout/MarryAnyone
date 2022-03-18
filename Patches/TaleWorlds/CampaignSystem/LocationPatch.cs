@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 
-namespace MarryAnyone.Patches.CampaignSystem
+namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem
 {
     [HarmonyPatch(typeof(Location))]
     class LocationPatch

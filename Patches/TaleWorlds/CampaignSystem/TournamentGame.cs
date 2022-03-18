@@ -10,14 +10,14 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
 using TaleWorlds.Core;
 
-namespace PatchViaHarmony.Patches
+namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem
 {
 #if V1650MORE
 	[HarmonyPatch(typeof(FightTournamentGame))]
 #else
 	[HarmonyPatch(typeof(TournamentGame))]
 #endif
-	public static class TaleworldsCampaignSystemTournamentGame161
+	public static class TournamentGame161
     {
 
 		private static void GetUpgradeTargetsPatch(CharacterObject troop, ref List<CharacterObject> list)

@@ -66,6 +66,7 @@ namespace MarryAnyone.Settings
         public int RelationLevelMinForCheating { get => _provider.RelationLevelMinForCheating; set => _provider.RelationLevelMinForCheating = value; }
         public int RelationLevelMinForSex { get => _provider.RelationLevelMinForSex; set => _provider.RelationLevelMinForSex = value; }
         public bool ImproveRelation { get => _provider.ImproveRelation; set => _provider.ImproveRelation = value; }
+        public bool ImproveBattleRelation { get => _provider.ImproveBattleRelation; set => _provider.ImproveBattleRelation = value; }
         public bool CanJoinUpperClanThroughMAPath { get => _provider.CanJoinUpperClanThroughMAPath; set => _provider.CanJoinUpperClanThroughMAPath = value; }
         public bool NotifyRelationImprovementWithinFamily { get => _provider.NotifyRelationImprovementWithinFamily; set => _provider.NotifyRelationImprovementWithinFamily = value; }
         public bool DifficultyEasyMode { get => String.Equals(_provider.Difficulty, DIFFICULTY_EASY, StringComparison.OrdinalIgnoreCase);  }
@@ -107,6 +108,7 @@ namespace MarryAnyone.Settings
                     MAConfig.Instance.RelationLevelMinForRomance = config.RelationLevelMinForRomance;
                     MAConfig.Instance.RelationLevelMinForSex = config.RelationLevelMinForSex;
                     MAConfig.Instance.ImproveRelation = config.ImproveRelation;
+                    MAConfig.Instance.ImproveBattleRelation = config.ImproveBattleRelation;
                     MAConfig.Instance.NotifyRelationImprovementWithinFamily = config.NotifyRelationImprovementWithinFamily;
                     MAConfig.Instance.CanJoinUpperClanThroughMAPath = config.CanJoinUpperClanThroughMAPath;
                     MAConfig.Instance.Patch = config.Patch;

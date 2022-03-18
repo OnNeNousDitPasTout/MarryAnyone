@@ -449,11 +449,11 @@ namespace MarryAnyone.Patches.Behaviors
                     relationChange = ((int)(zeroAUn * 9)) + 1 + (compatible > 0 ? compatible * 2 : 0);
                 }
                 if (relactionActuelle < 0)
-                    relationChange = ((int)(zeroAUn * 6)) - 2 + (compatible <= -2 ? -1 : compatible);
+                    relationChange = ((int)(zeroAUn * 6)) - 3 + (compatible <= -2 ? -1 : compatible);
                 else if (relactionActuelle < 25)
-                    relationChange = ((int)(zeroAUn * 5)) - 1 + (compatible <= -2 ? -1 : compatible);
+                    relationChange = ((int)(zeroAUn * 5)) - 2 + (compatible <= -2 ? -1 : compatible);
                 else if (relactionActuelle < 50)
-                    relationChange = ((int)(zeroAUn * 4)) + (compatible <= -2 ? -1 : compatible);
+                    relationChange = ((int)(zeroAUn * 4)) - 1 + (compatible <= -2 ? -1 : compatible);
                 else 
                     relationChange = ((int)(zeroAUn * 5)) + (compatible <= -3 ? -2 : compatible);
 
@@ -465,23 +465,29 @@ namespace MarryAnyone.Patches.Behaviors
                 {
                     if (needNotify)
                     {
+                        ChangeRelationAction.ApplyRelationChangeBetweenHeroes(hero, hero.Spouse, relationChange, false);
                         StringHelpers.SetCharacterProperties("HEROONE", hero.CharacterObject);
                         StringHelpers.SetCharacterProperties("HEROTOW", hero.Spouse.CharacterObject);
                         MBTextManager.SetTextVariable("INCREMENT", relationChange);
+                        MBTextManager.SetTextVariable("FINALRELATION", hero.GetRelation(hero.Spouse));
+                        Color color = relationChange < 0 ? Color.FromUint(16722716U) : (justPregnant ? Helper.yellowCollor : Color.FromUint(6750105U));
+                        TextObject textObject = null;
                         if (justPregnant)
                         {
-                            TextObject textObject = new TextObject("{=TheTwoOfThemHaveAGoodTime}{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points");
+                            textObject = new TextObject("{=TheTwoOfThemHaveAGoodTime}{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points to {FINALRELATION}");
                             Helper.PrintWithColor(textObject.ToString(), Helper.yellowCollor);
                         }
                         else
                         {
-                            TextObject textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points");
-                            Helper.PrintWithColor(textObject.ToString(), Color.White);
+                            if (relationChange > 0)
+                                textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points to {FINALRELATION}");
+                            else
+                                textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship down from {INCREMENT} points to {FINALRELATION}");
+
+                            Helper.PrintWithColor(textObject.ToString(), color);
                         }
                     }
 
-                    if (relationChange != 0) 
-                        ChangeRelationAction.ApplyRelationChangeBetweenHeroes(hero, hero.Spouse, relationChange, false);
                 }
             }
 

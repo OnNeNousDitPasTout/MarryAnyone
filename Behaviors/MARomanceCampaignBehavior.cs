@@ -1,10 +1,11 @@
 ﻿using HarmonyLib;
 using Helpers;
 using MarryAnyone.Helpers;
+using MarryAnyone.MA;
 using MarryAnyone.Models;
 using MarryAnyone.Patches;
 using MarryAnyone.Patches.Behaviors;
-using MarryAnyone.Patches.CampaignSystem;
+using MarryAnyone.Patches.TaleWorlds.CampaignSystem;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
+using TaleWorlds.MountAndBlade;
 using static TaleWorlds.CampaignSystem.Romance;
 
 namespace MarryAnyone.Behaviors
@@ -58,6 +60,9 @@ namespace MarryAnyone.Behaviors
 
         private bool _MAWedding = false;
 
+        private List<MATeam> _maTeams = null;
+        private Mission _mission = null;
+
         #endregion
 
         public static MARomanceCampaignBehavior? Instance;
@@ -85,6 +90,12 @@ namespace MarryAnyone.Behaviors
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(OnSessionLaunched));
             CampaignEvents.HeroesMarried.AddNonSerializedListener(this, new Action<Hero, Hero, bool>(OnHeroesMarried));
             CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, new Action(OnHourTickEvent));
+#if BATTLERELATION
+            CampaignEvents.OnMissionStartedEvent.AddNonSerializedListener(this, OnMissionStarted);
+            CampaignEvents.OnPlayerBattleEndEvent.AddNonSerializedListener(this, new Action<MapEvent>(OnPlayerBattleEnd));
+            CampaignEvents.AfterMissionStarted.AddNonSerializedListener(this, OnAfterMissionStarted);
+            //CampaignEvents.MapEventEnded.AddNonSerializedListener(this, new Action<MapEvent>(OnMapEvent));
+#endif
         }
 
         public void Dispose()
@@ -100,6 +111,9 @@ namespace MarryAnyone.Behaviors
             HeroPatch.heroJustifie = null;
             HeroPatch.spouseOn.Done();
 #endif
+
+            _mission = null;
+            _maTeams = null;
 
             Instance = null;
         }
@@ -585,7 +599,21 @@ namespace MarryAnyone.Behaviors
                 _MAWedding = false;
             }
         }
-#endregion
+        #endregion
+
+        #region player Family companions
+        public bool IsPlayerTeam(Hero hero)
+        {
+            if (hero.PartyBelongedTo == Hero.MainHero.PartyBelongedTo)
+                return true;
+            if (hero.Clan != null
+               && hero.Clan == Hero.MainHero.Clan)
+                return true;
+            if (hero.Clan?.Kingdom == Hero.MainHero.Clan?.Kingdom)
+                return true;
+            return false;
+        }
+        #endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -603,7 +631,7 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-#region dialogues
+        #region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
 
@@ -666,7 +694,7 @@ namespace MarryAnyone.Behaviors
 
             starter.AddDialogLine("hero_remarry_player", "player_RemarryBug_try", "close_window"
                                                 , "{=marryAgain_OK}I'm happy to hear that, we can formalize our bugged wedding !"
-                                                , conversation_can_marryAgainOK
+                                                , Conversation_can_marryAgainOK
                                                 , conversation_do_marryAgain
                                                 , 100, null);
 
@@ -698,7 +726,7 @@ namespace MarryAnyone.Behaviors
                                                 , 80, null);
 
             starter.AddDialogLine("hero_cheat_persuasion_fail", "heroPersuasionNextQuestion", "lort_pretalk", "{=!}{FAILED_PERSUASION_LINE}"
-                                                , persuasion_fail
+                                                , Persuasion_fail
                                                 , conversation_characacter_fail_to_cheat_go
                                                 , 100, null);
 
@@ -799,7 +827,7 @@ namespace MarryAnyone.Behaviors
             //starter.AddDialogLine("hero_courtship_final_barter_setup", "hero_courtship_final_barter_conclusion", "close_window", "{=iunPaMFv}I guess we should put this aside, for now. But perhaps we can speak again at a later date.", () => !this.conversation_marriage_barter_successful_on_condition(), null, 100, null);
         }
 
-        private bool conversation_can_marryAgainOK()
+        private bool Conversation_can_marryAgainOK()
         {
             if (conversation_can_marryAgain())
             {
@@ -1101,7 +1129,7 @@ namespace MarryAnyone.Behaviors
             return ret;
         }
 
-#region persuasion Cheat
+        #region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -1252,9 +1280,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-#endregion
+        #endregion
 
-#region persuasion system
+        #region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -1436,7 +1464,7 @@ namespace MarryAnyone.Behaviors
             _previousCheatPersuasionAttempts.Add(persuasionAttempt);
         }
 
-        private bool persuasion_fail()
+        private bool Persuasion_fail()
         {
             PersuasionTask currentPersuasionTask = this.GetCurrentPersuasionTask();
             if (currentPersuasionTask.Options.All((PersuasionOptionArgs x) => x.IsBlocked) && !ConversationManager.GetPersuasionProgressSatisfied())
@@ -1448,7 +1476,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-#endregion
+        #endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1672,7 +1700,101 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#region Loading and patches
+        #region battle relations
+#if BATTLERELATION
+
+        internal void VerifyMission(Mission mission, bool init = false)
+        {
+            if (_mission == mission && !init)
+            {
+                if (_maTeams != null && _maTeams.Count == mission.Teams.Count)
+                    return;
+            }
+
+            if (mission != null) 
+            {
+#if TRACEBATTLERELATION
+                Helper.Print(String.Format("VerifyMission build teams {0}", mission.Teams.Count), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+#endif
+                _maTeams = new List<MATeam>();
+                foreach (Team team in mission.Teams)
+                {
+                    _maTeams.Add(new MATeam(team));
+                }
+            }
+
+            _mission = mission;
+        }
+
+        private void OnMissionStarted(IMission obj)
+        {
+#if TRACEBATTLERELATION
+            if (obj != null)
+                Helper.Print(String.Format("OnMissionStarted Type {0}::{1}", obj.GetType().Name, obj.ToString()), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+#endif
+            if (obj != null && obj is Mission)
+            {
+                Mission mission = (Mission) obj;
+                VerifyMission(mission, true);
+            }
+        }
+
+        private void OnAfterMissionStarted(IMission obj)
+        {
+#if TRACEBATTLERELATION
+            if (obj != null)
+                Helper.Print(String.Format("OnAfterMissionStarted Type {0}::{1}", obj.GetType().Name, obj.ToString()), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+#endif
+            if (obj != null && obj is Mission)
+            {
+                Mission mission = (Mission)obj;
+                VerifyMission(mission);
+            }
+        }
+
+        public MATeam? ResolveMATeam(string heroStringID)
+        {
+            if (_maTeams != null)
+                return _maTeams.FirstOrDefault(x => x.Resolve(heroStringID) >= 0);
+            return null;
+        }
+
+        //        private MapEventSide? GetDefeatedSide(MapEvent m)
+        //        {
+        //            if (m.AttackerSide.Equals(m.Winner))
+        //            {
+        //                return m.DefenderSide;
+        //            }
+        //            if (m.DefenderSide.Equals(m.Winner))
+        //            {
+        //                return m.AttackerSide;
+        //            }
+        //            return null;
+        //        }
+
+        //        private void OnMapEvent(MapEvent m)
+        //        {
+        //            if (m.IsFieldBattle || m.IsSiegeAssault || m.IsSiegeOutside)
+        //            {
+
+        //                MapEventSide? defeatedSide = GetDefeatedSide(m);
+        //                MapEventSide? winner = m.Winner;
+        //                Helper.Print(
+        //                    String.Format(
+        //                        "OnMapEvent {0} "
+        //                            , defeatedSide.))
+        //            }
+        //        }
+
+        private void OnPlayerBattleEnd(MapEvent obj)
+        {
+            _maTeams = null;
+            _mission = null;
+        }
+#endif
+        #endregion
+
+        #region Loading and patches
 
         private bool SaveVersionOlderThen(String versionChaine)
         {
@@ -1783,7 +1905,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-#region little hands
+        #region little hands
         private void LogLectureAdd(List<CharacterMarriedLogEntry> lecture, Hero otherHero, CharacterMarriedLogEntry characterMarriedLogEntry)
         {
             CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
@@ -1822,7 +1944,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#endregion
+        #endregion
 
         private void patchSpouses(CampaignGameStarter campaignGameStarter)
         {
@@ -1964,7 +2086,8 @@ namespace MarryAnyone.Behaviors
 
                             InformationManager.ShowInquiry(new InquiryData(GameTexts.FindText("str_warning").ToString(), aff, true, true, "Remove", "Keep"
                                                                 , new Action(() => { RemoveMainHeroSpouse(spouse); })
-                                                                , new Action(() => {
+                                                                , new Action(() =>
+                                                                {
                                                                     if (_buggedSpouses == null)
                                                                         _buggedSpouses = new List<Hero>();
                                                                     _buggedSpouses.Add(spouse);
@@ -2267,6 +2390,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-#endregion
+        #endregion
     }
 }

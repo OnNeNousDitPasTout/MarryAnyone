@@ -10,7 +10,7 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 
-namespace MarryAnyone.Patches.CampaignSystem
+namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem
 {
 #if TRACEEXSPOUSE || PATCHHOMESETTLEMENT
 

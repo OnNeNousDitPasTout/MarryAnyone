@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using MarryAnyone.Patches;
-using MarryAnyone.Patches.CampaignSystem;
+using MarryAnyone.Patches.TaleWorlds.CampaignSystem;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
@@ -111,7 +111,9 @@ namespace MarryAnyone
 #else
         public const PrintHow PRINT_TRACE_ARENA_PARTICIPANT = PrintHow.PrintDisplay;
 #endif
-
+#if TRACEBATTLERELATION
+        public const PrintHow PRINT_TRACE_BATTLE_RELATION = PrintHow.PrintToLog;
+#endif
 #if !NOLOG
         public static string? LogPath
         {
@@ -212,6 +214,11 @@ namespace MarryAnyone
             if ((printHow & PrintHow.UpdateLog) != 0 && LogPath != null)
                 LogClose();
 #endif
+        }
+
+        public static void PrintWithColor(string message, uint color)
+        {
+            PrintWithColor(message, Color.FromUint(color));
         }
 
         public static void PrintWithColor(string message, Color color)

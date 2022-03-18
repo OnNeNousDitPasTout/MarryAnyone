@@ -39,8 +39,30 @@
 		<string id="CheatGenerosityCharm" text="It is a beautiful day outside, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurous man{\\?} like you, needs to enjoy the fresh air." />
 
 		<!-- Relation improvement-->
-		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points" />
-		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points" />
-
+		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
+		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
+		<string id="ChangeRelationUpToFinalWithPlayer" text=" Your relation up from {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationDownToFinalWithPlayer" text=" Your elation down from {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationUpToFinal" text=" Their relation up from {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationDownToFinal" text=" Their relation down from {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationUpToWithPlayer" text=" Your relation up from {RELATION}." />
+		<string id="ChangeRelationDownToWithPlayer" text=" Your relation down from {RELATION}." />
+		<string id="ChangeRelationUpTo" text=" Their relation up from {RELATION}." />
+		<string id="ChangeRelationDownTo" text=" Their relation down from {RELATION}." />
+		
+		<string id="BattleRelationLikeWeakOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} happily taunt you as you fall to the ground !" />
+		<string id="BattleRelationLikeWeakOpponent" text="{AFFECTORHERO.NAME} happily taunt {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground !" />
+		<string id="BattleRelationLikeStrongOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} respects your strength in battle." />
+		<string id="BattleRelationLikeStrongOpponent" text="{AFFECTORHERO.NAME} respects {AFFECTEDHERO.NAME} strength in battle." />
+		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} count on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
+		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} count on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
+		<string id="BattleRelationRespectLostAgainstPlayer" text="{AFFECTEDHERO.NAME} respects your strength in battle." />
+		<string id="BattleRelationRespectLostAgainstNPC" text="{AFFECTEDHERO.NAME} respects {AFFECTORHERO.NAME} strength in battle." />
+		<string id="BattleRelationFrustatedLostAgainstPlayer" text="{AFFECTEDHERO.NAME} holde a grudge against you when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationFrustatedLostAgainstNPC" text="{AFFECTEDHERO.NAME} holde a grudge against {AFFECTORHERO.NAME} when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationBattleWithFreindPlayer" text="{OTHERHERO.NAME} happily watches you beat enemies to the ground." />
+		<string id="BattleRelationBattleWithFreind" text="{OTHERHERO.NAME} happily watches {AFFECTORHERO.NAME} beat enemies to the ground." />
 	</strings>
 </base>

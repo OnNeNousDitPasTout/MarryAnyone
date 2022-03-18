@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 
-namespace MarryAnyone.Patches.CampaignSystem.GameComponents
+namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem.GameComponents
 {
 #if PATCHMAINPARTYWAGE
 
