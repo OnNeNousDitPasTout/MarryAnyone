@@ -43,7 +43,9 @@
 		<string id="RelationLevelMinForSex_desc" text="Relation needed for sexual relation (-1 disable the control)" />
 		<string id="ImproveRelation" text="Improve relation" />
 	    <string id="ImproveRelation_desc" text="Improve relation when heroes have sexual relation" />
-		<string id="notable" text="With notable" />
+		  <string id="improvebattlerelation" text="Improve (or not) relation during battle" />
+		  <string id="improvebattlerelation_desc" text="Spouse(s) and other heroes improve relation during battle" />
+		  <string id="notable" text="With notable" />
 		<string id="notable_desc" text="Player character can marry notable" />
 		<string id="NotifyRelationImprovementWithinFamily" text="Notify relation improvement in your family" />
 		<string id="NotifyRelationImprovementWithinFamily_desc" text="Display relation improvement in your family in the game's message log" />

@@ -11,7 +11,7 @@
         public bool Warning { get; set; } = true;
         public string Difficulty { get; set; } = "Easy";
         public string SexualOrientation { get; set; } = "Heterosexual";
-        public bool Adoption { get; set; } = false;
+        public bool Adoption { get; set; } = true;
         public float AdoptionChance { get; set; } = 0.05f;
         public bool AdoptionTitles { get; set; } = false;
         public bool RetryCourtship { get; set; } = false;
@@ -19,7 +19,7 @@
         public int RelationLevelMinForRomance { get; set; } = 5;
         public int RelationLevelMinForCheating { get; set; } = 10;
         public int RelationLevelMinForSex { get; set; } = 10;
-        public bool ImproveRelation { get; set; } = false;
+        public bool ImproveRelation { get; set; } = true;
         public bool ImproveBattleRelation { get; set; } = true;
         public bool CanJoinUpperClanThroughMAPath { get; set; } = false;
         public bool NotifyRelationImprovementWithinFamily { get; set; } = false;

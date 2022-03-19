@@ -5,7 +5,7 @@
 	"Polyamory": false,
 	"Incest": false,
 	"Notable": false,
-	"ImproveRelation": false,
+	"ImproveRelation": true,
 	"ImproveBattleRelation": true,
 	"CanJoinUpperClanThroughMAPath": false,
 	"Cheating": false,

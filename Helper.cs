@@ -114,6 +114,9 @@ namespace MarryAnyone
 #if TRACEBATTLERELATION
         public const PrintHow PRINT_TRACE_BATTLE_RELATION = PrintHow.PrintToLog;
 #endif
+#if TRACEINIT
+        public const PrintHow PRINT_TRACE_INIT = PrintHow.PrintToLogAndWriteAndInit;
+#endif
 #if !NOLOG
         public static string? LogPath
         {

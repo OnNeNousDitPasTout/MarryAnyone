@@ -24,26 +24,38 @@ namespace MarryAnyone.Settings
 
         public static bool NoConfigWarning;
 
+        private static String ConfigPathUser
+        {
+            get => Environment.GetFolderPath(Environment.SpecialFolder.Personal) + USER_PATH_FOR_CONFIG;
+        }
+
+        private static void CopyConfig()
+        {
+            string configPathUser = ConfigPathUser;
+            string configFileUser = configPathUser + "/" + CONFIG_FILE;
+            string configGame = BasePath.Name + GAME_PATH_CONFIG;
+            if (!File.Exists(configGame))
+                throw new Exception(String.Format("File {0} not found !", configGame));
+
+            Directory.CreateDirectory(configPathUser);
+
+            File.Copy(configGame, configFileUser);
+
+            if (!File.Exists(configFileUser))
+                throw new Exception(String.Format("File {0} not found !", configGame));
+
+        }
+
         //public static readonly string ConfigPath = BasePath.Name + "Modules/MarryAnyone/config.json";
         public static string ConfigPath
         {
             get
             {
 
-                string configPathUser = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + USER_PATH_FOR_CONFIG;
-                string configFileUser = configPathUser + "/" + CONFIG_FILE;
+                string configFileUser = ConfigPathUser + "/" + CONFIG_FILE;
                 if (!File.Exists(configFileUser))
                 {
-                    string configGame = BasePath.Name + GAME_PATH_CONFIG;
-                    if (!File.Exists(configGame))
-                        throw new Exception(String.Format("File {0} not found !", configGame));
-
-                    Directory.CreateDirectory(configPathUser);
-
-                    File.Copy(configGame, configFileUser);
-
-                    if (!File.Exists(configFileUser))
-                        throw new Exception(String.Format("File {0} not found !", configGame));
+                    CopyConfig();
                 }
                 return configFileUser;
             }
@@ -76,6 +88,10 @@ namespace MarryAnyone.Settings
 
         public MASettings()
         {
+#if TRACEINIT
+            Helper.Print("MASetting", Helper.PRINT_TRACE_INIT);
+#endif
+
             if (MCMSettings.Instance is { } settings)
             {
                 _provider = settings;
@@ -83,10 +99,30 @@ namespace MarryAnyone.Settings
                 UsingMCM = true;
                 return;
             }
+#if TRACEINIT
+            Helper.Print("MASetting PAS 10", Helper.PRINT_TRACE_INIT);
+#endif
             UsingMCM = false;
             MAConfig.Instance = new MAConfig();
+            bool retryDo = false;
             if (File.Exists(ConfigPath))
             {
+
+#if TRACEINIT
+                Helper.Print("MASetting PAS 20", Helper.PRINT_TRACE_INIT);
+#endif
+                goto Try;
+
+                Retry:
+                retryDo = true;
+                CopyConfig();
+
+#if TRACEINIT
+                Helper.Print("MASetting PAS 120", Helper.PRINT_TRACE_INIT);
+#endif
+
+                Try:
+
                 try
                 {
                     MAConfig config = JsonConvert.DeserializeObject<MAConfig>(File.ReadAllText(ConfigPath));
@@ -117,7 +153,10 @@ namespace MarryAnyone.Settings
                 }
                 catch (Exception exception)
                 {
-                    Helper.Error(exception);
+                    if (!retryDo)
+                        goto Retry;
+                    else
+                        Helper.Error(exception);
                 }
             }
             else
@@ -125,6 +164,10 @@ namespace MarryAnyone.Settings
                 NoConfigWarning = true;
                 NoMCMWarning = false;
             }
+#if TRACEINIT
+            Helper.Print("MASetting PAS 200", Helper.PRINT_TRACE_INIT);
+#endif
+
             _provider = MAConfig.Instance;
         }
 

@@ -88,31 +88,31 @@ namespace MarryAnyone.Settings
         public string SexualOrientation { get => SexualOrientationDropdown.SelectedValue; set => SexualOrientationDropdown.SelectedValue = value; }
 
         [SettingPropertyBool("{=spousejoinarena}Spouse(s) join arena", Order = 1, RequireRestart = false, HintText = "{=spousejoinarena_desc}Spouse will join arena with you")]
-        [SettingPropertyGroup("{=Side}Side Options")]
+        [SettingPropertyGroup("{=Side}Side Options", GroupOrder = 2)]
         public bool SpouseJoinArena { get; set; } = false;
 
-        [SettingPropertyBool("{=improvebattlerelation}Improve (or not) relation during battle", Order = 2, RequireRestart = false, HintText = "{=imporvebattlerelation_desc}Spouse(s) and other heroes improve relation during battle")]
-        [SettingPropertyGroup("{=Side}Side Options")]
+        [SettingPropertyBool("{=improvebattlerelation}Improve (or not) relation during battle", Order = 2, RequireRestart = false, HintText = "{=improvebattlerelation_desc}Spouse(s) and other heroes improve relation during battle")]
+        [SettingPropertyGroup("{=Side}Side Options", GroupOrder = 2)]
         public bool ImproveBattleRelation { get; set; } = false;
 
         [SettingPropertyBool("{=adoption}Adoption", RequireRestart = false, HintText = "{=adoption_desc}Player can adopt children in towns and villages", IsToggle = true)]
-        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 2)]
+        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 3)]
         public bool Adoption { get; set; } = false;
 
         [SettingPropertyFloatingInteger("{=adoption_chance}Adoption Chance", 0f, 1f, "#0%", RequireRestart = false, HintText = "{=adoption_chance_desc}Chance that a child is up for adoption")]
-        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 2)]
+        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 3)]
         public float AdoptionChance { get; set; } = 0.05f;
 
         [SettingPropertyBool("{=adoption_titles}Adoption Titles", RequireRestart = false, HintText = "{=adoption_titles_desc}Encyclopedia displays children without a parent as adopted")]
-        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 2)]
+        [SettingPropertyGroup("{=adoption}Adoption", GroupOrder = 3)]
         public bool AdoptionTitles { get; set; } = false;
 
         [SettingPropertyBool("{=NotifyRelationImprovementWithinFamily}Notify relation improvement in your family", Order = 1, RequireRestart = false, HintText = "{=NotifyRelationImprovementWithinFamily_desc}Display relation improvement in your family in the game's message log")]
-        [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 3)]
+        [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 4)]
         public bool NotifyRelationImprovementWithinFamily { get; set; } = false;
 
         [SettingPropertyBool("{=debug}Debug", Order = 2, RequireRestart = false, HintText = "{=debug_desc}Displays mod developer debug information in the game's message log")]
-        [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 3)]
+        [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 4)]
         public bool Debug { get; set; } = false;
 
         [SettingPropertyBool("{=patch}Patch", Order = 2, RequireRestart = false, HintText = "{=patch_desc}Save and lod the save to apply the patch again")]

@@ -41,6 +41,9 @@
 		<!-- Relation improvement-->
 		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
 		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
+		<string id="TheTwoOfThemSpendTimeDown" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship down from {INCREMENT} points to {FINALRELATION}" />
+
+		<!-- Relation Battle improvement-->
 		<string id="ChangeRelationUpToFinalWithPlayer" text=" Your relation up from {RELATION} to {FINALRELATION}." />
 		<string id="ChangeRelationDownToFinalWithPlayer" text=" Your elation down from {RELATION} to {FINALRELATION}." />
 		<string id="ChangeRelationUpToFinal" text=" Their relation up from {RELATION} to {FINALRELATION}." />
@@ -54,8 +57,8 @@
 		<string id="BattleRelationLikeWeakOpponent" text="{AFFECTORHERO.NAME} happily taunt {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground !" />
 		<string id="BattleRelationLikeStrongOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} respects your strength in battle." />
 		<string id="BattleRelationLikeStrongOpponent" text="{AFFECTORHERO.NAME} respects {AFFECTEDHERO.NAME} strength in battle." />
-		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
-		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationLostAFreindPlayer" text="{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
+		<string id="BattleRelationLostAFreind" text="{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
 		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} count on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
 		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} count on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
 		<string id="BattleRelationRespectLostAgainstPlayer" text="{AFFECTEDHERO.NAME} respects your strength in battle." />

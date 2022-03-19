@@ -166,9 +166,9 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                                     {
                                         coeff = -2;
                                         if (otherHero == Hero.MainHero)
-                                            raison = new TextObject("{=BattleRelationNeedAFreindPlayer}{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                            raison = new TextObject("{=BattleRelationLostAFreindPlayer}{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
                                         else
-                                            raison = new TextObject("{=BattleRelationNeedAFreind}{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                            raison = new TextObject("{=BattleRelationLostAFreind}{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
                                     }
                                     else if (compatibleBattleTraits >= HeroInteractionHelper.MAX_COMPATIBLE_BATTLE_TRAIT_ON_7)
                                     {
@@ -276,7 +276,9 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                             }
                         }
 
+#if TRACEBATTLERELATION
                         Helper.LogClose();
+#endif
                     }
                 }
             }
