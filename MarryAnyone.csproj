@@ -3,7 +3,7 @@
 	<!-- Marry Anyone -->
   <PropertyGroup>
 		<ModuleName>$(MSBuildProjectName)</ModuleName>
-		<Version>3.0.1</Version>
+		<Version>3.0.2</Version>
 		<Authors>RoGreat, GrandesMarees</Authors>
 	</PropertyGroup>
 	
@@ -21,6 +21,7 @@
 		<GameVersion>1.7.0</GameVersion>
 	</PropertyGroup>
 	<PropertyGroup>
+		<MCMVersion Condition="$(GameVersion) == '1.7.1'">4.3.15</MCMVersion>
 		<MCMVersion Condition="$(GameVersion) == '1.7.0'">4.3.15</MCMVersion>
 		<MCMVersion Condition="$(GameVersion) == '1.6.4' or $(GameVersion) == '1.6.5'">4.3.10</MCMVersion>
 	</PropertyGroup>
@@ -40,8 +41,9 @@
 	  <GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT'">E:\Mount &amp; Blade II 162 Steam</GameFolder>-->
 	<GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT' and $(GameVersion) == '1.6.4'">E:\Mount &amp; Blade II 164 Steam</GameFolder>
 	<GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT' and $(GameVersion) == '1.6.5'">E:\Mount &amp; Blade II 165 Steam</GameFolder>
-	<GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT' and $(GameVersion) == '1.7.0'">E:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
-    <GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT'">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 261550@InstallLocation)</GameFolder>
+	<GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT' and $(GameVersion) == '1.7.0'">E:\Mount &amp; Blade II 170 Steam</GameFolder>
+    <GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT' and $(GameVersion) == '1.7.1'">E:\SteamLibrary\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
+	<GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT'">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 261550@InstallLocation)</GameFolder>
     <GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Windows_NT'">C:\Program Files (x86)\Steam\steamapps\common\Mount &amp; Blade II Bannerlord</GameFolder>
     <!--Unix-->
     <GameFolder Condition="$(GameFolder) == '' AND $(OS) == 'Unix'">~/.steam/root/steamapps/common/Mount &amp; Blade II Bannerlord</GameFolder>
@@ -53,12 +55,12 @@
     <DefineConstants>RELEASE,V1620,V2,V1650LESS</DefineConstants>
 	  <DefineConstants>RELEASE,V1620,V2,V1650LESS</DefineConstants>
 	  <DefineConstants>RELEASE,V2,V1640,V1640MORE,TRACELOAD,TRACECREATECLAN,TRACEROMANCE</DefineConstants>-->
-	  <DefineConstants Condition="$(GameVersion) == '1.6.4'">RELEASE,V4,V1640,V1640MORE,V1650LESS,V1700LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,TRACE,TRACELOAD,TRACEPATCH</DefineConstants>
+	  <DefineConstants Condition="$(GameVersion) == '1.6.4'">RELEASE,V4,V1640,V1640MORE,V1650LESS,V1700LESS,V1710LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,TRACE,TRACELOAD,TRACEPATCH</DefineConstants>
 	  <!-- ,TRACEROMANCE,TRACEPREGNANCY,TRACKTOMUCHSPOUSE -->
-	  <DefineConstants Condition="$(GameVersion) == '1.6.5'">RELEASE,V4,V1650,V1640MORE,V1650MORE,V1700LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,TRACE,TRACELOAD,TRACEPATCH</DefineConstants>
+	  <DefineConstants Condition="$(GameVersion) == '1.6.5'">RELEASE,V4,V1650,V1640MORE,V1650MORE,V1700LESS,V1710LESS,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,TRACE,TRACELOAD,TRACEPATCH</DefineConstants>
 	  <!-- ,TRACEROMANCE,TRACEPREGNANCY,TRACKTOMUCHSPOUSE -->
-	  <DefineConstants Condition="$(GameVersion) == '1.7.0'">RELEASE,V4,V1700,V1700MORE,V1640MORE,V1650MORE,BATTLERELATION,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,PATCHWITHLOGENTRY,PATCHHOMESETTLEMENT,PATCHMAINPARTYWAGE,TRACE,TRACEPATCH,TRACEBATTLERELATION</DefineConstants>
-	  <!-- ,TRACE,TRACEINIT
+	  <DefineConstants Condition="$(GameVersion) == '1.7.0'">RELEASE,V4,V1700,V1700MORE,V1640MORE,V1650MORE,V1710LESS,BATTLERELATION,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,PATCHWITHLOGENTRY,PATCHHOMESETTLEMENT,PATCHMAINPARTYWAGE,NOLOG</DefineConstants>
+	  <!-- ,TRACE,TRACEINIT,TRACE,TRACEBATTLERELATION
 	    ,TRACE,TRACEPATCH,TRACEBATTLERELATION
 	        ,TRACKTOMUCHSPOUSE,TRACE,TRACEPREGNANCY,TRACELOAD,TRACEPATCH,TRACEROMANCE,TRACEWEDDING
 	        ,NOLOG,TRACKTOMUCHSPOUSE,TRACEPREGNANCY,TRACE,TRACELOAD,TRACEPATCH,TRACEROMANCE,TRACEWEDDING-->
@@ -66,10 +68,12 @@
 	  <!-- TRACKTOMUCHSPOUSE,TRACEROMANCE,TRACEPREGNANCY,TRACESWAPSPOUSE,TRACEPATCH,TRACECREATECLAN,TRACE_ARENA_PARTICIPANT_START,TRACE,TRACELOAD,TRACEPATCH,NOLOG
 	        ,TRACE,TRACEPATCH,TRACEROMANCE,TRACECREATECLAN,TRACEWEDDING
 	        ,,TRACEKILLCHARACTERBYREMOVE ça fait planter le jeu au chargement-->
+	  <DefineConstants Condition="$(GameVersion) == '1.7.1'">RELEASE,V4,V1700,V1710MORE,V1700MORE,V1640MORE,V1650MORE,BATTLERELATION,PATCHROMANCE,PATCHEENCYCLOPEDIA,CANHAVESPOUSE,SPOUSEALLWAYSWITHYOU,CANDIVORCE,CANTMARRYIFBUSY,PATCHWITHLOGENTRY,PATCHHOMESETTLEMENT,PATCHMAINPARTYWAGE,NOLOG</DefineConstants>
+
   </PropertyGroup>
 
   <!-- NuGet References -->
-  <ItemGroup Condition="$(GameVersion) == '1.7.0'">
+  <ItemGroup Condition="$(GameVersion) == '1.7.0' or $(GameVersion) == '1.7.1'">
 	  <PackageReference Include="Bannerlord.BUTR.Shared" Version="2.0.0.69" />
     <PackageReference Include="Bannerlord.MCM" Version="4.3.15" />
     <PackageReference Include="Bannerlord.ModuleManager" Version="2.0.81" />

@@ -22,8 +22,8 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
     {
         private const int BORNE_TRAIT_POSITIF = 2;
 
-        private static ShortLifeObject _affectedAgent = new ShortLifeObject(400);
-        private static ShortLifeObject _affectorAgent = new ShortLifeObject(400);
+        private static ShortLifeObject _affectedAgent = new ShortLifeObject(800);
+        private static ShortLifeObject _affectorAgent = new ShortLifeObject(800);
 
 
 
@@ -41,17 +41,16 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                     MATeam? maTeamAffectedAgent = MARomanceCampaignBehavior.Instance.ResolveMATeam(affectedAgent.Character.StringId);
                     MATeam? maTeamAffectorAgent = MARomanceCampaignBehavior.Instance.ResolveMATeam(affectorAgent.Character.StringId);
 
-//#if TRACEBATTLERELATION
-//                    Helper.Print(String.Format("OnAgentRemoved {0} by {1}\r\nResolve TeamAffected {2} killingBlow.IsValid ?= {3} IsMissile ?= {4}\r\nResolve TeamAffector {5}"
-//                                    , affectedAgent.Name
-//                                    , affectorAgent.Name
-//                                    , maTeamAffectedAgent == null ? "NULL" : maTeamAffectedAgent.ToString()
-//                                    , killingBlow.IsValid
-//                                    , killingBlow.IsMissile
-//                                    , maTeamAffectorAgent == null ? "NULL" : maTeamAffectorAgent.ToString()
-//                                    ), Helper.PRINT_TRACE_BATTLE_RELATION);
-
-//#endif
+#if TRACEBATTLERELATION
+                    Helper.Print(String.Format("OnAgentRemoved {0} by {1}\r\nResolve TeamAffected {2} killingBlow.IsValid ?= {3} IsMissile ?= {4}\r\nResolve TeamAffector {5}"
+                                    , affectedAgent.Name
+                                    , affectorAgent.Name
+                                    , maTeamAffectedAgent == null ? "NULL" : maTeamAffectedAgent.ToString()
+                                    , killingBlow.IsValid
+                                    , killingBlow.IsMissile
+                                    , maTeamAffectorAgent == null ? "NULL" : maTeamAffectorAgent.ToString()
+                                    ), Helper.PRINT_TRACE_BATTLE_RELATION);
+#endif
 
                     Hero? heroAffectedAgent = null;
                     Hero? heroAffectorAgent = null;
@@ -253,7 +252,7 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                                                     , compatibleBattleTraits), Helper.PRINT_TRACE_BATTLE_RELATION);
 #endif
 
-                                    if (compatibleBattleTraits >= HeroInteractionHelper.MAX_COMPATIBLE_BATTLE_TRAIT_ON_3)
+                                    if (compatibleBattleTraits >= HeroInteractionHelper.MAX_COMPATIBLE_BATTLE_TRAIT_ON_7)
                                     {
                                         coeff = 1;
                                         if (heroAffectorAgent == Hero.MainHero)
@@ -276,10 +275,10 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                             }
                         }
 
-#if TRACEBATTLERELATION
-                        Helper.LogClose();
-#endif
                     }
+#if TRACEBATTLERELATION
+                Helper.LogClose();
+#endif
                 }
             }
         }
@@ -316,7 +315,7 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
         [HarmonyPrefix]
         private static void SetMissionModePatch(bool atStart, MissionMode newMode, Mission __instance)
         {
-            if (newMode == MissionMode.Battle && newMode != __instance.Mode && MARomanceCampaignBehavior.Instance != null)
+            if ((newMode == MissionMode.Battle || newMode == MissionMode.Stealth) && newMode != __instance.Mode && MARomanceCampaignBehavior.Instance != null)
             {
                 MARomanceCampaignBehavior.Instance.VerifyMission(__instance, true);
             }

@@ -1,7 +1,9 @@
 ﻿using MarryAnyone.Behaviors;
+using MarryAnyone.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
@@ -35,7 +37,14 @@ namespace MarryAnyone.MA
                 }
             }
 #if TRACEBATTLERELATION
-            Helper.Print(String.Format("Create MATeam {0} nb Heroes {1}", team.ToString(), _heroes.Count()), Helper.PrintHow.PrintToLogAndWrite);
+            Helper.Print(String.Format("Create MATeam {0} nb Heroes {1}/nbAgent {2}"
+                            , team.ToString()
+                            , _heroes.Count()
+                            , team.TeamAgents.Count), Helper.PrintHow.PrintToLogAndWrite);
+            if (team.TeamAgents.Count == 0)
+            {
+                Helper.Print(String.Format("Team {0}", HelperReflection.Properties(team, " - ", BindingFlags.Instance)), Helper.PrintHow.PrintToLogAndWrite);
+            }
 #endif
 
         }

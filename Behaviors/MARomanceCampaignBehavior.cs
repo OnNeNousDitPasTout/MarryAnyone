@@ -61,7 +61,7 @@ namespace MarryAnyone.Behaviors
         private bool _MAWedding = false;
 
         private List<MATeam> _maTeams = null;
-        private Mission _mission = null;
+        private Mission? _mission = null;
 
         #endregion
 
@@ -1703,7 +1703,7 @@ namespace MarryAnyone.Behaviors
         #region battle relations
 #if BATTLERELATION
 
-        internal void VerifyMission(Mission mission, bool init = false)
+        internal void VerifyMission(Mission? mission, bool init = false)
         {
             if (_mission == mission && !init)
             {
@@ -1713,14 +1713,20 @@ namespace MarryAnyone.Behaviors
 
             if (mission != null) 
             {
-#if TRACEBATTLERELATION
-                Helper.Print(String.Format("VerifyMission build teams {0}", mission.Teams.Count), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
-#endif
+                bool teamsOk = false;
                 _maTeams = new List<MATeam>();
                 foreach (Team team in mission.Teams)
                 {
+                    teamsOk |= team.TeamAgents.Count > 0;
                     _maTeams.Add(new MATeam(team));
                 }
+
+#if TRACEBATTLERELATION
+                Helper.Print(String.Format("VerifyMission build teams {0} teamsOK ?= {1}", mission.Teams.Count, teamsOk), Helper.PrintHow.PrintToLogAndWriteAndForceDisplay);
+#endif
+
+                if (!teamsOk)
+                    mission = null;
             }
 
             _mission = mission;

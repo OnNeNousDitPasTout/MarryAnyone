@@ -580,7 +580,9 @@ namespace MarryAnyone
                 if (CharacterObject.PlayerCharacter != null)
                 {
                     AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
+#if V1710LESS
                     AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
+#endif
                 }
 #if TRACE
                 else
@@ -607,8 +609,9 @@ namespace MarryAnyone
 #endif
 
                 AccessTools.Field(typeof(CharacterObject), "_originCharacter").SetValue(character, CharacterObject.PlayerCharacter);
+#if V1710LESS
                 AccessTools.Field(typeof(CharacterObject), "_originCharacterStringId").SetValue(character, CharacterObject.PlayerCharacter.StringId);
-
+#endif
 #if TRACEPATCH
                 Print(String.Format("Swap Occupation To Lord for {0} newOccupation ?= {1}", character.Name.ToString(), character.Occupation.ToString()), PrintHow.PrintToLogAndWriteAndDisplay);
 #endif
