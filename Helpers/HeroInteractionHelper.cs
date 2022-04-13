@@ -8,6 +8,9 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.Core;
 using TaleWorlds.Localization;
+#if V1720MORE
+using TaleWorlds.CampaignSystem.CharacterDevelopment;
+#endif
 
 namespace MarryAnyone.Helpers
 {

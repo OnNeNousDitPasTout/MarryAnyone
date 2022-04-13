@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using TaleWorlds.CampaignSystem;
+#if V1720MORE
+using TaleWorlds.CampaignSystem.GameComponents;
+#else
 using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#endif
 
 namespace MarryAnyone.Models
 {

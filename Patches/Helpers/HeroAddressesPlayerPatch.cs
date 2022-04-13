@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
 using MarryAnyone.Behaviors;
 using TaleWorlds.CampaignSystem;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.Conversation;
+#endif
 using TaleWorlds.Localization;
 
 namespace MarryAnyone.Patches.Helpers

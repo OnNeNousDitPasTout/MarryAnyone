@@ -4,7 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HarmonyLib;
-using SandBox.Source.CampaignComponents;
+#if V1720MORE
+    using SandBox.CampaignBehaviors;
+#else
+    using SandBox.Source.CampaignComponents;
+#endif
 using TaleWorlds.CampaignSystem;
 
 namespace MarryAnyone.Patches.Behaviors

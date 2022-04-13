@@ -4,7 +4,11 @@ using MarryAnyone.Models;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
-using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.GameComponents;
+#else
+    using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#endif
 using TaleWorlds.MountAndBlade;
 using System.IO;
 using System;

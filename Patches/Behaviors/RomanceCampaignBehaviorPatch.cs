@@ -6,8 +6,16 @@ using MarryAnyone.Settings;
 using System;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.CampaignSystem.Barterables;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CampaignBehaviors;
+    using TaleWorlds.CampaignSystem.Encounters;
+    using TaleWorlds.CampaignSystem.Party;
+    using TaleWorlds.CampaignSystem.BarterSystem.Barterables;
+    using TaleWorlds.CampaignSystem.BarterSystem;
+#else
+    using TaleWorlds.CampaignSystem.Barterables;
+    using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+#endif
 using TaleWorlds.Localization;
 
 namespace MarryAnyone.Patches.Behaviors
@@ -17,7 +25,7 @@ namespace MarryAnyone.Patches.Behaviors
     {
         static Hero? _heroBeingProposedTo = null;
 
-#if V4 
+#if V4
 
         [HarmonyPatch("conversation_courtship_initial_reaction_on_condition")]
         [HarmonyPostfix]
@@ -109,7 +117,7 @@ namespace MarryAnyone.Patches.Behaviors
                 && (!Helper.HeroOccupiedAndCantMarried(Hero.OneToOneConversationHero))
 #endif
                 && Romance.GetCourtedHeroInOtherClan(Hero.MainHero, Hero.OneToOneConversationHero) == null 
-                && Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, Hero.OneToOneConversationHero);
+                && MARomanceModel.CourtshipPossibleBetweenNPCsStatic(Hero.MainHero, Hero.OneToOneConversationHero);
 #if TRACE
             Helper.Print(String.Format("conversation_player_eligible_for_marriage_with_conversation_hero_on_condition Return {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
 #endif
@@ -509,7 +517,14 @@ namespace MarryAnyone.Patches.Behaviors
                 MARomanceCampaignBehavior.Instance.PartnerRemove(_heroBeingProposedTo);
         }
 
+#if V1720MORE
 
-
+        [HarmonyPatch("MarriageCourtshipPossibility")]
+        [HarmonyPostfix]
+        internal static void MarriageCourtshipPossibilityPostFix(Hero person1, Hero person2, ref bool __result)
+        {
+            __result = MARomanceModel.CourtshipPossibleBetweenNPCsStatic(person1, person2);
+        }
+#endif
     }
 }

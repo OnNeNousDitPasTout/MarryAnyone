@@ -5,7 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CampaignBehaviors;
+#else
+    using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+#endif
 
 namespace MarryAnyone.Patches.Behaviors
 {

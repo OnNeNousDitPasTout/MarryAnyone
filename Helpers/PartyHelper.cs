@@ -6,6 +6,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+#if V1720MORE
+using TaleWorlds.CampaignSystem.Party;
+#endif
 
 namespace MarryAnyone.Helpers
 {

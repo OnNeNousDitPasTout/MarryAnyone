@@ -5,8 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.Barterables;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors;
+#if V1720MORE
+#else
+	using TaleWorlds.CampaignSystem.Barterables;
+	using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors;
+#endif
 
 namespace MarryAnyone.Patches.Behaviors
 {

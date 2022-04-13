@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.Settlements.Locations;
+#endif
 
 namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem
 {

@@ -6,7 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.GameComponents;
+    using TaleWorlds.CampaignSystem.Party;
+#else
+    using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#endif
 
 namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem.GameComponents
 {

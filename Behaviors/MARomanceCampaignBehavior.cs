@@ -15,8 +15,18 @@ using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
 using TaleWorlds.CampaignSystem.Conversation.Persuasion;
 using TaleWorlds.CampaignSystem.LogEntries;
-using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CampaignBehaviors;
+    using TaleWorlds.CampaignSystem.GameComponents;
+    using TaleWorlds.CampaignSystem.CharacterDevelopment;
+    using TaleWorlds.CampaignSystem.MapEvents;
+    using TaleWorlds.CampaignSystem.Party;
+    using TaleWorlds.CampaignSystem.Encounters;
+    using TaleWorlds.CampaignSystem.Conversation;
+#else
+    using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+    using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+#endif
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
@@ -29,7 +39,7 @@ namespace MarryAnyone.Behaviors
     internal class MARomanceCampaignBehavior : CampaignBehaviorBase
     {
 
-        #region variables
+#region variables
         public List<Hero>? Partners;
 
         public List<Hero>? NoMoreSpouse;
@@ -63,7 +73,7 @@ namespace MarryAnyone.Behaviors
         private List<MATeam> _maTeams = null;
         private Mission? _mission = null;
 
-        #endregion
+#endregion
 
         public static MARomanceCampaignBehavior? Instance;
 
@@ -79,7 +89,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #region vie de l'objet
+#region vie de l'objet
         public MARomanceCampaignBehavior()
         {
             Instance = this;
@@ -118,9 +128,9 @@ namespace MarryAnyone.Behaviors
             Instance = null;
         }
 
-        #endregion
+#endregion
 
-        #region Spouses
+#region Spouses
 
         private Hero? ResolveOriginalSpouseForPartner(Hero partner)
         {
@@ -599,9 +609,9 @@ namespace MarryAnyone.Behaviors
                 _MAWedding = false;
             }
         }
-        #endregion
+#endregion
 
-        #region player Family companions
+#region player Family companions
         public bool IsPlayerTeam(Hero hero)
         {
             if (hero.PartyBelongedTo == Hero.MainHero.PartyBelongedTo)
@@ -613,7 +623,7 @@ namespace MarryAnyone.Behaviors
                 return true;
             return false;
         }
-        #endregion
+#endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -631,7 +641,7 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-        #region dialogues
+#region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
 
@@ -1129,7 +1139,7 @@ namespace MarryAnyone.Behaviors
             return ret;
         }
 
-        #region persuasion Cheat
+#region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -1280,9 +1290,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-        #endregion
+#endregion
 
-        #region persuasion system
+#region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -1476,7 +1486,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-        #endregion
+#endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1516,7 +1526,7 @@ namespace MarryAnyone.Behaviors
                 && !Helpers.HeroInteractionHelper.CanIntegreSpouseInHeroClan(Hero.MainHero, Hero.OneToOneConversationHero))
                 return false;
 
-            bool ret = Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, Hero.OneToOneConversationHero)
+            bool ret = MARomanceModel.CourtshipPossibleBetweenNPCsStatic(Hero.MainHero, Hero.OneToOneConversationHero)
                         && (Hero.OneToOneConversationHero.Clan == null
                             || Hero.OneToOneConversationHero.Clan.IsBanditFaction
                             || Hero.OneToOneConversationHero.Clan.IsOutlaw
@@ -1568,7 +1578,7 @@ namespace MarryAnyone.Behaviors
                     foreach (Hero hero in clan.Lords)
                     {
                         if (hero != Hero.OneToOneConversationHero
-                            && Campaign.Current.Models.RomanceModel.CourtshipPossibleBetweenNPCs(Hero.MainHero, hero)
+                            && MARomanceModel.CourtshipPossibleBetweenNPCsStatic(Hero.MainHero, hero)
                             && Romance.GetRomanticLevel(Hero.MainHero, hero) == Romance.RomanceLevelEnum.CoupleAgreedOnMarriage)
                         {
                             MBTextManager.SetTextVariable("COURTSHIP_PARTNER", hero.Name, false);
@@ -1700,7 +1710,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #region battle relations
+#region battle relations
 #if BATTLERELATION
 
         internal void VerifyMission(Mission? mission, bool init = false)
@@ -1798,9 +1808,9 @@ namespace MarryAnyone.Behaviors
             _mission = null;
         }
 #endif
-        #endregion
+#endregion
 
-        #region Loading and patches
+#region Loading and patches
 
         private bool SaveVersionOlderThen(String versionChaine)
         {
@@ -1911,7 +1921,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-        #region little hands
+#region little hands
         private void LogLectureAdd(List<CharacterMarriedLogEntry> lecture, Hero otherHero, CharacterMarriedLogEntry characterMarriedLogEntry)
         {
             CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
@@ -1950,7 +1960,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-        #endregion
+#endregion
 
         private void patchSpouses(CampaignGameStarter campaignGameStarter)
         {
@@ -2396,6 +2406,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-        #endregion
+#endregion
     }
 }

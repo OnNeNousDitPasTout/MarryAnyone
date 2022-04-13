@@ -7,7 +7,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
+#if V1720MORE
+	using TaleWorlds.CampaignSystem.TournamentGames;
+	using TaleWorlds.CampaignSystem.Settlements;
+	using TaleWorlds.CampaignSystem.Party;
+	using TaleWorlds.CampaignSystem.Roster;
+#else
+	using TaleWorlds.CampaignSystem.SandBox.Source.TournamentGames;
+#endif
 using TaleWorlds.Core;
 
 namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem

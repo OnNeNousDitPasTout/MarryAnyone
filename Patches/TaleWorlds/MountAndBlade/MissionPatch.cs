@@ -10,6 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.Actions;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CharacterDevelopment;
+#endif
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;

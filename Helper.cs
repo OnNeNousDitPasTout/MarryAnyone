@@ -8,6 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TaleWorlds.CampaignSystem;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CharacterDevelopment;
+    using TaleWorlds.CampaignSystem.Issues;
+    using TaleWorlds.CampaignSystem.Settlements;
+#endif
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.ModuleManager;

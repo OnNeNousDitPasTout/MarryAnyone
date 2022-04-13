@@ -9,6 +9,13 @@ using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade;
 using SandBox;
 using System.Linq;
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.Conversation;
+    using TaleWorlds.CampaignSystem.Settlements;
+    using TaleWorlds.CampaignSystem.CharacterDevelopment;
+    using SandBox.Missions.AgentBehaviors;
+    using SandBox.Conversation;
+#endif
 
 namespace MarryAnyone.Behaviors
 {
@@ -21,6 +28,7 @@ namespace MarryAnyone.Behaviors
             starter.AddPlayerLine("adoption_discussion_MA", "town_or_village_children_player_no_rhyme", "adoption_child_MA"
                                     , "{=adoption_offer_child}I can tell you have no parents to go back to, my child. I can be your {?PLAYER.GENDER}mother{?}father{\\?} if you wish."
                                     , new ConversationSentence.OnConditionDelegate(conversation_adopt_child_on_condition), null, 120, null, null);
+
             starter.AddDialogLine("character_adoption_response_MA", "adoption_child_MA", "close_window"
                                     , "{=adoption_response_child}You want to be my {?PLAYER.GENDER}Ma{?}Pa{\\?}? very well then![rf:happy][rb:very_positive]"
                                     , null, new ConversationSentence.OnConsequenceDelegate(conversation_adopt_child_on_consequence), 100, null);

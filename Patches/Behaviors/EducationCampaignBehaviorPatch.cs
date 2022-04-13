@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using TaleWorlds.CampaignSystem;
-
+#if V1720MORE
+    using TaleWorlds.CampaignSystem.CampaignBehaviors;
+#endif
 namespace MarryAnyone.Patches.Behaviors
 {
     [HarmonyPatch(typeof(EducationCampaignBehavior), "GetHighestThreeAttributes")]
