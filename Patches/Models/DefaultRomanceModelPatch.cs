@@ -13,6 +13,8 @@ using TaleWorlds.CampaignSystem;
 
 namespace MarryAnyone.Patches.Models
 {
+#if V1720LESS
+
     [HarmonyPatch(typeof(DefaultRomanceModel), "CourtshipPossibleBetweenNPCs", new Type[] { typeof(Hero), typeof(Hero) })]
     class DefaultRomanceModel_CourtshipPossibleBetweenNPCs_Patch
     {
@@ -38,4 +40,5 @@ namespace MarryAnyone.Patches.Models
         }
 
     }
+#endif
 }

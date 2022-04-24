@@ -20,5 +20,6 @@
 	"Debug": false,
 	"NotifyRelationImprovementWithinFamily": false,
 	"Warning": true,
-	"Patch": false
+	"Patch": false,
+	"PatchMaxWanderer": -1
 }

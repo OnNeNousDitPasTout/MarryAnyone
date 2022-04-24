@@ -228,7 +228,7 @@ namespace MarryAnyone.Patches.Behaviors
                     Helper.Print(string.Format("DailyTickHero::{0} Pregnant {2}\r\nPolyamory ?= {1}", hero.Name, settings.Polyamory, hero.IsPregnant), Helper.PRINT_TRACE_PREGNANCY);
 #endif
 
-                    if ((isPartner || Hero.MainHero.ExSpouses.Contains(hero)) && HeroInteractionHelper.OkToDoIt(hero, Hero.MainHero))
+                    if ((isPartner || Hero.MainHero.ExSpouses.Contains(hero)) && HeroInteractionHelper.OkToDoIt(hero, Hero.MainHero, true))
                     {
 #if TRACEPREGNANCY
                         Helper.Print(string.Format("DailyTickHero::{0} ISPartener or exSpouse add mainHero\r\n=>{1}"
@@ -239,7 +239,7 @@ namespace MarryAnyone.Patches.Behaviors
 
                     }
 
-                    if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse) && _spouses.IndexOf(hero.Spouse) < 0)
+                    if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse, Helper.MASettings.ImproveBattleRelation) && _spouses.IndexOf(hero.Spouse) < 0)
                     {
 #if TRACEPREGNANCY
                         Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
@@ -289,10 +289,12 @@ namespace MarryAnyone.Patches.Behaviors
                     if (_spouses == null)
                         _spouses = new List<Hero>();
 
-                    if (hero.Spouse != null && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse, false) && _spouses.IndexOf(hero.Spouse) < 0)
+                    if (hero.Spouse != null 
+                        && HeroInteractionHelper.OkToDoIt(hero, hero.Spouse, false) 
+                        && _spouses.IndexOf(hero.Spouse) < 0)
                     {
 #if TRACEPREGNANCY
-                    Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
+                        Helper.Print(String.Format("DailyTickHero::{0} add hero Spouse {1}", hero.Name, hero.Spouse.Name), Helper.PRINT_TRACE_PREGNANCY);
 #endif
                         _spouses.Add(hero.Spouse);
                     }

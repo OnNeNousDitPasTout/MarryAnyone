@@ -25,5 +25,6 @@
         public bool NotifyRelationImprovementWithinFamily { get; set; } = false;
         public bool Notable { get; set; } = false;
         public bool Patch { get; set; } = false;
+        public int PatchMaxWanderer { get; set; } = -1;
     }
 }

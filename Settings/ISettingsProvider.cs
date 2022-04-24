@@ -23,5 +23,7 @@
         bool NotifyRelationImprovementWithinFamily { get; set; }
         bool Debug { get; set; }
         bool Patch { get; set; }
+        int PatchMaxWanderer { get; set; }
+
     }
 }

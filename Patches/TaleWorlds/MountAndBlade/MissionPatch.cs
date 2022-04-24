@@ -25,16 +25,17 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
     {
         private const int BORNE_TRAIT_POSITIF = 2;
 
-        private static ShortLifeObject _affectedAgent = new ShortLifeObject(800);
-        private static ShortLifeObject _affectorAgent = new ShortLifeObject(800);
-
+        //private static ShortLifeObject _affectedAgent = new ShortLifeObject(800);
+        //private static ShortLifeObject _affectorAgent = new ShortLifeObject(800);
+        private static ShortLifeBiObjects _agents = new ShortLifeBiObjects(2000);
 
 
         [HarmonyPatch(typeof(Mission), "OnAgentRemoved", new Type[] { typeof(Agent), typeof(Agent), typeof(AgentState), typeof(KillingBlow) })]
         [HarmonyPostfix]
         private static void OnAgentRemovedPostfix(Agent affectedAgent, Agent affectorAgent, AgentState agentState, KillingBlow killingBlow)
         {
-            if (_affectedAgent.Swap(affectedAgent) || _affectorAgent.Swap(affectorAgent) && MARomanceCampaignBehavior.Instance != null && Helper.MASettings.ImproveBattleRelation)
+            //if (_affectedAgent.Swap(affectedAgent) || _affectorAgent.Swap(affectorAgent) && MARomanceCampaignBehavior.Instance != null && Helper.MASettings.ImproveBattleRelation)
+            if (MARomanceCampaignBehavior.Instance != null && Helper.MASettings.ImproveBattleRelation && affectedAgent != affectorAgent && _agents.Swap(affectedAgent, affectorAgent))
             {
                 if (affectedAgent != null && affectorAgent != null && affectedAgent.Character != null && affectorAgent.Character != null)
                 {
@@ -321,6 +322,7 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
             if ((newMode == MissionMode.Battle || newMode == MissionMode.Stealth) && newMode != __instance.Mode && MARomanceCampaignBehavior.Instance != null)
             {
                 MARomanceCampaignBehavior.Instance.VerifyMission(__instance, true);
+                _agents.Done();
             }
 
 #if TRACEBATTLERELATION

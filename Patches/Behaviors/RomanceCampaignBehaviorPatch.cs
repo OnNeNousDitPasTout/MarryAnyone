@@ -520,10 +520,12 @@ namespace MarryAnyone.Patches.Behaviors
 #if V1720MORE
 
         [HarmonyPatch("MarriageCourtshipPossibility")]
-        [HarmonyPostfix]
-        internal static void MarriageCourtshipPossibilityPostFix(Hero person1, Hero person2, ref bool __result)
+        [HarmonyPrefix]
+        internal static bool MarriageCourtshipPossibilityPreFix(Hero person1, Hero person2, ref bool __result)
         {
             __result = MARomanceModel.CourtshipPossibleBetweenNPCsStatic(person1, person2);
+
+            return false; // No PostFix
         }
 #endif
     }

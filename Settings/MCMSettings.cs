@@ -115,8 +115,13 @@ namespace MarryAnyone.Settings
         [SettingPropertyGroup("{=Notification}Notification", GroupOrder = 4)]
         public bool Debug { get; set; } = false;
 
-        [SettingPropertyBool("{=patch}Patch", Order = 2, RequireRestart = false, HintText = "{=patch_desc}Save and lod the save to apply the patch again")]
+        [SettingPropertyBool("{=patchMAOnLoad}Patch MA on load", Order = 1, RequireRestart = false, HintText = "{=patch_desc}Save and load the save to apply the patch again")]
+        [SettingPropertyGroup("{=Patch}Patch", GroupOrder = 5)]
         public bool Patch { get; set; } = false;
+
+        [SettingPropertyInteger("{=PatchMaxWandererInTavern}Remove wanderer in tavern if more then ", -1, 100, Order = 2, RequireRestart = false, HintText = "{=PatchMaxWandererInTavern_desc}Remove wanderer when loading in tavern if more then (-1 disable the patch)")]
+        [SettingPropertyGroup("{=Patch}Patch", GroupOrder = 5)]
+        public int PatchMaxWanderer { get; set; } = -1;
 
 
     }

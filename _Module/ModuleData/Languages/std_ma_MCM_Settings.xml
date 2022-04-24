@@ -43,13 +43,16 @@
 		<string id="RelationLevelMinForSex_desc" text="Relation needed for sexual relation (-1 disable the control)" />
 		<string id="ImproveRelation" text="Improve relation" />
 	    <string id="ImproveRelation_desc" text="Improve relation when heroes have sexual relation" />
-		  <string id="improvebattlerelation" text="Improve (or not) relation during battle" />
-		  <string id="improvebattlerelation_desc" text="Spouse(s) and other heroes improve relation during battle" />
-		  <string id="notable" text="With notable" />
+		<string id="improvebattlerelation" text="Improve (or not) relation during battle" />
+		<string id="improvebattlerelation_desc" text="Spouse(s) and other heroes improve relation during battle" />
+		<string id="notable" text="With notable" />
 		<string id="notable_desc" text="Player character can marry notable" />
 		<string id="NotifyRelationImprovementWithinFamily" text="Notify relation improvement in your family" />
 		<string id="NotifyRelationImprovementWithinFamily_desc" text="Display relation improvement in your family in the game's message log" />
-		<string id="patch" text="Patch on load" />
-		<string id="patch_desc" text="Save and lod the save to apply the patch again" />
+		<string id="Patch" text="Patch" />
+		<string id="patchMAOnLoad" text="Patch MA on load" />
+		<string id="patch_desc" text="Save and load the save to apply the patch again" />
+		<string id="PatchMaxWandererInTavern" text="Remove wanderer in tavern if more then " />
+		<string id="PatchMaxWandererInTavern_desc" text="Remove wanderer when loading in tavern if more then (-1 disable the patch)" />
   </strings>
 </base>

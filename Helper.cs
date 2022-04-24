@@ -122,6 +122,12 @@ namespace MarryAnyone
 #if TRACEINIT
         public const PrintHow PRINT_TRACE_INIT = PrintHow.PrintToLogAndWriteAndInit;
 #endif
+#if NOLOG
+        public const PrintHow PRINT_TRACE_PATCHTOOMUCHWANDERER = PrintHow.PrintForceDisplay;
+#else
+        public const PrintHow PRINT_TRACE_PATCHTOOMUCHWANDERER = PrintHow.PrintToLogAndWriteAndInit;
+#endif
+
 #if !NOLOG
         public static string? LogPath
         {
