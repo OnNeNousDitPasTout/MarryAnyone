@@ -31,42 +31,70 @@ namespace MarryAnyone.Patches.Behaviors
         [HarmonyPostfix]
         private static void conversation_courtship_initial_reaction_on_conditionPostfix(ref bool __result)
         {
-            if (Hero.OneToOneConversationHero != null && __result) 
+#if TRACE
+            String aff = null;
+#endif
+
+            if (__result && Romance.GetRomanticLevel(Hero.OneToOneConversationHero, Hero.MainHero) == Romance.RomanceLevelEnum.Ended)
+            {
+                TryToRetryCourtship();
+#if TRACE
+                aff = "TryToRetryCourtship because ended";
+#endif
+            }
+
+            if (Hero.OneToOneConversationHero != null && __result)
             {
 #if CANTMARRYIFBUSY
                 if (Helper.HeroOccupiedAndCantMarried(Hero.OneToOneConversationHero))
                 {
 #if TRACE
-                    Helper.Print("conversation_courtship_initial_reaction_on_condition return false because busy", Helper.PrintHow.PrintToLogAndWrite);
-                    //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
+                    aff = (aff != null ? aff + "\r\n" : "") + "return false because busy";
 #endif
                     __result = false;
                 }
 #endif
-                if (Helper.MASettings.RelationLevelMinForRomance >= 0 && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)
+                if (Helper.MASettings.RelationLevelMinForRomance >= 0
+                    && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)
                 {
 #if TRACE
-                    Helper.Print("conversation_courtship_initial_reaction_on_condition return false because not enough relation", Helper.PrintHow.PrintToLogAndWrite);
-                    //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
+                    aff = (aff != null ? aff + "\r\n" : "") + "return false because not enough relation";
 #endif
                     __result = false;
                 }
+#if TRACE
+                if (__result)
+                    aff = (aff != null ? aff + "\r\n" : "") + "return true";
+#endif
             }
-            else if (Hero.OneToOneConversationHero != null 
+            else if (Hero.OneToOneConversationHero != null
                     && !__result
                     && MADefaultMarriageModel.IsCoupleSuitableForMarriageStatic(Hero.MainHero, Hero.OneToOneConversationHero, false)
                     && (Helper.MASettings.RelationLevelMinForRomance == -1
-                        || (Helper.MASettings.RelationLevelMinForRomance >= 0 && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) < Helper.MASettings.RelationLevelMinForRomance)))
+                        || (Helper.MASettings.RelationLevelMinForRomance >= 0 
+                            && Hero.OneToOneConversationHero.GetRelation(Hero.MainHero) > Helper.MASettings.RelationLevelMinForRomance)))
             {
 
                 // Retry
                 __result = TryToRetryCourtship();
 #if TRACE
-                Helper.Print(String.Format("conversation_courtship_initial_reaction_on_condition return {0} == true if retry courtship", __result), Helper.PrintHow.PrintToLogAndWrite);
-                //Helper.Print(String.Format("conversation_courtship_decline_reaction_to_player_on_conditionPrefix ?= {0}", __result), Helper.PrintHow.PrintToLogAndWrite);
+                aff = (aff != null ? aff + "\r\n" : "") + String.Format("return {0} == true if retry courtship", __result);
 #endif
 
             }
+            else
+            {
+#if TRACE
+                aff = (aff != null ? aff + "\r\n" : "") + String.Format("return {0}", __result);
+#endif
+            }
+
+#if TRACE
+            if (aff != null)
+            {
+                Helper.Print(String.Concat("conversation_courtship_initial_reaction_on_condition ", aff), Helper.PrintHow.PrintToLogAndWrite);
+            }
+#endif
         }
 
         [HarmonyPatch("conversation_courtship_decline_reaction_to_player_on_condition")]
@@ -223,13 +251,16 @@ namespace MarryAnyone.Patches.Behaviors
                                         ? "{=goodman_chance}My good man, would you give me another chance to prove myself ?"
                                         : "{=goodwife_chance}My dear lady, would you give me another chance to prove myself ?", false);
                             }
+#if TRACEROMANCE
+                            Helper.Print("conversation_player_can_open_courtship_on_condition return TRUE", Helper.PRINT_TRACE_ROMANCE);
+#endif
                             return true;
                         }
                     }
                 }
             }
 #if TRACEROMANCE
-            Helper.Print("conversation_player_can_open_courtship_on_condition Repond FALSE", Helper.PRINT_TRACE_ROMANCE);
+            Helper.Print("conversation_player_can_open_courtship_on_condition return FALSE", Helper.PRINT_TRACE_ROMANCE);
 #endif
             return false;
         }

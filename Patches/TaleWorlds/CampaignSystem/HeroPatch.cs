@@ -84,6 +84,9 @@ namespace MarryAnyone.Patches.TaleWorlds.CampaignSystem
 #endif
 
 #if TRACKTOMUCHSPOUSE || TRACEEXSPOUSE
+#if V1710MORE
+    not support TRACEEXSPOUSE
+#endif
         public static ShortLifeObject spouseOn = new ShortLifeObject(200);
         public static ShortLifeObject spouseWith = new ShortLifeObject(200);
 

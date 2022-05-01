@@ -169,7 +169,7 @@ namespace MarryAnyone.Patches.Behaviors
         private static List<Hero>? _spouses;
         private static Hero? _sideFemaleHero;
         private static bool _playerRelation = false;
-        private static ForHero? _forHero = null;
+        private static ForHero? _forHero = null; 
 #if TRACEPREGNANCY
         private static bool _needTrace = false;
 #endif
