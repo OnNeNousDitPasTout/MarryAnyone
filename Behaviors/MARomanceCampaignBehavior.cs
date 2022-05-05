@@ -673,7 +673,7 @@ namespace MarryAnyone.Behaviors
             //                                    , 100, null);
 
             starter.AddPlayerLine("player_cheat_persuasion_start", "lord_talk_speak_diplomacy_2", "acceptcheatingornot"
-                                                , "{=Cheat_engage_courtship}I would love to spend some time with you, can you join my party for a few days ?"
+                                                , "{=Cheat_engage_courtship}I would love to spend some time with you. Will you join my party for a few days ?"
                                                 , conversation_characacter_agreed_to_cheat
                                                 , null //conversation_characacter_test_to_cheat
                                                 , 100, null);
@@ -685,7 +685,7 @@ namespace MarryAnyone.Behaviors
                                                 , 80, null);
 
             starter.AddPlayerLine("player_DivorceBug_start", "lord_talk_speak_diplomacy_2", "close_window"
-                                                , "{=DivorceBug_engage_dialog}There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!"
+                                                , "{=DivorceBug_engage_dialog}There is a bug in the Marry Anyone, just leave my team {INTERLOCUTOR.NAME}!"
                                                 , conversation_can_divorce
                                                 , delegate { conversation_do_divorce(true); }
                                                 , 60, null);
@@ -724,7 +724,7 @@ namespace MarryAnyone.Behaviors
                                                 , null
                                                 , 120, null);
 
-            starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I have already given you my answer, off you go"
+            starter.AddDialogLine("hero_cheat_persuasion_start_nomore", "acceptcheatingornot", "lort_pretalk", "{=allready_reply}I have already given you my answer, off you go."
                                                 , delegate { return !conversation_characacter_notagreed_to_cheat_VariantTest() && conversation_cheat_allready_done(); }
                                                 , null
                                                 , 100, null);

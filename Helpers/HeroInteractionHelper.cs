@@ -173,16 +173,16 @@ namespace MarryAnyone.Helpers
                             if (playerIn)
                             {
                                 if (coeff > 0)
-                                    text = new TextObject("{=ChangeRelationUpToFinalWithPlayer} Your relation up from {RELATION} to {FINALRELATION}");
+                                    text = new TextObject("{=ChangeRelationUpToFinalWithPlayer} Your relation up by {RELATION} to {FINALRELATION}");
                                 else
-                                    text = new TextObject("{=ChangeRelationDownToFinalWithPlayer} Your elation down from {RELATION} to {FINALRELATION}");
+                                    text = new TextObject("{=ChangeRelationDownToFinalWithPlayer} Your relation down by {RELATION} to {FINALRELATION}");
                             }
                             else
                             {
                                 if (coeff > 0)
-                                    text = new TextObject("{=ChangeRelationUpToFinal} Their relation up from {RELATION} to {FINALRELATION}");
+                                    text = new TextObject("{=ChangeRelationUpToFinal} Their relation up by {RELATION} to {FINALRELATION}");
                                 else
-                                    text = new TextObject("{=ChangeRelationDownToFinal} Their relation down from {RELATION} to {FINALRELATION}");
+                                    text = new TextObject("{=ChangeRelationDownToFinal} Their relation down by {RELATION} to {FINALRELATION}");
                             }
                         }
                         else
@@ -190,16 +190,16 @@ namespace MarryAnyone.Helpers
                             if (playerIn)
                             {
                                 if (coeff > 0)
-                                    text = new TextObject("{=ChangeRelationUpToWithPlayer} Your relation up from {RELATION}");
+                                    text = new TextObject("{=ChangeRelationUpToWithPlayer} Your relation up by {RELATION}");
                                 else
-                                    text = new TextObject("{=ChangeRelationDownToWithPlayer} Your relation down from {RELATION}");
+                                    text = new TextObject("{=ChangeRelationDownToWithPlayer} Your relation down by {RELATION}");
                             }
                             else
                             {
                                 if (coeff > 0)
-                                    text = new TextObject("{=ChangeRelationUpTo} Their relation up from {RELATION}");
+                                    text = new TextObject("{=ChangeRelationUpTo} Their relation up by {RELATION}");
                                 else
-                                    text = new TextObject("{=ChangeRelationDownTo} Their relation down from {RELATION}");
+                                    text = new TextObject("{=ChangeRelationDownTo} Their relation down by {RELATION}");
                             }
                         }
                         text.SetTextVariable("RELATION", coeff.ToString());

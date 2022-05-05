@@ -111,9 +111,9 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                                     coeffRaison = -heroAffectorAgent.GetTraitLevel(DefaultTraits.Honor);
                                     coeff += coeffRaison;
                                     if (heroAffectedAgent == Hero.MainHero)
-                                        raison = new TextObject("{=BattleRelationLikeWeakOpponentAgainstPlayer}{AFFECTORHERO.NAME} happily taunt you as you fall to the ground !");
+                                        raison = new TextObject("{=BattleRelationLikeWeakOpponentAgainstPlayer}{AFFECTORHERO.NAME} happily taunts you as you fall to the ground !");
                                     else
-                                        raison = new TextObject("{=BattleRelationLikeWeakOpponent}{AFFECTORHERO.NAME} happily taunt {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground !");
+                                        raison = new TextObject("{=BattleRelationLikeWeakOpponent}{AFFECTORHERO.NAME} happily taunts {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground !");
                                 }
                                 else if (maTeamAffectorAgent != null && heroAffectorAgent.GetTraitLevel(DefaultTraits.Honor) > 0)
                                 {
@@ -169,17 +169,17 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                                     {
                                         coeff = -2;
                                         if (otherHero == Hero.MainHero)
-                                            raison = new TextObject("{=BattleRelationLostAFreindPlayer}{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                            raison = new TextObject("{=BattleRelationLostAFreindPlayer}{AFFECTEDHERO.NAME} resents you because you are looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground.");
                                         else
-                                            raison = new TextObject("{=BattleRelationLostAFreind}{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                            raison = new TextObject("{=BattleRelationLostAFreind}{AFFECTEDHERO.NAME} resents {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?}'s looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground.");
                                     }
                                     else if (compatibleBattleTraits >= HeroInteractionHelper.MAX_COMPATIBLE_BATTLE_TRAIT_ON_7)
                                     {
                                         coeff = 2;
                                         if (otherHero == Hero.MainHero)
-                                            raison = new TextObject("{=BattleRelationNeedAFreindPlayer}{AFFECTEDHERO.NAME} count on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}.");
+                                            raison = new TextObject("{=BattleRelationNeedAFreindPlayer}{AFFECTEDHERO.NAME} is counting on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}!");
                                         else
-                                            raison = new TextObject("{=BattleRelationNeedAFreind}{AFFECTEDHERO.NAME} count on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}.");
+                                            raison = new TextObject("{=BattleRelationNeedAFreind}{AFFECTEDHERO.NAME} is counting on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}!");
                                     }
                                 }
 
@@ -212,9 +212,9 @@ namespace MarryAnyone.Patches.TaleWorlds.MountAndBlade
                                     coeffRaison = -Math.Max(BORNE_TRAIT_POSITIF / 2, 2);
                                     coeff = coeffRaison;
                                     if (heroAffectorAgent == Hero.MainHero)
-                                        raison = new TextObject("{=BattleRelationFrustatedLostAgainstPlayer}{AFFECTEDHERO.NAME} holde a grudge against you when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                        raison = new TextObject("{=BattleRelationFrustatedLostAgainstPlayer}{AFFECTEDHERO.NAME} holds a grudge against you when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground.");
                                     else
-                                        raison = new TextObject("{=BattleRelationFrustatedLostAgainstNPC}{AFFECTEDHERO.NAME} holde a grudge against {AFFECTORHERO.NAME} when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground.");
+                                        raison = new TextObject("{=BattleRelationFrustatedLostAgainstNPC}{AFFECTEDHERO.NAME} holds a grudge against {AFFECTORHERO.NAME} when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground.");
                                 }
                             }
                             if (coeff != 0)

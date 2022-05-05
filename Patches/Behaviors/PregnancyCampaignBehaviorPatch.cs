@@ -487,9 +487,9 @@ namespace MarryAnyone.Patches.Behaviors
                         else
                         {
                             if (relationChange > 0)
-                                textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points to {FINALRELATION}");
+                                textObject = new TextObject("{=TheTwoOfThemSpendTime}{HEROONE.NAME} and {HEROTOW.NAME} spend some time together, their relationship up from {INCREMENT} points to {FINALRELATION}");
                             else
-                                textObject = new TextObject("{=TheTwoOfThemSpendTimeDown}{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship down from {INCREMENT} points to {FINALRELATION}");
+                                textObject = new TextObject("{=TheTwoOfThemSpendTimeDown}{HEROONE.NAME} and {HEROTOW.NAME} don't have a good time together, their relationship down from {INCREMENT} points to {FINALRELATION}");
 
                             Helper.PrintWithColor(textObject.ToString(), color);
                         }

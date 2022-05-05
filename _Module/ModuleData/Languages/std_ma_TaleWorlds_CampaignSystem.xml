@@ -13,7 +13,7 @@
 		<string id="goodwife_chance" text="My dear lady, would you give me another chance to prove myself ?" />
 
 		<string id="Divorce_engage_dialog" text="We have been together for too long my {RELATION_TEXT}{newline}, I think it is time to explore new horizons. I want a divorce {INTERLOCUTOR.NAME}." />
-		<string id="DivorceBug_engage_dialog" text="There is a bug in the Marry Anyone, juste leave my team {INTERLOCUTOR.NAME}!" />
+		<string id="DivorceBug_engage_dialog" text="There is a bug in the Marry Anyone, just leave my team {INTERLOCUTOR.NAME}!" />
 		<string id="LeaveSpouseParty" text="Hope we meet again, maybe in the arena{newline}, so long ..." />
 		<string id="endcourthip" text="Sorry {INTERLOCUTOR.NAME}, I don't want to marry you anymore." />
 		<string id="marryAgain_engage_dialog" text="We are not well married {INTERLOCUTOR.NAME} (regarding the log events).{newline} Do you want we married again my {RELATION_TEXT} ?" />
@@ -26,9 +26,9 @@
 
 
 		<!-- Cheating -->
-		<string id="Cheat_engage_courtship" text="I would love to spend some time with you, can you join my party for a few days ?" />
+		<string id="Cheat_engage_courtship" text="I would love to spend some time with you. Will you join my party for a few days ?" />
 		<string id="LeaveCheat_engage_dialog" text="I think you need to go away {INTERLOCUTOR.NAME}, I have other things to do." />
-		<string id="allready_reply" text="I have already given you my answer, off you go" />
+		<string id="allready_reply" text="I have already given you my answer, off you go." />
 		<string id="Cheat_success" text="Yes, let's have some fun ! I will join your party." />
 		<string id="cheatTestFail" text="I am not interested." />
 		<string id="cheatTestRetry" text="Well, I think you may want to try some other time." />
@@ -39,33 +39,33 @@
 		<string id="CheatGenerosityCharm" text="It is a beautiful day outside, and {?INTERLOCUTOR.GENDER}an adventurous woman{?}an adventurous man{\\?} like you, needs to enjoy the fresh air." />
 
 		<!-- Relation improvement-->
-		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
-		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship up from {INCREMENT} points to {FINALRELATION}." />
-		<string id="TheTwoOfThemSpendTimeDown" text="{HEROONE.NAME} and {HEROTOW.NAME} spend time together, their relationship down from {INCREMENT} points to {FINALRELATION}" />
+		<string id="TheTwoOfThemHaveAGoodTime" text="{HEROONE.NAME} and {HEROTOW.NAME} have a good time together, their relationship up by {INCREMENT} points to {FINALRELATION}." />
+		<string id="TheTwoOfThemSpendTime" text="{HEROONE.NAME} and {HEROTOW.NAME} spend some time together, their relationship up by {INCREMENT} points to {FINALRELATION}." />
+		<string id="TheTwoOfThemSpendTimeDown" text="{HEROONE.NAME} and {HEROTOW.NAME} don't have a good time together, their relationship down by {INCREMENT} points to {FINALRELATION}" />
 
 		<!-- Relation Battle improvement-->
-		<string id="ChangeRelationUpToFinalWithPlayer" text=" Your relation up from {RELATION} to {FINALRELATION}." />
-		<string id="ChangeRelationDownToFinalWithPlayer" text=" Your elation down from {RELATION} to {FINALRELATION}." />
-		<string id="ChangeRelationUpToFinal" text=" Their relation up from {RELATION} to {FINALRELATION}." />
-		<string id="ChangeRelationDownToFinal" text=" Their relation down from {RELATION} to {FINALRELATION}." />
-		<string id="ChangeRelationUpToWithPlayer" text=" Your relation up from {RELATION}." />
-		<string id="ChangeRelationDownToWithPlayer" text=" Your relation down from {RELATION}." />
-		<string id="ChangeRelationUpTo" text=" Their relation up from {RELATION}." />
-		<string id="ChangeRelationDownTo" text=" Their relation down from {RELATION}." />
+		<string id="ChangeRelationUpToFinalWithPlayer" text=" Your relation up by {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationDownToFinalWithPlayer" text=" Your relation down by {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationUpToFinal" text=" Their relation up by {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationDownToFinal" text=" Their relation down by {RELATION} to {FINALRELATION}." />
+		<string id="ChangeRelationUpToWithPlayer" text=" Your relation up by {RELATION}." />
+		<string id="ChangeRelationDownToWithPlayer" text=" Your relation down by {RELATION}." />
+		<string id="ChangeRelationUpTo" text=" Their relation up by {RELATION}." />
+		<string id="ChangeRelationDownTo" text=" Their relation down by {RELATION}." />
 		
-		<string id="BattleRelationLikeWeakOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} happily taunt you as you fall to the ground !" />
-		<string id="BattleRelationLikeWeakOpponent" text="{AFFECTORHERO.NAME} happily taunt {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground !" />
+		<string id="BattleRelationLikeWeakOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} happily taunts you as you fall to the ground !" />
+		<string id="BattleRelationLikeWeakOpponent" text="{AFFECTORHERO.NAME} happily taunts {AFFECTEDHERO.NAME} as {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground !" />
 		<string id="BattleRelationLikeStrongOpponentAgainstPlayer" text="{AFFECTORHERO.NAME} respects your strength in battle." />
 		<string id="BattleRelationLikeStrongOpponent" text="{AFFECTORHERO.NAME} respects {AFFECTEDHERO.NAME} strength in battle." />
-		<string id="BattleRelationLostAFreindPlayer" text="{AFFECTEDHERO.NAME} rescent you because you were looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
-		<string id="BattleRelationLostAFreind" text="{AFFECTEDHERO.NAME} rescent {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?} was looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
-		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} count on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
-		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} count on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}." />
+		<string id="BattleRelationLostAFreindPlayer" text="{AFFECTEDHERO.NAME} resents you because you are looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground." />
+		<string id="BattleRelationLostAFreind" text="{AFFECTEDHERO.NAME} resents {OTHERHERO.NAME} because {?OTHERHERO.GENDER}she{?}he{\\?}'s looking away when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground." />
+		<string id="BattleRelationNeedAFreindPlayer" text="{AFFECTEDHERO.NAME} is counting on you to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}!" />
+		<string id="BattleRelationNeedAFreind" text="{AFFECTEDHERO.NAME} is counting on {OTHERHERO.NAME} to avenge {?AFFECTEDHERO.GENDER}her{?}him{\\?}!" />
 		<string id="BattleRelationRespectLostAgainstPlayer" text="{AFFECTEDHERO.NAME} respects your strength in battle." />
 		<string id="BattleRelationRespectLostAgainstNPC" text="{AFFECTEDHERO.NAME} respects {AFFECTORHERO.NAME} strength in battle." />
-		<string id="BattleRelationFrustatedLostAgainstPlayer" text="{AFFECTEDHERO.NAME} holde a grudge against you when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
-		<string id="BattleRelationFrustatedLostAgainstNPC" text="{AFFECTEDHERO.NAME} holde a grudge against {AFFECTORHERO.NAME} when {?AFFECTEDHERO.GENDER}she{?}he{\\?} fall to the ground." />
-		<string id="BattleRelationBattleWithFreindPlayer" text="{OTHERHERO.NAME} happily watches you beat enemies to the ground." />
-		<string id="BattleRelationBattleWithFreind" text="{OTHERHERO.NAME} happily watches {AFFECTORHERO.NAME} beat enemies to the ground." />
+		<string id="BattleRelationFrustatedLostAgainstPlayer" text="{AFFECTEDHERO.NAME} holds a grudge against you when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground." />
+		<string id="BattleRelationFrustatedLostAgainstNPC" text="{AFFECTEDHERO.NAME} holds a grudge against {AFFECTORHERO.NAME} when {?AFFECTEDHERO.GENDER}she{?}he{\\?} falls to the ground." />
+		<string id="BattleRelationBattleWithFreindPlayer" text="{OTHERHERO.NAME} happily watches you beat your enemies to the ground." />
+		<string id="BattleRelationBattleWithFreind" text="{OTHERHERO.NAME} happily watches {AFFECTORHERO.NAME} beat their enemies to the ground." />
 	</strings>
 </base>
