@@ -2,6 +2,7 @@
 using Helpers;
 using MarryAnyone.Behaviors;
 using MarryAnyone.Helpers;
+using MarryAnyone.MA;
 using MarryAnyone.Settings;
 using System;
 using System.Collections.Generic;
@@ -216,7 +217,11 @@ namespace MarryAnyone.Patches.Behaviors
                 else if (hero == Hero.MainHero 
                             || isPartner 
                             || (maRomanceCampaignBehaviorIsOk && MARomanceCampaignBehavior.Instance.SpouseOfPlayer(hero))) // If you are the MainHero go through advanced process
-                {   
+                {
+#if NEWSAVE
+                    MAFamily mAFamily = MARomanceCampaignBehavior.MAFamily(Hero.MainHero, true);
+#endif
+
                     // MainHero or MainHero spouses
                     _playerRelation = true;
                     MASettings settings = Helper.MASettings;
@@ -249,10 +254,17 @@ namespace MarryAnyone.Patches.Behaviors
 
                     if (settings.Polyamory)
                     {
+#if NEWSAVE
+                        if (mAFamily.Partners != null)
+                        {
+                            foreach (Hero withHero in mAFamily.Partners)
+#else
                         if (MARomanceCampaignBehavior.Instance.Partners != null)
                         {
 
                             foreach (Hero withHero in MARomanceCampaignBehavior.Instance.Partners)
+
+#endif
                             {
                                 if (withHero != hero && HeroInteractionHelper.OkToDoIt(hero, withHero) && _spouses.IndexOf(withHero) < 0)
                                 {
