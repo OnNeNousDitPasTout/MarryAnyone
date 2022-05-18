@@ -821,7 +821,7 @@ namespace MarryAnyone
             {
 #if TRACELOAD
                 Print(String.Format("Patch Hero {0} with PlayerClan {1} => {2}\r\n\t{3}", hero.Name.ToString()
-                                , Clan.PlayerClan.Name.ToString()
+                                , Clan.PlayerClan?.Name.ToString()
                                 , hero.Clan.Name.ToString()
                                 , Helper.TraceHero(hero)), PrintHow.PrintToLogAndWriteAndDisplay);
 #else

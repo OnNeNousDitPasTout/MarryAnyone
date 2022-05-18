@@ -24,8 +24,8 @@ using TaleWorlds.CampaignSystem.LogEntries;
     using TaleWorlds.CampaignSystem.Encounters;
     using TaleWorlds.CampaignSystem.Conversation;
 #else
-    using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
-    using TaleWorlds.CampaignSystem.SandBox.GameComponents;
+using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
+using TaleWorlds.CampaignSystem.SandBox.GameComponents;
 #endif
 using TaleWorlds.CampaignSystem.ViewModelCollection;
 using TaleWorlds.Core;
@@ -45,7 +45,7 @@ namespace MarryAnyone.Behaviors
     internal class MARomanceCampaignBehavior : CampaignBehaviorBase
     {
 
-#region variables
+        #region variables
 #if NEWSAVE
         private List<MAFamily>? _mAFamilies;
         private MAFamily? _mAFamily;
@@ -85,7 +85,7 @@ namespace MarryAnyone.Behaviors
         private List<MATeam> _maTeams = null;
         private Mission? _mission = null;
 
-#endregion
+        #endregion
 
         public static MARomanceCampaignBehavior? Instance;
 #if NEWSAVE
@@ -96,17 +96,29 @@ namespace MarryAnyone.Behaviors
                 return null;
 
             if (Instance._mAFamily?.Resolve(hero) != null)
+            {
+                if (canCreate)
+                    Instance._mAFamily.MainHero = hero;
+
                 return Instance._mAFamily;
+            }
 
             if (Instance._mAFamilies != null)
             {
                 foreach (MAFamily family in Instance._mAFamilies)
+                {
                     if (family.Resolve(hero))
+                    {
+                        if (canCreate)
+                            family.MainHero = hero;
                         return family;
+                    }
+                }
             }
             if (canCreate && hero.Spouse != null)
             {
-                MAFamily family = new MAFamily(hero, hero.Spouse);
+                MAFamily family = new MAFamily(hero);
+
                 if (Instance._mAFamilies == null)
                     Instance._mAFamilies = new List<MAFamily>();
                 Instance._mAFamilies.Add(family);
@@ -138,7 +150,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 #endif
-#region vie de l'objet
+        #region vie de l'objet
         public MARomanceCampaignBehavior()
         {
             Instance = this;
@@ -149,6 +161,10 @@ namespace MarryAnyone.Behaviors
             CampaignEvents.OnSessionLaunchedEvent.AddNonSerializedListener(this, new Action<CampaignGameStarter>(OnSessionLaunched));
             CampaignEvents.HeroesMarried.AddNonSerializedListener(this, new Action<Hero, Hero, bool>(OnHeroesMarried));
             CampaignEvents.HourlyTickEvent.AddNonSerializedListener(this, new Action(OnHourTickEvent));
+            // CampaignEvents.PlayerMetCharacter !!!!!!
+#if NEWSAVE
+            CampaignEvents.OnPlayerCharacterChangedEvent.AddNonSerializedListener(this, new Action<Hero, Hero, MobileParty>(OnPlayerCharacterChanged));
+#endif
 #if BATTLERELATION
             CampaignEvents.OnMissionStartedEvent.AddNonSerializedListener(this, OnMissionStarted);
             CampaignEvents.OnPlayerBattleEndEvent.AddNonSerializedListener(this, new Action<MapEvent>(OnPlayerBattleEnd));
@@ -157,6 +173,12 @@ namespace MarryAnyone.Behaviors
 #endif
         }
 
+#if NEWSAVE
+        private void OnPlayerCharacterChanged(Hero arg1, Hero arg2, MobileParty arg3)
+        {
+            _mAFamily = MAFamily(arg2, true);
+        }
+#endif
         public void Dispose()
         {
 #if NEWSAVE
@@ -186,9 +208,9 @@ namespace MarryAnyone.Behaviors
             Instance = null;
         }
 
-#endregion
+        #endregion
 
-#region Spouses
+        #region Spouses
 
 #if !NEWSAVE
         private Hero? ResolveOriginalSpouseForPartner(Hero partner)
@@ -232,7 +254,7 @@ namespace MarryAnyone.Behaviors
 #if NEWSAVE
         public bool SpouseOfPlayer(Hero spouse)
         {
-            return _mAFamily.SpouseOfMainHero(spouse);
+            return _mAFamily != null && _mAFamily.SpouseOfMainHero(spouse);
         }
 #else
         public bool SpouseOfPlayer(Hero spouse)
@@ -296,8 +318,8 @@ namespace MarryAnyone.Behaviors
             {
 #if NEWSAVE
                 spouse = Hero.MainHero.ExSpouses
-                        .LastOrDefault(h => h.IsAlive 
-                            && (_mAFamily == null || !_mAFamily.ResolveNoMoreSpouse(h)) 
+                        .LastOrDefault(h => h.IsAlive
+                            && (_mAFamily == null || !_mAFamily.ResolveNoMoreSpouse(h))
                             && HeroInteractionHelper.OkToDoIt(Hero.MainHero, h));
 #else
                 spouse = Hero.MainHero.ExSpouses.LastOrDefault(h => h.IsAlive && NoMoreSpouse.IndexOf(h) < 0 && HeroInteractionHelper.OkToDoIt(Hero.MainHero, h));
@@ -320,6 +342,7 @@ namespace MarryAnyone.Behaviors
             return spouse;
         }
 
+#if !NEWSAVE
         public List<Hero> Spouses
         {
             get
@@ -332,22 +355,15 @@ namespace MarryAnyone.Behaviors
                     else
                         spouses.Add(Hero.MainHero.Spouse);
                 }
-#if NEWSAVE
-                if (_mAFamily != null && _mAFamily.Partners != null)
-                    spouses.RemoveAll(x => _mAFamily.ResolvePartner(x));
-
-                if (_mAFamily != null && _mAFamily.NoMoreSpouses != null)
-                    spouses.RemoveAll(x => _mAFamily.ResolveNoMoreSpouse(x));
-#else
                 if (Partners != null)
                     spouses.RemoveAll(x => Partners.IndexOf(x) >= 0);
 
                 if (NoMoreSpouse != null)
                     spouses.RemoveAll(x => NoMoreSpouse.IndexOf(x) >= 0);
-#endif
                 return spouses;
             }
         }
+#endif
 
 #if !NEWSAVE
         public void RemoveMainHeroSpouse(Hero oldSpouse, Hero withHero)
@@ -713,9 +729,9 @@ namespace MarryAnyone.Behaviors
                 _MAWedding = false;
             }
         }
-#endregion
+        #endregion
 
-#region player Family companions
+        #region player Family companions
         public bool IsPlayerTeam(Hero hero)
         {
             if (hero.PartyBelongedTo == Hero.MainHero.PartyBelongedTo)
@@ -727,7 +743,7 @@ namespace MarryAnyone.Behaviors
                 return true;
             return false;
         }
-#endregion
+        #endregion
 
 #if TRACKTOMUCHSPOUSE
 
@@ -745,7 +761,7 @@ namespace MarryAnyone.Behaviors
         }
 #endif
 
-#region dialogues
+        #region dialogues
         protected void AddDialogs(CampaignGameStarter starter)
         {
 
@@ -1047,7 +1063,7 @@ namespace MarryAnyone.Behaviors
                 {
                     _mAFamily = MAFamily(Hero.MainHero, true);
                 }
-                    
+
 #else
                 NoMoreSpouse.Add(Hero.OneToOneConversationHero);
 #endif
@@ -1070,7 +1086,11 @@ namespace MarryAnyone.Behaviors
 
             if (multiple > 0)
             {
+#if NEWSAVE
+                foreach (Hero spouse in _mAFamily.Spouses)
+#else
                 foreach (Hero spouse in Spouses)
+#endif
                 {
                     float rela1 = spouse.GetRelation(Hero.OneToOneConversationHero);
                     float rela2 = spouse.GetRelationWithPlayer();
@@ -1264,7 +1284,7 @@ namespace MarryAnyone.Behaviors
             return ret;
         }
 
-#region persuasion Cheat
+        #region persuasion Cheat
 
         private Tuple<TraitObject, int>[] GetTraitCorrelations(int valor = 0, int mercy = 0, int honor = 0, int generosity = 0, int calculating = 0)
         {
@@ -1428,9 +1448,9 @@ namespace MarryAnyone.Behaviors
             return Helper.MASettings.DifficultyVeryEasyMode;
         }
 
-#endregion
+        #endregion
 
-#region persuasion system
+        #region persuasion system
 
         private PersuasionTask GetCurrentPersuasionTask()
         {
@@ -1628,7 +1648,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-#endregion
+        #endregion
 
         private bool conversation_character_agrees_to_discussion_on_condition()
         {
@@ -1756,7 +1776,7 @@ namespace MarryAnyone.Behaviors
         }
 
         // Return true, if destroy the clan
-        private bool HeroLeaveClanLeaderAndDestroyClan(Clan fromClan, Clan newClan = null)
+        private bool HeroLeaveClanLeaderAndDestroyClan(Clan fromClan, Clan? newClan = null)
         {
             Hero? ancLeader = fromClan.Leader;
             Hero? newLeader = null;
@@ -1805,7 +1825,7 @@ namespace MarryAnyone.Behaviors
             return supprimeClan;
         }
 
-#endregion
+        #endregion
 
         private void OnHourTickEvent()
         {
@@ -1852,7 +1872,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#region battle relations
+        #region battle relations
 #if BATTLERELATION
 
         internal void VerifyMission(Mission? mission, bool init = false)
@@ -1950,9 +1970,9 @@ namespace MarryAnyone.Behaviors
             _mission = null;
         }
 #endif
-#endregion
+        #endregion
 
-#region Loading and patches
+        #region Loading and patches
 
         public bool SaveVersionOlderThen(String versionChaine)
         {
@@ -2065,7 +2085,7 @@ namespace MarryAnyone.Behaviors
             return false;
         }
 
-#region little hands
+        #region little hands
         private void LogLectureAdd(List<CharacterMarriedLogEntry> lecture, Hero otherHero, CharacterMarriedLogEntry characterMarriedLogEntry)
         {
             CharacterMarriedLogEntry? existe = lecture.Find(x => (x.MarriedHero == otherHero || x.MarriedTo == otherHero));
@@ -2104,7 +2124,7 @@ namespace MarryAnyone.Behaviors
             }
         }
 
-#endregion
+        #endregion
 #endif
 
 #if !NEWSAVE
@@ -2434,6 +2454,11 @@ namespace MarryAnyone.Behaviors
                     Helper.Print(String.Format("Sibling of main Hero {0}", hero.Name), Helper.PRINT_TRACE_LOAD);
             }
 
+            if (_mAFamilies != null)
+                foreach (MAFamily mAFamily in _mAFamilies)
+                    Helper.Print(String.Format("Trace family {0}", mAFamily.Trace(" - ")), Helper.PRINT_TRACE_LOAD);
+
+
 #endif
             Helper.MASettingsClean();
             Helper.MAEtape = Helper.Etape.EtapeLoadPas2;
@@ -2442,18 +2467,14 @@ namespace MarryAnyone.Behaviors
             if (_mAFamily == null)
             {
                 _mAFamily = MAFamily(Hero.MainHero, true);
-                _mAFamily.MainHero = Hero.MainHero;
             }
 
             foreach (MAFamily mAFamily in _mAFamilies)
-                if (mAFamily.MainHero != null)
-                    mAFamily.PatchSpouses(mAFamily.MainHero);
+                mAFamily.PatchSpouses();
 
 #else
             if (NoMoreSpouse == null)
                 NoMoreSpouse = new List<Hero>();
-
-            // MAHelper.RemoveDuplicatedHero(); No Need 
 
             patchSpouses(campaignGameStarter);
 #endif
@@ -2561,13 +2582,24 @@ namespace MarryAnyone.Behaviors
                     dataStore.SyncData<List<Hero>?>("NoMoreSpouse", ref noMoreSpouse);
                     dataStore.SyncData<List<PersuasionAttempt>?>("PreviousCheatPersuasionAttempts", ref persuasionAttempts);
 
-                    MAFamily mAFamily = new MAFamily(noMoreSpouse, partners, persuasionAttempts);
+#if TRACELOAD
+                    Helper.Print(String.Format("MARomanceCampaignBehavior::Load Old Save MainHero ?= {0}", Hero.MainHero), Helper.PRINT_TRACE_LOAD);
+#endif
+
+                    MAFamily mAFamily = new MAFamily(Hero.MainHero, noMoreSpouse, partners, persuasionAttempts);
                     _mAFamilies = new List<MAFamily>();
                     _mAFamilies.Add(mAFamily);
                 }
             }
             else
+            {
+#if NEWSAVE
+                if (_mAFamilies != null)
+                    foreach (MAFamily mAFamily in _mAFamilies)
+                        Helper.Print(String.Format("MARomanceCampaignBehavior::Will Save family {0}", mAFamily.Trace(" - ")), Helper.PRINT_TRACE_LOAD);
+#endif
                 dataStore.SyncData<List<MAFamily>?>("Families", ref _mAFamilies);
+            }
 #else
 
             dataStore.SyncData<List<Hero>?>("Partners", ref Partners);
@@ -2582,6 +2614,11 @@ namespace MarryAnyone.Behaviors
             {
                 _hasLoading = true;
                 Helper.Print("MARomanceCampaignBehavior::AfterLoad", Helper.PRINT_TRACE_LOAD);
+#if NEWSAVE
+                if (_mAFamilies != null)
+                    foreach (MAFamily mAFamily in _mAFamilies)
+                        Helper.Print(String.Format("MARomanceCampaignBehavior::Has Loaded family {0}", mAFamily.Trace(" - ")), Helper.PRINT_TRACE_LOAD);
+#endif
                 if (String.IsNullOrWhiteSpace(saveVersion))
                     SaveVersion = null;
                 else
@@ -2589,6 +2626,6 @@ namespace MarryAnyone.Behaviors
             }
 #endif
         }
-#endregion
+        #endregion
     }
 }

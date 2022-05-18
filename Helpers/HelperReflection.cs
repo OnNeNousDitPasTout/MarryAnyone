@@ -11,7 +11,7 @@ namespace MarryAnyone.Helpers
     {
         public static String Properties(Object o, String sep, BindingFlags flag)
         {
-            String ret = null;
+            String? ret = null;
             if ((flag & BindingFlags.Instance) != 0)
             {
                 PropertyInfo[] props = o.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);

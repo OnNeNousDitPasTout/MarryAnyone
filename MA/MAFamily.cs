@@ -17,36 +17,34 @@ namespace MarryAnyone.MA
     public class MAFamily
     {
 #nullable enable
-        public Hero MainHero = null;
         private List<Hero>? _buggedSpouses;
+        //public List<Hero> Spouses { get; set; }
+        private List<Hero>? _spouses = null;
 
         [SaveableProperty(1)]
-        public List<Hero> Spouses { get; set; }
+        public Hero MainHero { get; set; }
 
         [SaveableProperty(2)]
-        public List<Hero> NoMoreSpouses { get; set; }
+        public List<Hero>? NoMoreSpouses { get; set; }
 
         [SaveableProperty(3)]
-        public List<Hero> Partners { get; set; }
+        public List<Hero>? Partners { get; set; }
 
         [SaveableProperty(4)]
-        public List<PersuasionAttempt> PreviousCheatPersuasionAttempts { get; set; }
+        public List<PersuasionAttempt>? PreviousCheatPersuasionAttempts { get; set; }
 
 #nullable restore
 
-        public MAFamily(List<Hero>? noMoreSpouses, List<Hero>? partners, List<PersuasionAttempt>? previousCheatPersuasionAttempts)
+        public MAFamily(Hero mainHero, List<Hero>? noMoreSpouses, List<Hero>? partners, List<PersuasionAttempt>? previousCheatPersuasionAttempts)
         {
-            NoMoreSpouses = NoMoreSpouses;
+            MainHero = mainHero;
+            NoMoreSpouses = noMoreSpouses;
             Partners = partners;
             PreviousCheatPersuasionAttempts = previousCheatPersuasionAttempts;
         }
 
-        public MAFamily(Hero hero, Hero spouse)
+        public MAFamily(Hero hero)
         {
-            Spouses = new List<Hero>();
-            Spouses.Add(hero);
-            if (spouse != null)
-                Spouses.Add(spouse);
             MainHero = hero;
         }
 
@@ -83,7 +81,7 @@ namespace MarryAnyone.MA
             return false;
         }
 
-        public void PatchSpouses(Hero mainHero)
+        public void PatchSpouses()
         {
             bool bPatchExecute = false;
             int nbMainHero = 0;
@@ -92,7 +90,9 @@ namespace MarryAnyone.MA
             bool needPatch = Helper.MASettings.Patch;
             bool needPatchPartner = false;
 
-            MainHero = mainHero;
+#if TRACELOAD
+            Helper.Print(String.Format("patchSpouses:: for MainHero {0}", Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_LOAD);
+#endif
 
             if (MainHero.Spouse != null && MainHero.Spouse.HeroState == Hero.CharacterStates.Disabled && MainHero.Spouse.IsAlive)
             {
@@ -136,7 +136,6 @@ namespace MarryAnyone.MA
 #if TRACELOAD
                 if (nb != MainHero.ExSpouses.Count)
                     Helper.Print(String.Format("Patch duplicate spouse for mainHero from {0} to {1}", nb, MainHero.ExSpouses.Count), Helper.PRINT_TRACE_LOAD);
-                Helper.Print(String.Format("MainHero {0}", Helper.TraceHero(Hero.MainHero)), Helper.PRINT_TRACE_LOAD);
 #endif
                 nbMainHero = nb;
 
@@ -392,28 +391,57 @@ namespace MarryAnyone.MA
 
         #region spouse
 
+        public List<Hero> Spouses
+        {
+            get
+            {
+                if (_spouses == null)
+                {
+                    _spouses = MainHero.ExSpouses.ToList();
+
+                    if (MainHero.Spouse != null)
+                    {
+                        if (_spouses.Count > 0)
+                            _spouses.Insert(0, Hero.MainHero.Spouse);
+                        else
+                            _spouses.Add(Hero.MainHero.Spouse);
+                    }
+
+                    if (Partners != null)
+                        _spouses.RemoveAll(x => ResolvePartner(x));
+
+                    if (NoMoreSpouses != null)
+                        _spouses.RemoveAll(x => ResolveNoMoreSpouse(x));
+
+                }
+
+                return _spouses;
+            }
+        }
+
         public bool Resolve(Hero hero)
         {
             if (MainHero == hero
-                || Spouses.Contains(hero))
+                || (Spouses.Count > 0 && Spouses.Contains(hero)))
                 return true;
 
             return false;
         }
 
-        public bool SpouseRemove(Hero hero)
-        {
+        //public bool SpouseRemove(Hero hero)
+        //{
 
-            bool ret = false;
-            if (Spouses != null)
-            {
-                while (Spouses.Remove(hero))
-                    ret = true;
-                if (Spouses.Count == 0)
-                    Spouses = null;
-            }
-            return ret;
-        }
+        //    bool ret = false;
+        //    if (Spouses != null)
+        //    {
+        //        while (Spouses.Remove(hero))
+        //            ret = true;
+
+        //        if (Spouses.Count == 0)
+        //            Spouses = null;
+        //    }
+        //    return ret;
+        //}
 
         public bool SpouseOfMainHero(Hero spouse)
         {
@@ -435,14 +463,12 @@ namespace MarryAnyone.MA
         {
             if (Resolve(hero) && !ResolveNoMoreSpouse(hero))
             {
-                if (MainHero == hero)
-                    MainHero = null;
-
                 if (NoMoreSpouses == null)
                     NoMoreSpouses = new List<Hero>();
 
                 NoMoreSpouses.Add(hero);
-                SpouseRemove(hero);
+                if (_spouses != null)
+                    _spouses.RemoveAll(x => x == hero);
             }
         }
         #endregion
@@ -486,16 +512,63 @@ namespace MarryAnyone.MA
 
         #endregion
 
+        public String Trace(String sep)
+        {
+            bool premier = true;
+            StringBuilder ret = new StringBuilder();
+            ret.Append(String.Format("MAFamily withBugged ?= {0} ", _buggedSpouses == null ? "false" : "true"));
+            ret.Append(String.Format("MainHero {0}", MainHero != null ? MainHero.Name : "NULL"));
+
+            if (_spouses != null && _spouses.Count > 0) 
+            {
+                ret.Append(sep);
+                ret.Append(String.Format("Spouses (nb {0})", _spouses.Count));
+                premier = true;
+                foreach (Hero hero in _spouses)
+                {
+                    if (!premier)
+                        ret.Append(", ");
+                    ret.Append(hero.Name);
+                    premier = false;
+                }
+            }
+            if (Partners != null)
+            {
+                ret.Append(sep);
+                ret.Append("Partners ");
+                premier = true;
+                foreach (Hero hero in Partners)
+                {
+                    if (!premier)
+                        ret.Append(", ");
+                    ret.Append(hero.Name);
+                    premier = false;
+                }
+            }
+            if (NoMoreSpouses != null)
+            {
+                ret.Append(sep);
+                ret.Append("NoMoreSpouses ");
+                premier = true;
+                foreach (Hero hero in NoMoreSpouses)
+                {
+                    if (!premier)
+                        ret.Append(", ");
+                    ret.Append(hero.Name);
+                    premier = false;
+                }
+            }
+            return ret.ToString();
+        }
 
         public void dispose()
         {
-            Spouses = null;
+            _spouses = null;
             Partners = null;
             NoMoreSpouses = null;
             PreviousCheatPersuasionAttempts = null;
             _buggedSpouses = null;
         }
-
     }
 #endif
 }

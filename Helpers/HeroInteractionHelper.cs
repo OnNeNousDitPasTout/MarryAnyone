@@ -167,7 +167,7 @@ namespace MarryAnyone.Helpers
 
                     if (raison != null)
                     {
-                        TextObject text = null;
+                        TextObject? text = null;
                         if ((showWhat & ShowWhat.ShowFinalRelation) != 0)
                         {
                             if (playerIn)

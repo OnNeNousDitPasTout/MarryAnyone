@@ -75,7 +75,7 @@ namespace MarryAnyone.MA
 #if TRACEBATTLERELATION
             Helper.Print(String.Format("Dispose MATeam {0}", _team.ToString()), Helper.PrintHow.PrintToLogAndWrite);
 #endif
-            _team = null;
+            _team.Clear();
             _heroes.Clear();
         }
     }

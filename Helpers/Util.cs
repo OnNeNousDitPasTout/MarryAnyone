@@ -38,7 +38,7 @@ namespace MarryAnyone.Helpers
 
         public static void CleanRomance(Hero hero, Hero otherHero, RomanceLevelEnum newRomanceLevel = RomanceLevelEnum.Untested)
         {
-            RomanticState lastRomance = null;
+            RomanticState? lastRomance = null;
             int n = 0;
             while (true)
             {
